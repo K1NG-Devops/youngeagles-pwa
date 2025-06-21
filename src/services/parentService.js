@@ -15,13 +15,37 @@ class ParentService {
   }
 
   // Get homework list
-  async getHomework(childId = null) {
-    const url = childId 
-      ? `${API_CONFIG.ENDPOINTS.HOMEWORK_LIST}?child_id=${childId}`
-      : API_CONFIG.ENDPOINTS.HOMEWORK_LIST;
-    
-    const response = await api.get(url);
-    return response.data;
+  async getHomework(childId = null, parentId = null) {
+    try {
+      if (!childId || !parentId) {
+        throw new Error('Child ID and Parent ID are required');
+      }
+
+      const url = API_CONFIG.ENDPOINTS.HOMEWORK_FOR_PARENT
+        .replace(':parentId', parentId)
+        .replace(':childId', childId);
+      
+      const response = await api.get(url, {
+        headers: {
+          'X-Request-Source': 'pwa-parent-homework',
+          'Cache-Control': 'no-cache'
+        },
+        timeout: API_CONFIG.TIMEOUT.DEFAULT
+      });
+
+      return {
+        success: true,
+        data: response.data,
+        error: null
+      };
+    } catch (error) {
+      console.error('Error fetching homework:', error);
+      return {
+        success: false,
+        data: null,
+        error: error.response?.data?.message || error.message
+      };
+    }
   }
 
   // Submit homework

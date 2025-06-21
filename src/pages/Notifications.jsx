@@ -46,9 +46,9 @@ const Notifications = () => {
     setIsUpdating(true);
     try {
       await parentService.markNotificationAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(notification =>
-          notification.id === notificationId
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
             ? { ...notification, read: true }
             : notification
         )
@@ -90,9 +90,9 @@ const Notifications = () => {
   };
 
   const getNotificationIcon = (type, priority) => {
-    const iconClass = priority === 'high' ? 'text-red-500' :
-      priority === 'medium' ? 'text-yellow-500' :
-        'text-blue-500';
+    const iconClass = priority === 'high' ? 'text-red-500' : 
+                     priority === 'medium' ? 'text-yellow-500' : 
+                     'text-blue-500';
     switch (type) {
       case 'homework':
       case 'assignment':
@@ -175,13 +175,13 @@ const Notifications = () => {
             {filteredNotifications.map((notification) => (
               <div key={notification.id} className={`p-4 hover:bg-gray-50 transition-colors ${notification.read ? '' : 'bg-blue-50/50'}`}>
                 <div className="flex items-center space-x-3">
-                  {getNotificationIcon(notification.type, notification.priority)}
+                      {getNotificationIcon(notification.type, notification.priority)}
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(notification.type)}`}>{notification.type}</span>
-                      {!notification.read && (
+                        {!notification.read && (
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">New</span>
-                      )}
+                        )}
                     </div>
                     <h3 className="text-base font-semibold text-gray-900 mb-1">{notification.title}</h3>
                     <p className="text-sm text-gray-600 mb-2">{notification.message}</p>

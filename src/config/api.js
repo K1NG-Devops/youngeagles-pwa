@@ -44,11 +44,20 @@ export const API_CONFIG = {
     // Admin-specific
     ADMIN_DASHBOARD: '/admin/dashboard',
     ADMIN_USERS: '/admin/users',
+    ADMIN_TEACHERS: '/admin/teachers',
+    ADMIN_PARENTS: '/admin/parents',
     
     // Homework
-    HOMEWORK_LIST: '/homework',
+    HOMEWORK_LIST: '/homework/list',
     HOMEWORK_SUBMIT: '/homework/submit',
     HOMEWORK_CREATE: '/homework/create',
+    HOMEWORK_DETAIL: '/homework/:id',
+    HOMEWORK_FOR_PARENT: '/homework/parent/:parentId/child/:childId',
+    HOMEWORK_FOR_TEACHER: '/homework/teacher/:teacherId',
+    HOMEWORK_SUBMISSIONS: '/homework/submissions',
+    
+    // Reports
+    REPORTS: '/reports/parent/:parentId/child/:childId',
     
     // Notifications
     NOTIFICATIONS: '/notifications',

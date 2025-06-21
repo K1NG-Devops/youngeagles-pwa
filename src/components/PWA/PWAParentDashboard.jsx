@@ -5,6 +5,7 @@ import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { API_CONFIG } from '../../config/api';
+import { parentService } from '../../services';
 
 const PWAParentDashboard = () => {
   const navigate = useNavigate();
@@ -81,16 +82,13 @@ const PWAParentDashboard = () => {
     setErrors(prev => ({ ...prev, homework: null }));
     
     try {
-      const res = await axios.get(
-        `${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.HOMEWORK_LIST}?child_id=${selectedChild}&parent_id=${parent_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const result = await parentService.getHomework(selectedChild, parent_id);
       
-      const hwList = Array.isArray(res.data) ? res.data : res.data.homeworks || [];
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch homework');
+      }
+      
+      const hwList = Array.isArray(result.data) ? result.data : result.data.homeworks || [];
       
       // Calculate progress
       const total = hwList.length;
@@ -106,26 +104,25 @@ const PWAParentDashboard = () => {
       setErrors(prev => ({ ...prev, homework: null }));
     } catch (err) {
       console.error('Error fetching homework:', err);
-      const errorMessage = err.response?.data?.message || 'Unable to load homework data';
+      const errorMessage = err.message || 'Unable to load homework data';
       
-      // Handle different error scenarios
       if (err.response?.status === 404) {
-        // No homework found - this is normal, not an error
-        console.log('No homework found for this child - this is normal');
         setErrors(prev => ({ ...prev, homework: null }));
+        setHomeworkProgress({
+          total: 0,
+          submitted: 0,
+          percentage: 0
+        });
       } else if (err.response?.status === 400 && errorMessage.includes('Child ID must be specified')) {
-        // Child not selected
         setErrors(prev => ({ ...prev, homework: 'Please select a child first' }));
       } else {
-        // Actual error
         setErrors(prev => ({ ...prev, homework: errorMessage }));
+        setHomeworkProgress({
+          total: 0,
+          submitted: 0,
+          percentage: 0
+        });
       }
-      
-      setHomeworkProgress({
-        total: 0,
-        submitted: 0,
-        percentage: 0
-      });
     } finally {
       setIsLoading(prev => ({ ...prev, homework: false }));
     }

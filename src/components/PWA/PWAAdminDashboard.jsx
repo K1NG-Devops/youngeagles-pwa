@@ -26,15 +26,15 @@ const PWAAdminDashboard = () => {
       try {
         if (import.meta.env.DEV) {
           // Mock data for development
-          setTimeout(() => {
-            setAdminStats({
-              totalUsers: 150,
-              totalTeachers: 12,
-              totalParents: 138,
-              totalHomeworks: 45,
-              totalSubmissions: 234,
-              systemHealth: 'Excellent'
-            });
+      setTimeout(() => {
+        setAdminStats({
+          totalUsers: 150,
+          totalTeachers: 12,
+          totalParents: 138,
+          totalHomeworks: 45,
+          totalSubmissions: 234,
+          systemHealth: 'Excellent'
+        });
             setRecentActivity([
               { message: 'New parent registered: Sarah Johnson', timestamp: '2 hours ago' },
               { message: 'Teacher posted new homework', timestamp: '4 hours ago' },
@@ -62,7 +62,7 @@ const PWAAdminDashboard = () => {
       } catch (error) {
         toast.error('Failed to load admin dashboard data');
         setIsLoading(false);
-      }
+    }
     };
     fetchAdminStats();
   }, []);
@@ -288,10 +288,10 @@ const PWAAdminDashboard = () => {
           ) : (
             recentActivity.map((activity, idx) => (
               <div key={idx} className="flex items-center space-x-3 p-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <p className="text-sm text-gray-600">{activity.message}</p>
                 <span className="text-xs text-gray-400">{activity.timestamp}</span>
-              </div>
+          </div>
             ))
           )}
         </div>

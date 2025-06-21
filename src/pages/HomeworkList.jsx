@@ -1,104 +1,301 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaBook, FaClock, FaCalendarAlt, FaFileAlt, FaEye, FaCheckCircle, FaExclamationTriangle, FaSpinner, FaPlay, FaPlusCircle } from 'react-icons/fa';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { FaBook, FaClock, FaCalendarAlt, FaFileAlt, FaEye, FaCheckCircle, FaExclamationTriangle, FaSpinner, FaPlay, FaPlusCircle, FaPlus } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import useAuth from '../hooks/useAuth';
-import axios from 'axios';
+import { api } from '../services/httpClient';
 import { API_CONFIG } from '../config/api';
+import { parentService } from '../services';
+
+// Error handler for homework fetch errors - moved outside component to prevent re-renders
+const handleHomeworkError = (err, navigate, isTeacher) => {
+  if (!err.response) {
+    toast.error('Network error. Please check your connection and try again.');
+    return;
+  }
+
+  const { status } = err.response;
+  switch (status) {
+    case 401:
+      toast.error('Your session has expired. Please log in again.');
+      navigate('/login');
+      break;
+    case 403:
+      toast.error('You do not have permission to view homeworks.');
+      break;
+    case 404:
+      if (isTeacher) {
+        toast.info('No homework assignments found.');
+      }
+      break;
+    default:
+      toast.error('Failed to load homework assignments. Please try again later.');
+  }
+};
 
 const HomeworkList = () => {
+  const navigate = useNavigate();
   const { auth } = useAuth();
   const [searchParams] = useSearchParams();
   const [homeworks, setHomeworks] = useState([]);
   const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(() => {
-    return searchParams.get('child_id') || localStorage.getItem('selectedChild') || '';
+    // Try to get child_id from multiple sources with validation
+    const queryChild = searchParams.get('child_id');
+    const storedChild = localStorage.getItem('selectedChild');
+    
+    // Validate the child_id to ensure it's not null, undefined, or empty string
+    if (queryChild && queryChild.trim() !== '') {
+      console.log('HomeworkList: Using child_id from query params:', queryChild);
+      // Store it in localStorage for persistence
+      localStorage.setItem('selectedChild', queryChild);
+      return queryChild;
+    } else if (storedChild && storedChild.trim() !== '') {
+      console.log('HomeworkList: Using child_id from localStorage:', storedChild);
+      return storedChild;
+    }
+    console.log('HomeworkList: No valid child_id found in query or localStorage');
+    return '';
   });
   const [filter, setFilter] = useState('all'); // all, pending, submitted, overdue
   const [isLoading, setIsLoading] = useState({
     children: false,
     homeworks: false
   });
+  const [error, setError] = useState(null);
 
-  const parent_id = localStorage.getItem('parent_id');
-  const token = localStorage.getItem('accessToken');
-  const userRole = auth?.user?.role || localStorage.getItem('role');
-  const isTeacher = userRole === 'teacher';
-  const teacherId = auth?.user?.id || localStorage.getItem('teacherId');
+  // Get user data from multiple sources for resilience
+  const getAuthData = () => {
+    // Try to get the most reliable token first
+    const token = localStorage.getItem('accessToken') || auth?.accessToken;
+    
+    // Try to get parent_id from multiple sources
+    let parent_id = localStorage.getItem('parent_id');
+    if (!parent_id && auth?.user?.id) {
+      parent_id = auth.user.id.toString();
+      // Store in localStorage for future use
+      localStorage.setItem('parent_id', parent_id);
+      console.log('HomeworkList: Saved parent_id to localStorage from auth context:', parent_id);
+    }
+    
+    const userRole = localStorage.getItem('role') || auth?.user?.role;
+    const isTeacher = userRole === 'teacher';
+    const teacherId = localStorage.getItem('teacherId') || auth?.user?.id;
+    
+    console.log('HomeworkList: Auth data retrieved:', {
+      hasToken: !!token,
+      hasParentId: !!parent_id,
+      userRole,
+      isTeacher,
+      hasTeacherId: !!teacherId
+    });
+    
+    return { token, parent_id, userRole, isTeacher, teacherId };
+  };
+  
+  // Use the function to get all auth data
+  const { token, parent_id, userRole, isTeacher, teacherId } = getAuthData();
 
   // Fetch children for parents
   useEffect(() => {
-    if (isTeacher || !parent_id || !token) return;
+    if (isTeacher) {
+      console.log('HomeworkList: Skipping children fetch - user is a teacher');
+      return;
+    }
+    
+    if (!parent_id) {
+      console.error('HomeworkList: Missing parent_id, cannot fetch children');
+      
+      // Try to recover parent_id from auth or localStorage
+      const storedParentId = localStorage.getItem('parent_id');
+      const authUserId = auth?.user?.id;
+      
+      console.log('HomeworkList: Recovery attempt -', { 
+        fromLocalStorage: storedParentId, 
+        fromAuthContext: authUserId 
+      });
+      
+      if (authUserId) {
+        localStorage.setItem('parent_id', authUserId.toString());
+        // We'll let the component re-render with the updated localStorage value
+        return;
+      }
+      
+      return;
+    }
+    
+    if (!token) {
+      console.error('HomeworkList: Missing authentication token, cannot fetch children');
+      return;
+    }
     
     const fetchChildren = async () => {
       setIsLoading(prev => ({ ...prev, children: true }));
+      setError(null);
       
       try {
-        const res = await axios.get(
-          `${API_CONFIG.getApiUrl()}/auth/parents/${parent_id}/children`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        console.log(`HomeworkList: Fetching children for parent_id ${parent_id}`);
+        const res = await api.get(`${API_CONFIG.ENDPOINTS.CHILDREN}/${parent_id}`, { 
+          headers: { 
+            'X-Request-Source': 'pwa-homework-list-children',
+            'Authorization': `Bearer ${token}` // Explicitly set token in header
+          },
+          timeout: 8000 // Extend timeout for reliability
+        });
         
+        console.log(`HomeworkList: Children API response:`, {
+          status: res.status,
+          hasData: !!res.data,
+          isArray: Array.isArray(res.data),
+          dataLength: Array.isArray(res.data) ? res.data.length : (res.data && res.data.children ? res.data.children.length : 'N/A')
+        });
         const childrenData = Array.isArray(res.data) ? res.data : res.data.children || [];
+        console.log(`HomeworkList: Fetched ${childrenData.length} children`);
         setChildren(childrenData);
         
         // Auto-select first child if no child is selected
         if (childrenData.length > 0 && !selectedChild) {
           const firstChildId = childrenData[0].id.toString();
+          console.log(`HomeworkList: Auto-selecting first child: ${firstChildId}`);
           setSelectedChild(firstChildId);
           localStorage.setItem('selectedChild', firstChildId);
+        } else if (childrenData.length > 0) {
+          // Validate that the selected child exists in the fetched children
+          const childExists = childrenData.some(child => child.id.toString() === selectedChild);
+          if (!childExists) {
+            console.log(`HomeworkList: Selected child ${selectedChild} not found in fetched children, selecting first child`);
+            const firstChildId = childrenData[0].id.toString();
+            setSelectedChild(firstChildId);
+            localStorage.setItem('selectedChild', firstChildId);
+          }
         }
       } catch (err) {
-        console.error('Error fetching children:', err);
-        toast.error('Failed to load children');
+        console.error('HomeworkList: Error fetching children:', err);
+        setError('Failed to load children data');
+        
+        if (err.response) {
+          const { status, data } = err.response;
+          
+          if (status === 401) {
+            // Try to get a fresh token from localStorage
+            const freshToken = localStorage.getItem('accessToken');
+            if (freshToken && freshToken !== token) {
+              console.log('HomeworkList: Found newer token in localStorage, will retry children fetch');
+              return; // Component will re-render with new token
+            }
+            
+            toast.error('Your session has expired. Please log in again.');
+            navigate('/login');
+          } else if (status === 403) {
+            toast.error('You do not have permission to view children.');
+          } else if (status === 404) {
+            console.log('HomeworkList: No children found for parent_id:', parent_id);
+            setChildren([]);
+            toast.info('No children found. Please register a child first.');
+            // Redirect to the correct child management page
+            navigate('/manage-children');
+          } else {
+            toast.error(`Failed to load children: ${data?.message || 'Unknown error'}`);
+          }
+        } else {
+          toast.error('Network error. Please check your connection and try again.');
+        }
       } finally {
         setIsLoading(prev => ({ ...prev, children: false }));
       }
     };
 
     fetchChildren();
-  }, [isTeacher, parent_id, token]);
+  }, [isTeacher, parent_id, token, selectedChild, navigate]);
 
   // Fetch homeworks
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    
     const fetchHomeworks = async () => {
-      if (!token) return;
-      if (!isTeacher && (!parent_id || !selectedChild)) return;
+      if (!token) {
+        console.warn('HomeworkList: No auth token found, aborting fetch');
+        return;
+      }
+      if (!isTeacher && (!parent_id || !selectedChild)) {
+        console.warn('HomeworkList: Missing parent_id or selectedChild for parent view, aborting fetch');
+        return;
+      }
       
       setIsLoading(prev => ({ ...prev, homeworks: true }));
+      setError(null);
       
       try {
-        let url;
+        let homeworkData;
+        
         if (isTeacher) {
-          url = `${API_CONFIG.getApiUrl()}/homeworks/for-teacher/${teacherId}`;
+          const res = await api.get(
+            API_CONFIG.ENDPOINTS.HOMEWORK_FOR_TEACHER.replace(':teacherId', teacherId),
+            {
+              headers: { 'X-Request-Source': 'pwa-teacher-homework' },
+              signal: controller.signal
+            }
+          );
+          homeworkData = res.data;
         } else {
-          url = `${API_CONFIG.getApiUrl()}/homeworks/for-parent/${parent_id}?child_id=${selectedChild}`;
+          // Use the updated parent service
+          const result = await parentService.getHomework(selectedChild, parent_id);
+          
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to fetch homework');
+          }
+          
+          homeworkData = result.data;
         }
         
-        const res = await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        if (!isMounted) return;
         
-        const hwList = Array.isArray(res.data) ? res.data : res.data.homeworks || [];
+        const hwList = Array.isArray(homeworkData) ? homeworkData : homeworkData.homeworks || [];
         setHomeworks(hwList);
+        
+        // Clear any existing errors
+        setError(null);
+        
       } catch (err) {
-        console.error('Error fetching homeworks:', err);
-        if (err.response?.status !== 404) {
-          toast.error('Failed to load homeworks');
+        console.error('HomeworkList: Error fetching homework:', err);
+        
+        if (!isMounted) return;
+        
+        const errorMessage = err.response?.data?.message || err.message;
+        setError(errorMessage);
+        setHomeworks([]);
+        
+        if (err.response?.status === 401) {
+          toast.error('Your session has expired. Please log in again.');
+          navigate('/login');
+        } else if (err.response?.status === 403) {
+          toast.error('You do not have permission to view homework assignments.');
+        } else if (err.response?.status === 404) {
+          toast.info('No homework assignments found.');
+        } else {
+          toast.error(`Failed to load homework: ${errorMessage}`);
         }
       } finally {
-        setIsLoading(prev => ({ ...prev, homeworks: false }));
+        if (isMounted) {
+          setIsLoading(prev => ({ ...prev, homeworks: false }));
+        }
       }
     };
 
-    fetchHomeworks();
-  }, [isTeacher, parent_id, selectedChild, teacherId, token]);
+    const timer = setTimeout(() => {
+      if ((isTeacher && teacherId && token) || 
+          (!isTeacher && parent_id && selectedChild && token)) {
+        fetchHomeworks();
+      }
+    }, 500);
+    
+    return () => {
+      clearTimeout(timer);
+      isMounted = false;
+      controller.abort();
+    };
+  }, [isTeacher, parent_id, selectedChild, teacherId, token, navigate]);
 
   // Filter homeworks based on selected filter
   const filteredHomeworks = homeworks.filter(hw => {
@@ -161,11 +358,41 @@ const HomeworkList = () => {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    if (!dateString) return 'No date';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return 'Invalid date';
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error, dateString);
+      return 'Invalid date';
+    }
   };
 
-  const selectedChildData = children.find(child => child.id.toString() === selectedChild);
+  const selectedChildData = children.find(child => child.id?.toString() === selectedChild);
+
+  // Show warnings if there are issues with auth or selection
+  const showAuthWarning = !isTeacher && (!token || !parent_id);
+  const showChildWarning = !isTeacher && children.length > 0 && !selectedChild;
+  
+  // Debug information
+  console.log('HomeworkList: Render state:', {
+    hasToken: !!token,
+    parent_id,
+    childrenCount: children.length,
+    selectedChild,
+    selectedChildData: !!selectedChildData,
+    showAuthWarning,
+    showChildWarning
+  });
 
   return (
     <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
@@ -178,6 +405,22 @@ const HomeworkList = () => {
           {isTeacher ? 'View and manage your class assignments' : 'View your child\'s homework assignments'}
         </p>
       </div>
+      
+      {/* Auth Warning */}
+      {showAuthWarning && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FaExclamationTriangle className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                Authentication issue detected. Please try logging out and logging back in.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Child Selection for Parents */}
       {!isTeacher && (
@@ -188,27 +431,47 @@ const HomeworkList = () => {
               <FaSpinner className="animate-spin text-gray-400" />
               <span className="text-sm text-gray-500">Loading children...</span>
             </div>
-          ) : (
-            <select
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-black text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={selectedChild}
-              onChange={(e) => {
-                setSelectedChild(e.target.value);
-                localStorage.setItem('selectedChild', e.target.value);
-              }}
-            >
-              <option value="">Select a child</option>
-              {children.map((child) => (
-                <option key={child.id} value={child.id}>
-                  {child.name} - {child.className || 'No Class'}
-                </option>
-              ))}
-            </select>
-          )}
-          {selectedChildData && (
-            <div className="mt-2 p-2 bg-blue-50 rounded text-sm text-blue-700">
-              Selected: <span className="font-medium">{selectedChildData.name}</span> ({selectedChildData.className})
+          ) : children.length === 0 ? (
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-gray-700 mb-3">No children found for your account.</p>
+              <Link 
+                to="/children/register" 
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <FaPlus className="mr-2" />
+                Register a Child
+              </Link>
             </div>
+          ) : (
+            <>
+              <select
+                className="w-full p-3 border border-gray-300 rounded-lg bg-white text-black text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={selectedChild}
+                onChange={(e) => {
+                  setSelectedChild(e.target.value);
+                  localStorage.setItem('selectedChild', e.target.value);
+                }}
+              >
+                <option value="">Select a child</option>
+                {children.map((child) => (
+                  <option key={child.id} value={child.id}>
+                    {child.name} - {child.className || 'No Class'}
+                  </option>
+                ))}
+              </select>
+              
+              {showChildWarning && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+                  Please select a child to view homework assignments
+                </div>
+              )}
+              
+              {selectedChildData && (
+                <div className="mt-2 p-2 bg-blue-50 rounded text-sm text-blue-700">
+                  Selected: <span className="font-medium">{selectedChildData.name}</span> ({selectedChildData.className})
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

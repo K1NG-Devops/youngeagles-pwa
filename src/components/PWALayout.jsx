@@ -20,15 +20,17 @@ import AuthTest from './AuthTest'
 import MessagingCenter from './MessagingCenter'
 import PrivateRoutePWA from './PWA/PrivateRoutePWA'
 import AdminLogin from './AdminLogin'
-import OfflineIndicator from './OfflineIndicator'
 import Registration2026 from '../pages/Registration2026'
 import ContactUs from '../pages/ContactUs'
 import AdminTeachers from './PWA/AdminTeachers'
+import ChildManagement from './PWA/ChildManagement'
 
-const PWALayout = ({ isOnline = true }) => {
+const PWALayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { logout } = useAuth()
+  // Get the isOnline state from usePWA (which is always true)
+  const { isOnline } = usePWA()
   
   // Simple localStorage-based auth like the full website
   const accessToken = localStorage.getItem('accessToken')
@@ -53,70 +55,126 @@ const PWALayout = ({ isOnline = true }) => {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [isInitialized, setIsInitialized] = useState(false)
 
-  // Check authentication on mount
+  // Helper functions to improve code readability
+  const isPublicRoute = (path) => {
+    return path.includes('login') || 
+           path.includes('register') || 
+           path.includes('password-reset') ||
+           path.includes('auth-test') ||
+           path === '/contact-us' ||
+           path === '/register-2026';
+  }
+
+  const getDashboardPath = (role) => {
+    if (role === 'teacher') return '/teacher-dashboard';
+    if (role === 'admin') return '/admin-dashboard';
+    return '/dashboard'; // Default for parents/students
+  }
+
+  // Navigation Guard: Check immediately if user is on login but already authenticated
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const accessToken = localStorage.getItem('accessToken');
+    const storedUser = localStorage.getItem('user');
+    const userRole = localStorage.getItem('role');
+    
+    console.log('🔍 PWALayout - Navigation Guard Check:', {
+      path: currentPath,
+      hasToken: !!accessToken,
+      hasUser: !!storedUser,
+      role: userRole || 'none',
+      isPublicRoute: isPublicRoute(currentPath)
+    });
+    
+    // If user is authenticated but on a public route (like login), redirect to dashboard
+    if (isPublicRoute(currentPath) && accessToken && storedUser) {
+      try {
+        // Verify the stored user is valid JSON
+        const user = JSON.parse(storedUser);
+        const role = user.role || userRole || 'parent';
+        const dashboardPath = getDashboardPath(role);
+        
+        console.log('🚀 PWALayout - Redirecting authenticated user from public route to dashboard', {
+          from: currentPath,
+          to: dashboardPath,
+          userRole: role
+        });
+        
+        navigate(dashboardPath, { replace: true });
+      } catch (error) {
+        console.error('❌ PWALayout - Invalid user data in localStorage:', error);
+        // Clear invalid data
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+      }
+    }
+  }, [location.pathname, navigate]);
+
+  // Check authentication on mount and handle redirects for protected routes
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const accessToken = localStorage.getItem('accessToken')
-        const storedUser = localStorage.getItem('user')
-        const userRole = localStorage.getItem('role')
+        const accessToken = localStorage.getItem('accessToken');
+        const storedUser = localStorage.getItem('user');
+        const userRole = localStorage.getItem('role');
+        const currentPath = location.pathname;
         
         console.log('🔄 PWALayout - Auth initialization:', {
           hasAccessToken: !!accessToken,
           hasAuthUser: !!auth?.user,
           hasStoredUser: !!storedUser,
-          currentPath: location.pathname,
-          isPublicRoute: location.pathname.includes('login') || 
-                        location.pathname.includes('register') || 
-                        location.pathname.includes('password-reset')
-        })
+          currentPath: currentPath,
+          tokenLength: accessToken ? accessToken.length : 0,
+          isPublicRoute: isPublicRoute(currentPath)
+        });
         
         // If we have a token but no auth user, let useAuth handle restoration
         if (accessToken && !auth?.user && storedUser) {
           try {
-            const parsedUser = JSON.parse(storedUser)
-            console.log('📦 PWALayout - Found stored user data, letting useAuth restore session')
-            // Don't redirect immediately, let auth restoration happen first
+            const parsedUser = JSON.parse(storedUser);
+            console.log('📦 PWALayout - Found stored user data:', {
+              email: parsedUser.email,
+              role: parsedUser.role || userRole,
+              name: parsedUser.name
+            });
           } catch (error) {
-            console.error('❌ Error parsing stored user:', error)
-            localStorage.removeItem('user')
-            localStorage.removeItem('accessToken')
+            console.error('❌ Error parsing stored user:', error);
+            localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
           }
         }
 
         // Only redirect if we clearly have no auth data and not on public routes
-        const isPublicRoute = location.pathname.includes('login') || 
-                             location.pathname.includes('register') || 
-                             location.pathname.includes('password-reset') ||
-                             location.pathname.includes('auth-test') ||
-                             location.pathname === '/contact-us' ||
-                             location.pathname === '/register-2026'
-        
-        if (!auth?.user && !accessToken && !isPublicRoute) {
-          console.log('🚪 PWALayout - No auth data found, redirecting to login')
-          const preferredRole = localStorage.getItem('preferredRole') || 'parent'
+        if (!accessToken && !isPublicRoute(currentPath)) {
+          console.log('🚪 PWALayout - No auth data found, redirecting to login');
+          const preferredRole = localStorage.getItem('preferredRole') || 'parent';
           const loginPath = preferredRole === 'teacher' ? '/teacher-login' : 
                           preferredRole === 'admin' ? '/admin-login' : 
-                          '/login'
-          navigate(loginPath)
+                          '/login';
+          navigate(loginPath, { replace: true });
         }
       } catch (error) {
-        console.error('❌ Auth initialization error:', error)
+        console.error('❌ Auth initialization error:', error);
       } finally {
-        setIsInitialized(true)
+        setIsInitialized(true);
       }
-    }
+    };
 
-    // Add a small delay to let useAuth initialize first
-    const timer = setTimeout(initializeAuth, 100)
-    return () => clearTimeout(timer)
-  }, [auth?.user, navigate, location.pathname])
+    // Run immediately without delay
+    initializeAuth();
+  }, [auth?.user, navigate, location.pathname]);
 
   // Sync navigation tab with current route
   useEffect(() => {
     if (!isInitialized) return
-
+    
     const currentPath = location.pathname
+    console.log('📌 PWALayout - Syncing navigation tab with route:', {
+      path: currentPath,
+      authenticated: !!auth?.user,
+      isInitialized
+    })
+    
     if (currentPath.includes('/student/homework') || currentPath.includes('/homework')) {
       setActiveTab('homework')
     } else if (currentPath.includes('/messages')) {
@@ -126,7 +184,7 @@ const PWALayout = ({ isOnline = true }) => {
     } else if (currentPath.includes('/dashboard')) {
       setActiveTab('dashboard')
     }
-  }, [location.pathname, isInitialized])
+  }, [location.pathname, isInitialized, auth?.user])
 
   const handleLogout = async () => {
     try {
@@ -141,14 +199,13 @@ const PWALayout = ({ isOnline = true }) => {
   }
 
   const handleOpenWebsite = async () => {
-    // For development, just open in new tab
-    if (import.meta.env.DEV) {
-      window.open('http://localhost:5173', '_blank')
-      toast.info('Opening main website in new tab...')
-    } else {
-      openFullWebsite()
-      toast.info('Opening full website in browser...')
-    }
+    // Open the main website in browser - this PWA is standalone
+    const mainWebsiteUrl = import.meta.env.DEV 
+      ? 'http://localhost:5173' 
+      : 'https://youngeagles.org.za'
+    
+    window.open(mainWebsiteUrl, '_blank')
+    toast.info('Opening main website in browser...')
   }
 
   // Navigation items based on user role
@@ -184,14 +241,24 @@ const PWALayout = ({ isOnline = true }) => {
 
   const navigationItems = getNavigationItems()
 
+  // Debug auth state before rendering
+  useEffect(() => {
+    console.log('🧪 PWALayout - Current Auth State:', {
+      hasToken: !!localStorage.getItem('accessToken'),
+      hasUser: !!localStorage.getItem('user'),
+      role: localStorage.getItem('role') || 'none',
+      path: location.pathname,
+      isInitialized
+    });
+  }, [location.pathname, isInitialized]);
+
   if (!isInitialized) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Offline Indicator */}
-      {!isOnline && <OfflineIndicator />}
+      {/* Offline Indicator removed to prevent false offline detection */}
       
       {/* PWA Header */}
       <header className="bg-blue-600 text-white p-4 shadow-lg">
@@ -256,6 +323,7 @@ const PWALayout = ({ isOnline = true }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         <Routes>
+          {/* Public routes - these should check for authentication and redirect if already logged in */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/password-reset" element={<PasswordReset />} />
@@ -270,13 +338,17 @@ const PWALayout = ({ isOnline = true }) => {
             <Route path="/submit-work" element={<SubmitWork />} />
             <Route path="/messages" element={<MessagingCenter />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/manage-children" element={<ChildManagement />} />
             <Route path="/teacher-dashboard" element={<PWATeacherDashboard />} />
             <Route path="/teacher/homework-list" element={<HomeworkList />} />
             <Route path="/admin-dashboard" element={<PWAAdminDashboard />} />
             <Route path="/admin-teachers" element={<AdminTeachers />} />
+            <Route path="/admin-users" element={<AdminTeachers />} />
+            <Route path="/admin-reports" element={<AdminTeachers />} />
+            <Route path="/admin-settings" element={<AdminTeachers />} />
           </Route>
 
-          <Route path="/register-2026" element={<Registration2026 />} />
+<Route path="/register-2026" element={<Registration2026 />} />
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/*" element={<Navigate to="/login" replace />} />
         </Routes>

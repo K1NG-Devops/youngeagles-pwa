@@ -1,79 +1,188 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaUpload, FaFile, FaTrash, FaPaperPlane, FaSpinner, FaCheckCircle } from 'react-icons/fa';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FaUpload, FaFile, FaTrash, FaPaperPlane, FaSpinner, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import { api } from '../services/httpClient';
 import useAuth from '../hooks/useAuth';
 import { API_CONFIG } from '../config/api';
 
 const SubmitWork = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { auth } = useAuth();
-  const [selectedChild, setSelectedChild] = useState(localStorage.getItem('selectedChild') || '');
+  
+  // Get child_id from URL params first, then localStorage
+  const urlChildId = searchParams.get('child_id');
+  const urlHomeworkId = searchParams.get('homework_id');
+  
+  console.log('SubmitWork: URL parameters:', { urlChildId, urlHomeworkId });
+  
+  const [selectedChild, setSelectedChild] = useState(() => {
+    // Priority: URL param > localStorage > empty string
+    return urlChildId || localStorage.getItem('selectedChild') || '';
+  });
+  
+  const [selectedHomework, setSelectedHomework] = useState(() => {
+    // Priority: URL param > empty string
+    return urlHomeworkId || '';
+  });
+  
   const [children, setChildren] = useState([]);
   const [homeworks, setHomeworks] = useState([]);
-  const [selectedHomework, setSelectedHomework] = useState('');
   const [files, setFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState({
     children: false,
     homeworks: false
   });
+  const [error, setError] = useState(null);
 
-  const parent_id = localStorage.getItem('parent_id');
-  const token = localStorage.getItem('accessToken');
+  // More robust authentication data retrieval
+  const getAuthData = () => {
+    // Get token from multiple sources
+    const token = localStorage.getItem('accessToken') || auth?.accessToken;
+    
+    // Get parent_id from multiple sources
+    let parent_id = localStorage.getItem('parent_id');
+    if (!parent_id && auth?.user?.id) {
+      parent_id = auth.user.id.toString();
+      // Store in localStorage for future use
+      localStorage.setItem('parent_id', parent_id);
+      console.log('SubmitWork: Saved parent_id to localStorage from auth context:', parent_id);
+    }
+    
+    console.log('SubmitWork: Auth data retrieved:', {
+      hasToken: !!token,
+      tokenLength: token ? token.length : 0,
+      parent_id
+    });
+    
+    return { token, parent_id };
+  };
+  
+  const { token, parent_id } = getAuthData();
 
   // Fetch children
   useEffect(() => {
+    console.log('SubmitWork: Checking auth data for fetching children:', { 
+      hasParentId: !!parent_id, 
+      hasToken: !!token
+    });
+    
+    // Don't try to fetch without auth data
+    if (!parent_id) {
+      console.error('SubmitWork: Missing parent_id, cannot fetch children');
+      setError('Missing parent ID. Please try logging out and back in.');
+      return;
+    }
+    
+    if (!token) {
+      console.error('SubmitWork: Missing token, cannot fetch children');
+      setError('Authentication token missing. Please try logging out and back in.');
+      return;
+    }
+    
     const fetchChildren = async () => {
-      if (!parent_id || !token) return;
-      
       setLoading(prev => ({ ...prev, children: true }));
       
       try {
-        const res = await axios.get(
-          `${API_CONFIG.getApiUrl()}/auth/parents/${parent_id}/children`,
+        console.log(`SubmitWork: Fetching children for parent_id ${parent_id}`);
+        const res = await api.get(
+          `${API_CONFIG.ENDPOINTS.CHILDREN}/${parent_id}`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              'Authorization': `Bearer ${token}`,
+              'X-Request-Source': 'pwa-submit-work-children'
             },
+            timeout: 8000
           }
         );
         
         const childrenData = Array.isArray(res.data) ? res.data : res.data.children || [];
+        console.log(`SubmitWork: Fetched ${childrenData.length} children`);
         setChildren(childrenData);
         
         // Auto-select first child if no child is selected
         if (childrenData.length > 0 && !selectedChild) {
           const firstChildId = childrenData[0].id.toString();
+          console.log(`SubmitWork: Auto-selecting first child: ${firstChildId}`);
           setSelectedChild(firstChildId);
           localStorage.setItem('selectedChild', firstChildId);
+        } else if (selectedChild) {
+          // Validate that selected child exists in the fetched children
+          const childExists = childrenData.some(child => child.id.toString() === selectedChild);
+          if (!childExists && childrenData.length > 0) {
+            console.log(`SubmitWork: Selected child ${selectedChild} not found in fetched children, selecting first child`);
+            const firstChildId = childrenData[0].id.toString();
+            setSelectedChild(firstChildId);
+            localStorage.setItem('selectedChild', firstChildId);
+          }
         }
       } catch (err) {
         console.error('Error fetching children:', err);
-        toast.error('No Homeworks found');
+        
+        if (err.response) {
+          const { status } = err.response;
+          
+          if (status === 401) {
+            toast.error('Your session has expired. Please log in again.');
+            navigate('/login');
+          } else if (status === 403) {
+            toast.error('You do not have permission to view children.');
+          } else if (status === 404) {
+            toast.info('No children found. Please register a child first.');
+          } else {
+            toast.error('Failed to load children data.');
+          }
+        } else {
+          toast.error('Network error. Please check your connection.');
+        }
       } finally {
         setLoading(prev => ({ ...prev, children: false }));
       }
     };
 
     fetchChildren();
-  }, [parent_id, token]);
+  }, [parent_id, token, selectedChild]);
 
   // Fetch homeworks when child is selected
   useEffect(() => {
+    console.log('SubmitWork: Checking data for fetching homeworks:', { 
+      hasParentId: !!parent_id, 
+      hasToken: !!token,
+      selectedChild
+    });
+    
+    // More detailed checks with better error handling
+    if (!parent_id) {
+      console.error('SubmitWork: Missing parent_id, cannot fetch homeworks');
+      return;
+    }
+    
+    if (!token) {
+      console.error('SubmitWork: Missing token, cannot fetch homeworks');
+      return;
+    }
+    
+    if (!selectedChild) {
+      console.log('SubmitWork: No child selected yet, skipping homework fetch');
+      return;
+    }
+    
     const fetchHomeworks = async () => {
-      if (!parent_id || !token || !selectedChild) return;
-      
       setLoading(prev => ({ ...prev, homeworks: true }));
+      setError(null);
       
       try {
-        const res = await axios.get(
-          `${API_CONFIG.getApiUrl()}/homeworks/for-parent/${parent_id}?child_id=${selectedChild}`,
+        console.log(`SubmitWork: Fetching homeworks for child_id ${selectedChild}`);
+        const res = await api.get(
+          `${API_CONFIG.ENDPOINTS.HOMEWORK_FOR_PARENT}?child_id=${selectedChild}&parent_id=${parent_id}`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              'Authorization': `Bearer ${token}`,
+              'X-Request-Source': 'pwa-submit-work-homeworks'
             },
+            timeout: 8000
           }
         );
         
@@ -83,8 +192,23 @@ const SubmitWork = () => {
         setHomeworks(pendingHomeworks);
       } catch (err) {
         console.error('Error fetching homeworks:', err);
-        if (err.response?.status !== 404) {
-          toast.message('No homeworks found');
+        
+        if (err.response) {
+          const { status } = err.response;
+          
+          if (status === 401) {
+            toast.error('Your session has expired. Please log in again.');
+            navigate('/login');
+          } else if (status === 403) {
+            toast.error('You do not have permission to view homeworks.');
+          } else if (status === 404) {
+            setHomeworks([]);
+            toast.info('No homework assignments found for this child.');
+          } else {
+            toast.error('Failed to load homework assignments.');
+          }
+        } else {
+          toast.error('Network error. Please check your connection.');
         }
       } finally {
         setLoading(prev => ({ ...prev, homeworks: false }));
@@ -136,14 +260,14 @@ const SubmitWork = () => {
         formData.append('files', file);
       });
 
-      await axios.post(
-        `${API_CONFIG.getApiUrl()}/homeworks/submit`,
+      // Add token for upload authentication (handled by api.upload automatically)
+      await api.upload(
+        `${API_CONFIG.ENDPOINTS.HOMEWORK_SUBMIT}`,
         formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
+        (progressEvent) => {
+          // Optional progress handler if you want to show upload progress
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`Upload progress: ${percentCompleted}%`);
         }
       );
 
@@ -154,13 +278,8 @@ const SubmitWork = () => {
       setFiles([]);
       
       // Refresh homeworks list
-      const res = await axios.get(
-        `${API_CONFIG.getApiUrl()}/homeworks/for-parent/${parent_id}?child_id=${selectedChild}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await api.get(
+        `${API_CONFIG.ENDPOINTS.HOMEWORK_FOR_PARENT}?child_id=${selectedChild}&parent_id=${parent_id}`
       );
       
       const hwList = Array.isArray(res.data) ? res.data : res.data.homeworks || [];
@@ -169,8 +288,39 @@ const SubmitWork = () => {
       
     } catch (err) {
       console.error('Error submitting homework:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to submit homework';
-      toast.error(errorMessage);
+      
+      if (err.response) {
+        const { status, data } = err.response;
+        
+        if (status === 401) {
+          toast.error('Your session has expired. Please log in again.');
+          navigate('/login');
+        } else if (status === 403) {
+          toast.error('You do not have permission to submit homework.');
+        } else if (status === 413) {
+          toast.error('Files too large. Total submission must be under 10MB.');
+        } else if (status === 422) {
+          const validationErrors = data.errors ? 
+            data.errors.map(e => e.msg).join(', ') : 
+            data.message;
+          toast.error(`Validation error: ${validationErrors}`);
+        } else {
+          toast.error(data.message || 'Failed to submit homework.');
+        }
+      } else if (err.request) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        toast.error('Error submitting homework: ' + err.message);
+      }
+      
+      // Log additional details for debugging
+      if (API_CONFIG.FEATURES.DEBUG_MODE) {
+        console.error('Submission error details:', {
+          status: err.response?.status,
+          data: err.response?.data,
+          config: err.config
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -187,6 +337,18 @@ const SubmitWork = () => {
   const selectedChildData = children.find(child => child.id.toString() === selectedChild);
   const selectedHomeworkData = homeworks.find(hw => hw.id.toString() === selectedHomework);
 
+  // Debug information
+  console.log('SubmitWork: Render state:', {
+    hasToken: !!token,
+    parent_id,
+    childrenCount: children.length,
+    selectedChild,
+    selectedHomework,
+    homeworksCount: homeworks.length,
+    filesCount: files.length,
+    error
+  });
+  
   return (
     <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
       {/* Header */}
@@ -194,6 +356,20 @@ const SubmitWork = () => {
         <h1 className="text-xl font-bold mb-1">Submit Homework</h1>
         <p className="text-sm text-green-100">Upload your child's completed assignments</p>
       </div>
+      
+      {/* Error Messages */}
+      {error && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FaExclamationTriangle className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Child Selection */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">

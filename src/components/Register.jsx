@@ -1,206 +1,235 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaSpinner, FaUserPlus } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { buildUrl, API_CONFIG } from '../config/api';
+import API_CONFIG from '../config/api';
 
 const Register = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    name: '', email: '', phone: '', address: '', workAddress: '', password: '', confirmPassword: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      toast.error('Please fill in all fields');
-      return;
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      navigate('/dashboard');
     }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      const response = await axios.post(
-        buildUrl(API_CONFIG.ENDPOINTS.REGISTER),
-        {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: 'parent'
-        }
-      );
-
-      toast.success('Registration successful! Please log in.');
-      navigate('/login');
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  }, [navigate]);
+  const validatePhoneNumber = (phone) => {
+    // Basic phone validation (accepts formats like: 123-456-7890, (123) 456-7890, 123.456.7890, etc.)
+    const phoneRegex = /^[\d\s\-+().]{10,15}$/;
+    return phoneRegex.test(phone);
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Clear specific field error when user starts typing again
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors('');
+    setMessage('');
+    setFieldErrors({});
+    
+    // Validate all fields
+    const newFieldErrors = {};
+    let hasErrors = false;
+    
+    if (formData.password !== formData.confirmPassword) {
+      newFieldErrors.confirmPassword = 'Passwords do not match';
+      hasErrors = true;
+    }
+    
+    if (formData.password.length < 6) {
+      newFieldErrors.password = 'Password must be at least 6 characters';
+      hasErrors = true;
+    }
+    
+    if (!validatePhoneNumber(formData.phone)) {
+      newFieldErrors.phone = 'Please enter a valid phone number';
+      hasErrors = true;
+    }
+    
+    if (hasErrors) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await axios.post(`${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.REGISTER}`, formData);
+
+      localStorage.removeItem('accessToken');
+      
+      // login using the same credentials
+      const loginRes = await axios.post(`${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.LOGIN}`, {
+        email: formData.email,
+        password: formData.password
+      });
+
+      // Store credentials consistently
+      localStorage.setItem('accessToken', loginRes.data.token);
+      localStorage.setItem('parent_id', loginRes.data.user.id);
+      localStorage.setItem('user', JSON.stringify(loginRes.data.user));
+      
+      setMessage('Registration successful! Redirecting to login...');
+      setFormData({
+        name: '', email: '', phone: '', address: '', workAddress: '', password: '', confirmPassword: ''
+      });
+      setErrors('');
+      
+      // Success message and redirect to login
+      setTimeout(() => {
+        // Show success dialog with PWA option
+        const installApp = window.confirm('✅ Registration successful!\n\n📱 Would you like to install our mobile app for the best experience?');
+        
+        if (installApp) {
+          // Show installation instructions without opening a new tab
+          alert('📱 To install the app:\n\n1. Look for the "Install" or "Add to Home Screen" option in your browser\n2. Follow the prompts to add Young Eagles to your device\n3. Open the app from your home screen for the best experience');
+        }
+        
+        // Navigate to login page
+        navigate('/login', { replace: true });
+      }, 1500);
+    } catch (err) {
+      console.error(err); // Helpful for debugging
+      
+      // Handle specific error cases
+      if (err.response?.status === 409 || (err.response?.data?.message && err.response.data.message.includes('email'))) {
+        setFieldErrors(prev => ({ ...prev, email: 'Email already in use' }));
+      } else if (err.response?.data?.errors) {
+        // Process validation errors from the server
+        const newFieldErrors = {};
+        err.response.data.errors.forEach(error => {
+          if (error.param && formData[error.param] !== undefined) {
+            newFieldErrors[error.param] = error.msg;
+          }
+        });
+        
+        if (Object.keys(newFieldErrors).length > 0) {
+          setFieldErrors(newFieldErrors);
+        } else {
+          const allErrors = err.response.data.errors.map(e => e.msg).join(', ');
+          setErrors(allErrors);
+        }
+      } else {
+        setErrors(err.response?.data?.message || 'Registration failed. Please try again.');
+      }
+      setMessage('');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 relative safe-area-inset">
+      <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FaUserPlus className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-600">Join Young Eagles as a parent</p>
+          <img
+            src="/yehc_logo.png"
+            alt="Young Eagles"
+            className="h-4 w-4 mx-auto mb-4 rounded-full object-cover shadow-lg"
+          />
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Parent Registration</h1>
+          <p className="text-gray-600">Create your parent account</p>
         </div>
 
-        {/* Registration Form */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Enter your full name"
-                  required
-                />
+        {/* Main Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {[
+              { name: 'name', label: 'Full Name' },
+              { name: 'email', label: 'Email Address', type: 'email' },
+              { name: 'phone', label: 'Phone Number' },
+              { name: 'address', label: 'Home Address' },
+              { name: 'workAddress', label: 'Work Address' },
+              { name: 'password', label: 'Password', type: 'password' },
+              { name: 'confirmPassword', label: 'Confirm Password', type: 'password' },
+            ].map(({ name, label, type = 'text' }) => (
+              <div key={name} className="relative">
+                <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                <div className="relative">
+                  {name === 'name' && <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+                  {name === 'email' && <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+                  {(name === 'password' || name === 'confirmPassword') && <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+                  <input
+                    id={name}
+                    type={type}
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    required={name !== 'workAddress'}
+                    autoComplete={name === 'password' || name === 'confirmPassword' ? 'new-password' : name}
+                    className={`w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors[name] ? 'border-red-500' : ''}`}
+                    placeholder={name === "workAddress" ? "If applicable" : name === "phone" ? "e.g., 123-456-7890" : undefined}
+                    pattern={name === 'phone' ? "[0-9\\s\\-+().]{10,15}" : undefined}
+                  />
+                  {fieldErrors[name] && (
+                    <p className="text-red-500 text-xs mt-1">{fieldErrors[name]}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            ))}
 
-            {/* Email Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-            </div>
+            <p className="text-sm text-center text-gray-600">
+              By registering, you agree to our <a href="/terms" className="text-blue-600 hover:text-blue-500">Terms</a> and <a href="/privacy" className="text-blue-600 hover:text-blue-500">Privacy</a>.
+            </p>
 
-            {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Create a password"
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Confirm your password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
-                isLoading
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                loading 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                   : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-200'
               }`}
             >
-              {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <FaSpinner className="animate-spin" />
-                  <span>Creating account...</span>
-                </div>
-              ) : (
-                'Create Account'
-              )}
+              {loading ? <><FaSpinner className="animate-spin inline mr-2" /> Registering...</> : <><FaUserPlus className="inline mr-2" /> Register</>}
             </button>
-          </form>
 
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <div className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                Sign in
-              </Link>
+            {/* Error/Success Messages */}
+            {message && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-600 text-sm text-center">{message}</p>
+              </div>
+            )}
+            {errors && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm text-center">{errors}</p>
+              </div>
+            )}
+
+            {/* Footer Links */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+                  Sign in here
+                </Link>
+              </p>
             </div>
+          </form>
+        </div>
+
+        {/* Role Navigation */}
+        <div className="mt-6 bg-white rounded-xl shadow-lg p-4">
+          <div className="flex justify-center space-x-4 text-sm">
+            <Link to="/home" className="text-blue-600 hover:text-blue-500 font-medium">
+              Back to Home
+            </Link>
           </div>
         </div>
       </div>

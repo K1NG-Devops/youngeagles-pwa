@@ -51,46 +51,112 @@ httpClient.interceptors.response.use(
       switch (status) {
         case 401:
           // Unauthorized - Token expired or invalid
-          console.warn('🔐 Authentication failed');
+          console.warn('🔐 Authentication failed:', originalRequest.url);
           
-          // Try to refresh token once
+          // List of endpoints that should not trigger redirect even if they return 401
+          const noRedirectEndpoints = [
+            '/auth/verify',
+            '/homework',
+            '/parent/children',
+            '/reports/parent'
+          ];
+          
+          // Check if this is an endpoint we should ignore for redirects
+          const shouldSkipRedirect = noRedirectEndpoints.some(endpoint => 
+            originalRequest.url.includes(endpoint)
+          );
+          
+          if (shouldSkipRedirect) {
+            console.log('🔍 Skipping redirect for non-critical 401 on:', originalRequest.url);
+            return Promise.reject(error);
+          }
+          
+          // Try to refresh token - only attempt once per request
           if (!originalRequest._retry) {
+            console.log('🔄 Attempting token refresh for:', originalRequest.url);
             originalRequest._retry = true;
             
             try {
+              // First check if we have a refresh token
               const refreshToken = localStorage.getItem('refreshToken');
+              
+              // Also check if we might have a newer access token already
+              // (could happen if another request refreshed while this one was in flight)
+              const currentToken = localStorage.getItem('accessToken');
+              const requestToken = originalRequest.headers.Authorization?.replace('Bearer ', '');
+              
+              if (currentToken && currentToken !== requestToken) {
+                console.log('📋 Using newer token from localStorage');
+                // Use the newer token without making a refresh request
+                originalRequest.headers.Authorization = `Bearer ${currentToken}`;
+                return httpClient(originalRequest);
+              }
+              
               if (refreshToken) {
+                console.log('🔑 Calling refresh token endpoint');
                 const response = await axios.post(
                   `${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`,
-                  { refreshToken }
+                  { refreshToken },
+                  { timeout: 5000 } // Add timeout to refresh request
                 );
                 
                 const { accessToken } = response.data;
                 localStorage.setItem('accessToken', accessToken);
+                console.log('✅ Token refresh successful');
                 
                 // Retry original request with new token
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                 return httpClient(originalRequest);
+              } else {
+                console.warn('⚠️ No refresh token available');
               }
             } catch (refreshError) {
-              console.error('🔄 Token refresh failed:', refreshError);
+              console.error('❌ Token refresh failed:', refreshError?.message || 'Unknown error');
             }
           }
           
-          // Clear auth data and redirect to login
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-          localStorage.removeItem('role');
+          // Check if we're already on a login page before clearing auth
+          const isLoginPage = window.location.pathname.includes('/login') || 
+                             window.location.pathname.includes('-login');
           
-          // Only show toast in development or if not already on login page
-          if (API_CONFIG.FEATURES.DEBUG_MODE && !window.location.pathname.includes('/login')) {
-            toast.error('Session expired. Please login again.');
-          }
-          
-          // Redirect to login (if not already there)
-          if (!window.location.pathname.includes('/login')) {
-            window.location.href = '/login';
+          if (!isLoginPage) {
+            console.log('🧹 Clearing auth data after failed refresh');
+            // Clear auth data
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('role');
+            
+            // Preserve selected child if available (to help with re-login experience)
+            const selectedChild = localStorage.getItem('selectedChild');
+            const parentId = localStorage.getItem('parent_id');
+            
+            // Only show toast if not in login flow already
+            if (API_CONFIG.FEATURES.DEBUG_MODE) {
+              toast.error('Your session has expired. Please login again.');
+            }
+            
+            // Store current URL to redirect back after login
+            try {
+              sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+            } catch (e) {
+              console.error('Failed to save redirect path', e);
+            }
+            
+            // Redirect to appropriate login page based on last known role
+            const lastRole = localStorage.getItem('role') || 'parent';
+            localStorage.setItem('preferredRole', lastRole); // Remember for login page
+            
+            const loginPath = lastRole === 'teacher' ? '/teacher-login' : 
+                            lastRole === 'admin' ? '/admin-login' : 
+                            '/login';
+                            
+            console.log(`🚪 Redirecting to ${loginPath} after auth failure`);
+            window.location.href = loginPath;
+            
+            // Restore selected child and parent_id after clearing localStorage
+            if (selectedChild) localStorage.setItem('selectedChild', selectedChild);
+            if (parentId) localStorage.setItem('parent_id', parentId);
           }
           break;
 
@@ -230,4 +296,3 @@ export const testConnection = async () => {
 };
 
 export default httpClient;
-

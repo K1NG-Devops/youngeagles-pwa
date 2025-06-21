@@ -15,12 +15,50 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
+  // Dedicated function to handle dashboard redirection using React Router
+  const redirectToDashboard = () => {
+    console.log('🚀 Redirecting to dashboard using React Router navigation...');
+    console.log('📍 Current location before redirect:', window.location.href);
+    
+    // Verify localStorage has auth data before navigation
+    const accessToken = localStorage.getItem('accessToken');
+    const user = localStorage.getItem('user');
+    const role = localStorage.getItem('role');
+    const parentId = localStorage.getItem('parent_id');
+    
+    console.log('🔍 Verifying localStorage before navigation:', { 
+      hasToken: !!accessToken, 
+      hasUser: !!user, 
+      hasRole: !!role,
+      hasParentId: !!parentId
+    });
+    
+    if (accessToken && user && role) {
+      console.log('✅ Auth data verified in localStorage, proceeding with navigation');
+      // Use React Router navigation with replace to prevent back button issues
+      navigate('/dashboard', { replace: true });
+    } else {
+      console.error('❌ Missing auth data in localStorage before navigation!', {
+        accessToken: !!accessToken,
+        user: !!user,
+        role: !!role,
+        parentId: !!parentId
+      });
+      // Try again with a small delay as a fallback
+      setTimeout(() => {
+        console.log('⚠️ Attempting navigation with delay as fallback');
+        navigate('/dashboard', { replace: true });
+      }, 500);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
     console.log('🔐 Parent login form submitted');
     console.log('📧 Email:', email);
+    console.log('🔍 Starting login process...');
     
     setIsLoading(true);
 
@@ -32,16 +70,47 @@ const Login = () => {
       // Clear any previous errors
       setErrorMessage('');
       
-      await login(email, password, 'parent');
+      const result = await login(email, password, 'parent');
       
       console.log('✅ Parent login successful!');
+      console.log('👤 User data:', result?.user);
+      console.log('🔑 Auth state:', { isAuthenticated: true, role: result?.role });
+      
+      // Log localStorage state immediately after login
+      console.log('📦 Checking localStorage after login:', {
+        accessToken: !!localStorage.getItem('accessToken'),
+        user: !!localStorage.getItem('user'),
+        role: localStorage.getItem('role'),
+        parentId: !!localStorage.getItem('parent_id')
+      });
+      
       setSuccessMessage('Login successful!');
       toast.success('Login successful!');
       
-      // Navigate with replace to prevent back button issues
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 100);
+      // Manually ensure critical auth data is in localStorage as a safeguard
+      if (result?.token && result?.user && result?.role) {
+        console.log('🔒 Ensuring auth data is set in localStorage');
+        if (!localStorage.getItem('accessToken')) {
+          console.log('⚠️ Setting accessToken in localStorage as fallback');
+          localStorage.setItem('accessToken', result.token);
+        }
+        if (!localStorage.getItem('user')) {
+          console.log('⚠️ Setting user in localStorage as fallback');
+          localStorage.setItem('user', JSON.stringify(result.user));
+        }
+        if (!localStorage.getItem('role')) {
+          console.log('⚠️ Setting role in localStorage as fallback');
+          localStorage.setItem('role', result.role);
+        }
+        if (result.parent_id && !localStorage.getItem('parent_id')) {
+          console.log('⚠️ Setting parent_id in localStorage as fallback');
+          localStorage.setItem('parent_id', result.parent_id);
+        }
+      }
+      
+      // Navigate immediately without timeout
+      console.log('🚪 Calling redirectToDashboard immediately after login');
+      redirectToDashboard();
     } catch (error) {
       console.error('❌ Parent login error:', error);
       console.error('Error details:', {

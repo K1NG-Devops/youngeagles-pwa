@@ -231,21 +231,6 @@ export default function Homework() {
           ))
         )}
       </div>
-
-      {/* Offline Note */}
-      <div className="pwa-card bg-blue-50 border border-blue-200">
-        <div className="flex items-start space-x-3">
-          <BookOpen className="text-blue-600 mt-1" size={20} />
-          <div>
-            <h3 className="text-sm font-medium text-blue-800 mb-1">
-              Offline Functionality
-            </h3>
-            <p className="text-sm text-blue-700">
-              Homework data is cached for offline access. Changes will sync when you're back online.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
