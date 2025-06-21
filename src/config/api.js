@@ -35,7 +35,7 @@ export const API_CONFIG = {
     
     // Parent-specific
     PARENT_DASHBOARD: '/parent/dashboard',
-    CHILDREN: '/parent/children',
+    CHILDREN: '/children',
     
     // Teacher-specific
     TEACHER_DASHBOARD: '/teacher/dashboard',
@@ -48,13 +48,13 @@ export const API_CONFIG = {
     ADMIN_PARENTS: '/admin/parents',
     
     // Homework
-    HOMEWORK_LIST: '/homework/list',
-    HOMEWORK_SUBMIT: '/homework/submit',
-    HOMEWORK_CREATE: '/homework/create',
-    HOMEWORK_DETAIL: '/homework/:id',
+    HOMEWORK_LIST: '/homeworks/list',
+    HOMEWORK_SUBMIT: '/homeworks/submit',
+    HOMEWORK_CREATE: '/homeworks/create',
+    HOMEWORK_DETAIL: '/homeworks/:id',
     HOMEWORK_FOR_PARENT: '/homework/parent/:parentId/child/:childId',
-    HOMEWORK_FOR_TEACHER: '/homework/teacher/:teacherId',
-    HOMEWORK_SUBMISSIONS: '/homework/submissions',
+    HOMEWORK_FOR_TEACHER: '/homeworks/teacher/:teacherId',
+    HOMEWORK_SUBMISSIONS: '/homeworks/submissions',
     
     // Reports
     REPORTS: '/reports/parent/:parentId/child/:childId',

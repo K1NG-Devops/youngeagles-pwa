@@ -20,6 +20,13 @@ httpClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Add default headers if not already set
+    config.headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...config.headers
+    };
+
     // Log API calls in development
     logApiCall(config.method, config.url, config.data);
 

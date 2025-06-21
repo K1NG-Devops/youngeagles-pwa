@@ -7,10 +7,16 @@ class AuthService {
     this.isAuthenticated = false;
     this.user = null;
     this.accessToken = null;
+    this.isInitialized = false;
   }
 
   // Initialize auth state from localStorage
   init() {
+    // Prevent multiple initializations
+    if (this.isInitialized) {
+      return;
+    }
+    
     const accessToken = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
     
@@ -26,19 +32,35 @@ class AuthService {
           userRole: this.user?.role
         });
         
-        // Verify accessToken is still valid (but don't block initialization)
+        // Verify token silently - don't logout on failure
         this.verifyToken().catch((error) => {
           console.warn('🔐 Token verification failed during init:', error.message);
-          // If accessToken is invalid, log out
-            this.logout();
         });
       } catch (error) {
         console.error('❌ Error parsing stored user data:', error);
-        this.logout();
+        // Don't logout, just clear the invalid data
+        this.clearAuthData();
       }
     } else {
       console.log('🔒 No stored auth data found');
     }
+    
+    this.isInitialized = true;
+  }
+
+  // Clear auth data without calling logout endpoint
+  clearAuthData() {
+    this.isAuthenticated = false;
+    this.user = null;
+    this.accessToken = null;
+
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('parent_id');
+    localStorage.removeItem('teacherId');
+    localStorage.removeItem('adminId');
   }
 
   // Login with email and password
@@ -131,32 +153,22 @@ class AuthService {
   }
 
   // Logout user
-  async logout() {
+  async logout(silent = false) {
     try {
-      // Call logout endpoint if authenticated
+      // Only call logout endpoint if we have valid auth
       if (this.isAuthenticated && this.accessToken) {
         await api.post(API_CONFIG.ENDPOINTS.LOGOUT);
       }
     } catch (error) {
-      console.warn('Logout API call failed:', error.message);
-      // Continue with local logout even if API call fails
+      if (!silent) {
+        console.warn('Logout API call failed:', error.message);
+      }
     } finally {
-      // Clear local state
-      this.isAuthenticated = false;
-      this.user = null;
-      this.accessToken = null;
-
-      // Clear localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('role');
-      localStorage.removeItem('parent_id');
-      localStorage.removeItem('teacherId');
-      localStorage.removeItem('adminId');
-
-      console.log('👋 User logged out');
-      toast.info('You have been logged out.');
+      this.clearAuthData();
+      if (!silent) {
+        console.log('👋 User logged out');
+        toast.info('You have been logged out.');
+      }
     }
   }
 
@@ -171,7 +183,17 @@ class AuthService {
       return response.data;
     } catch (error) {
       console.warn('🔐 Token verification failed:', error.message);
-      throw error;
+      
+      // Try to refresh token if verification fails
+      try {
+        await this.refreshToken();
+        // If refresh successful, retry verification
+        const retryResponse = await api.get(API_CONFIG.ENDPOINTS.VERIFY_TOKEN);
+        return retryResponse.data;
+      } catch (refreshError) {
+        console.error('❌ Token refresh failed:', refreshError.message);
+        throw error;
+      }
     }
   }
 
@@ -189,7 +211,7 @@ class AuthService {
 
       const { accessToken, refreshToken: newRefreshToken } = response.data;
       
-      // Update stored accessToken
+      // Update stored tokens
       localStorage.setItem('accessToken', accessToken);
       if (newRefreshToken) {
         localStorage.setItem('refreshToken', newRefreshToken);
@@ -198,12 +220,44 @@ class AuthService {
       this.accessToken = accessToken;
       console.log('🔄 Token refreshed successfully');
       
-      return accessToken;
+      return { accessToken, refreshToken: newRefreshToken };
     } catch (error) {
-      console.error('🔄 Token refresh failed:', error);
+      console.error('❌ Token refresh failed:', error.message);
+      // Clear auth data on refresh failure
       this.logout();
       throw error;
     }
+  }
+
+  // Check if token needs refresh
+  async checkAndRefreshToken() {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return false;
+
+      // Try to verify current token
+      try {
+        await this.verifyToken();
+        return true;
+      } catch (error) {
+        // If verification fails, try to refresh
+        await this.refreshToken();
+        return true;
+      }
+    } catch (error) {
+      console.error('Token check and refresh failed:', error);
+      return false;
+    }
+  }
+
+  // Get current auth state
+  getAuthState() {
+    return {
+      isAuthenticated: this.isAuthenticated,
+      user: this.user,
+      accessToken: this.accessToken,
+      role: this.user?.role || 'none'
+    };
   }
 
   // Get current user

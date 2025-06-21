@@ -4,14 +4,45 @@ import { API_CONFIG } from '../config/api.js';
 class ParentService {
   // Get parent dashboard data
   async getDashboardData() {
-    const response = await api.get(API_CONFIG.ENDPOINTS.PARENT_DASHBOARD);
-    return response.data;
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.PARENT_DASHBOARD);
+      return {
+        success: true,
+        data: response.data,
+        error: null
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      return {
+        success: false,
+        data: null,
+        error: error.response?.data?.message || error.message
+      };
+    }
   }
 
   // Get children list
   async getChildren() {
-    const response = await api.get(API_CONFIG.ENDPOINTS.CHILDREN);
-    return response.data;
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.CHILDREN, {
+        headers: {
+          'X-Request-Source': 'pwa-parent-children',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      return {
+        success: true,
+        data: response.data,
+        error: null
+      };
+    } catch (error) {
+      console.error('Error fetching children:', error);
+      return {
+        success: false,
+        data: null,
+        error: error.response?.data?.message || error.message
+      };
+    }
   }
 
   // Get homework list
@@ -25,12 +56,13 @@ class ParentService {
         .replace(':parentId', parentId)
         .replace(':childId', childId);
       
+      console.log('Fetching homework with URL:', url);
+      
       const response = await api.get(url, {
         headers: {
           'X-Request-Source': 'pwa-parent-homework',
           'Cache-Control': 'no-cache'
-        },
-        timeout: API_CONFIG.TIMEOUT.DEFAULT
+        }
       });
 
       return {
@@ -40,6 +72,11 @@ class ParentService {
       };
     } catch (error) {
       console.error('Error fetching homework:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       return {
         success: false,
         data: null,
