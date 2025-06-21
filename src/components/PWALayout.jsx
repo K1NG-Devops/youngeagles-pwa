@@ -201,8 +201,8 @@ const PWALayout = () => {
   const handleOpenWebsite = async () => {
     // Open the main website in browser - this PWA is standalone
     const mainWebsiteUrl = import.meta.env.DEV 
-      ? 'http://localhost:5173' 
-      : 'https://youngeagles.org.za'
+      ? (import.meta.env.VITE_MAIN_WEBSITE_DEV_URL || 'http://localhost:5173')
+      : (import.meta.env.VITE_MAIN_WEBSITE_URL || 'https://youngeagles.org.za')
     
     window.open(mainWebsiteUrl, '_blank')
     toast.info('Opening main website in browser...')

@@ -97,14 +97,13 @@ const PWALayout = ({ isOnline = true }) => {
   }
 
   const handleOpenWebsite = async () => {
-    // For development, just open in new tab
-    if (import.meta.env.DEV) {
-      window.open('http://localhost:5173', '_blank')
-      toast.info('Opening main website in new tab...')
-    } else {
-      openFullWebsite()
-      toast.info('Opening full website in browser...')
-    }
+    // Open the main website in browser
+    const mainWebsiteUrl = import.meta.env.DEV 
+      ? (import.meta.env.VITE_MAIN_WEBSITE_DEV_URL || 'http://localhost:5173')
+      : (import.meta.env.VITE_MAIN_WEBSITE_URL || 'https://youngeagles.org.za')
+    
+    window.open(mainWebsiteUrl, '_blank')
+    toast.info('Opening main website in browser...')
   }
 
   // Navigation items based on user role

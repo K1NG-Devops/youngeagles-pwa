@@ -16,12 +16,18 @@ export default defineConfig({
     }
   },
   server: {
+    port: 3002,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_LOCAL_URL || 'http://localhost:3001',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
+  },
+  define: {
+    // Ensure environment variables are available at build time
+    __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
   }
 })

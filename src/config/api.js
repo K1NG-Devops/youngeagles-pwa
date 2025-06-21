@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   // Base URLs
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://youngeagles-api-server.up.railway.app/api',
-  LOCAL_URL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  LOCAL_URL: import.meta.env.VITE_API_LOCAL_URL || 'http://localhost:3001/api',
   
   // Environment detection
   isDevelopment: import.meta.env.DEV,
