@@ -6,8 +6,9 @@ The following has been set up and deployed:
 
 1. **Enhanced `vercel.json`** with auto-deployment configuration
 2. **GitHub Actions workflow** for automated builds
-3. **Project linked** to Vercel (Project ID: `prj_gsLRAS2nH81zEuq49QtFa2Prl6uS`)
+3. **Project linked** to Vercel (Project ID: `prj_m6XZikJAryf2hxfNGSz4HzUbepJ9`)
 4. **Security headers** and service worker caching configured
+5. **Environment variables** configured for production deployment
 
 ## 🔧 **Manual Steps Required**
 
@@ -20,25 +21,22 @@ The following has been set up and deployed:
 5. Select `K1NG-Devops/youngeagles-pwa`
 6. Ensure **Production Branch** is set to `main`
 
-### **Step 2: Configure Environment Variables**
+### **Step 2: Environment Variables** ✅ **COMPLETED**
 
-In Vercel Dashboard → Settings → Environment Variables, add:
+Environment variables have been automatically configured via CLI:
 
 ```env
-VITE_API_BASE_URL=https://youngeagles-api-server.up.railway.app/api
-VITE_API_LOCAL_URL=http://localhost:3001/api
-VITE_FORCE_LOCAL_API=false
-VITE_ENABLE_PUSH_NOTIFICATIONS=true
-VITE_ENABLE_OFFLINE_MODE=true
-VITE_ENABLE_ANALYTICS=false
-VITE_DEBUG_MODE=false
-VITE_MAIN_WEBSITE_URL=https://youngeagles.org.za
-VITE_MAIN_WEBSITE_DEV_URL=http://localhost:5173
+✅ VITE_API_BASE_URL=https://youngeagles-api-server.up.railway.app/api (Production)
+✅ VITE_API_LOCAL_URL=http://localhost:3001/api (Development)
+✅ VITE_FORCE_LOCAL_API=false (Production)
+✅ VITE_MAIN_WEBSITE_URL=https://youngeagles.org.za (Production)
 ```
 
-**For each variable:**
-- Environment: `Production`, `Preview`, `Development`
-- Branch: `main` (for Production)
+**Additional variables can be added via CLI:**
+```bash
+npx vercel env add VARIABLE_NAME production
+npx vercel env add VARIABLE_NAME development
+```
 
 ### **Step 3: Configure GitHub Secrets (Optional - for GitHub Actions)**
 
@@ -50,7 +48,7 @@ If you want to use GitHub Actions instead of Vercel Git integration:
 ```
 VERCEL_TOKEN=<your_vercel_token>
 VERCEL_ORG_ID=team_giHKj8I9KO4Lt858w2ADYKb6
-VERCEL_PROJECT_ID=prj_gsLRAS2nH81zEuq49QtFa2Prl6uS
+VERCEL_PROJECT_ID=prj_m6XZikJAryf2hxfNGSz4HzUbepJ9
 ```
 
 **To get VERCEL_TOKEN:**
@@ -111,7 +109,7 @@ After completing manual steps:
 | GitHub Actions | ✅ Complete | Workflow file created |
 | Vercel Project | ✅ Linked | Project ID configured |
 | Git Connection | ⚠️ Manual | Needs dashboard setup |
-| Environment Vars | ⚠️ Manual | Needs dashboard setup |
+| Environment Vars | ✅ Complete | Configured via CLI |
 | Auto-Deploy | ⚠️ Pending | After manual steps |
 
 ## 🎯 **Expected Behavior After Setup**
