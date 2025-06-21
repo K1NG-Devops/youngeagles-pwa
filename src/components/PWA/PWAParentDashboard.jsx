@@ -5,7 +5,7 @@ import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { API_CONFIG } from '../../config/api';
-import { parentService } from '../../services';
+import parentService from '../../services/parentService';
 
 const PWAParentDashboard = () => {
   const navigate = useNavigate();

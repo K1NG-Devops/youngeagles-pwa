@@ -280,5 +280,7 @@ class ParentService {
 // Create singleton instance
 const parentService = new ParentService();
 
+// Export both the class and the singleton instance
+export { ParentService, parentService };
 export default parentService;
 

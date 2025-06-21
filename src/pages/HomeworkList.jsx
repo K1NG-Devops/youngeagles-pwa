@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import useAuth from '../hooks/useAuth';
 import { api } from '../services/httpClient';
 import { API_CONFIG } from '../config/api';
-import { parentService } from '../services';
+import parentService from '../services/parentService';
 
 // Error handler for homework fetch errors - moved outside component to prevent re-renders
 const handleHomeworkError = (err, navigate, isTeacher) => {
