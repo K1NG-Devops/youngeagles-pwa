@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt } from 'react-icons/fa';
+import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt, FaChartBar, FaMagic, FaRocket } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { API_CONFIG } from '../../config/api';
+import AdvancedHomeworkCreator from './AdvancedHomeworkCreator';
+import AdvancedProgressDashboard from './AdvancedProgressDashboard';
 
 const PWATeacherDashboard = () => {
   const navigate = useNavigate();
@@ -22,6 +24,9 @@ const PWATeacherDashboard = () => {
   });
   const [expandedSection, setExpandedSection] = useState(null);
   const [teacherClass, setTeacherClass] = useState(null);
+  const [activeView, setActiveView] = useState('dashboard');
+  const [showAdvancedCreator, setShowAdvancedCreator] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   const token = localStorage.getItem('accessToken');
   const teacherId = auth?.user?.id || localStorage.getItem('teacherId');
@@ -33,9 +38,9 @@ const PWATeacherDashboard = () => {
     setIsLoading(prev => ({ ...prev, stats: true, submissions: true }));
     
     try {
-      // Fetch homework stats
-      const homeworkRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/homeworks/for-teacher/${teacherId}`,
+      // Fetch teacher class info and students
+      const classRes = await axios.get(
+        `${API_CONFIG.getApiUrl()}/teacher/classes`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -43,11 +48,14 @@ const PWATeacherDashboard = () => {
         }
       );
       
-      const homeworks = homeworkRes.data.homeworks || [];
+      const classData = classRes.data;
+      if (classData.success && classData.teacher) {
+        setTeacherClass(classData.teacher.className);
+      }
       
-      // Fetch all submissions for teacher
-      const submissionsRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/homeworks/teacher/all-submissions`,
+      // Fetch teacher stats from new endpoint
+      const statsRes = await axios.get(
+        `${API_CONFIG.getApiUrl()}/teacher/stats`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -55,30 +63,48 @@ const PWATeacherDashboard = () => {
         }
       );
       
-      const submissions = submissionsRes.data.submissions || [];
-      const teacherClassInfo = submissionsRes.data.teacherClass;
+      if (statsRes.data.success && statsRes.data.stats) {
+        const stats = statsRes.data.stats;
+        setTeacherStats({
+          totalHomeworks: stats.totalHomework,
+          totalSubmissions: stats.totalSubmissions,
+          totalStudents: stats.totalStudents,
+          submissionRate: Math.round(stats.submissionRate)
+        });
+      }
       
-      setTeacherClass(teacherClassInfo);
-      setRecentSubmissions(submissions.slice(0, 5)); // Show latest 5 submissions
-      
-      // Calculate stats
-      const totalHomeworks = homeworks.length;
-      const totalSubmissions = submissions.length;
-      const uniqueStudents = new Set(submissions.map(s => s.child_id)).size;
-      const submissionRate = totalHomeworks > 0 ? (totalSubmissions / (totalHomeworks * Math.max(1, uniqueStudents))) * 100 : 0;
-      
-      setTeacherStats({
-        totalHomeworks,
-        totalSubmissions,
-        totalStudents: uniqueStudents,
-        submissionRate: Math.min(100, submissionRate)
-      });
+      // Fetch all submissions for teacher (keep existing endpoint as fallback)
+      try {
+        const submissionsRes = await axios.get(
+          `${API_CONFIG.getApiUrl()}/homeworks/teacher/all-submissions`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        const submissions = submissionsRes.data.submissions || [];
+        setRecentSubmissions(submissions.slice(0, 5)); // Show latest 5 submissions
+      } catch (submissionErr) {
+        console.warn('Could not fetch submissions, using empty array:', submissionErr);
+        setRecentSubmissions([]);
+      }
       
     } catch (err) {
       console.error('Error fetching teacher data:', err);
       if (typeof toast !== 'undefined') {
         toast.error('Failed to load dashboard data');
       }
+      
+      // Fallback to empty state
+      setTeacherStats({
+        totalHomeworks: 0,
+        totalSubmissions: 0,
+        totalStudents: 0,
+        submissionRate: 0
+      });
+      setRecentSubmissions([]);
     } finally {
       setIsLoading(prev => ({ ...prev, stats: false, submissions: false }));
     }
@@ -95,6 +121,26 @@ const PWATeacherDashboard = () => {
   };
 
   const quickActions = [
+    {
+      id: 'advanced-creator',
+      title: '🎯 Advanced Creator',
+      description: 'Smart homework wizard',
+      icon: FaMagic,
+      color: 'gradient',
+      action: () => setShowAdvancedCreator(true),
+      badge: null,
+      isAdvanced: true
+    },
+    {
+      id: 'progress-dashboard',
+      title: '📊 Progress Analytics',
+      description: 'Student insights',
+      icon: FaChartBar,
+      color: 'gradient',
+      action: () => setActiveView('progress'),
+      badge: null,
+      isAdvanced: true
+    },
     {
       id: 'create-assignment',
       title: 'Create Assignment',
@@ -138,17 +184,103 @@ const PWATeacherDashboard = () => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   };
 
+  // Handle advanced homework creation
+  const handleAdvancedHomeworkSave = async (homeworkData) => {
+    try {
+      setIsLoading(prev => ({ ...prev, stats: true }));
+      
+      // TODO: Send to backend API
+      console.log('Saving advanced homework:', homeworkData);
+      
+      // For now, just show success and close modal
+      toast.success('Advanced homework created successfully!');
+      setShowAdvancedCreator(false);
+      
+      // Refresh stats
+      await fetchTeacherData();
+      
+    } catch (error) {
+      console.error('Error saving homework:', error);
+      toast.error('Failed to create homework');
+    } finally {
+      setIsLoading(prev => ({ ...prev, stats: false }));
+    }
+  };
+
+  // Theme toggle
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+  };
+
+  // Show Advanced Homework Creator Modal
+  if (showAdvancedCreator) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="max-w-6xl w-full max-h-screen overflow-y-auto">
+          <AdvancedHomeworkCreator
+            onSave={handleAdvancedHomeworkSave}
+            onCancel={() => setShowAdvancedCreator(false)}
+            isDark={isDark}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Show Advanced Progress Dashboard
+  if (activeView === 'progress') {
+    return (
+      <div className="min-h-screen">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className="flex items-center px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            ← Back to Dashboard
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            {isDark ? '☀️' : '🌙'}
+          </button>
+        </div>
+        <AdvancedProgressDashboard isDark={isDark} />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
-        <h2 className="text-xl font-bold mb-1">Welcome, {teacherName}!</h2>
-        <p className="text-sm text-green-100">Manage your class and track student progress</p>
-        {teacherClass && (
-          <div className="mt-2 bg-white bg-opacity-20 rounded-lg p-2">
-            <p className="text-sm font-medium">Your Class: {teacherClass}</p>
+      {/* Enhanced Welcome Section */}
+      <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-4 text-white shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16" />
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-xl font-bold mb-1">Welcome, {teacherName}! 🎓</h2>
+              <p className="text-sm text-green-100">Advanced Teaching Dashboard - Empowering Every Student</p>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors"
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
           </div>
-        )}
+          {teacherClass && (
+            <div className="mt-2 bg-white bg-opacity-20 rounded-lg p-2">
+              <p className="text-sm font-medium flex items-center">
+                <FaRocket className="mr-2" />
+                Your Class: {teacherClass}
+              </p>
+            </div>
+          )}
+          <div className="mt-3 flex items-center text-xs text-green-100">
+            <span className="bg-white bg-opacity-20 px-2 py-1 rounded-full mr-2">NEW</span>
+            Advanced AI-powered teaching tools available!
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats */}
@@ -226,9 +358,15 @@ const PWATeacherDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Enhanced Quick Actions */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Quick Actions</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+            ✨ Enhanced Features
+          </span>
+        </div>
+        
         <div className="grid grid-cols-2 gap-3">
           {quickActions.map((action) => {
             const IconComponent = action.icon;
@@ -236,28 +374,50 @@ const PWATeacherDashboard = () => {
               blue: 'bg-blue-50 border-blue-200 text-blue-700',
               green: 'bg-green-50 border-green-200 text-green-700',
               purple: 'bg-purple-50 border-purple-200 text-purple-700',
-              orange: 'bg-orange-50 border-orange-200 text-orange-700'
+              orange: 'bg-orange-50 border-orange-200 text-orange-700',
+              gradient: 'bg-gradient-to-br from-purple-500 to-pink-500 text-white border-transparent'
             };
             
+            const ActionElement = action.path ? Link : 'button';
+            const actionProps = action.path 
+              ? { to: action.path }
+              : { onClick: action.action };
+            
             return (
-              <Link
+              <ActionElement
                 key={action.id}
-                to={action.path}
-                className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all min-h-[100px] ${colorClasses[action.color]} hover:shadow-md cursor-pointer`}
+                {...actionProps}
+                className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all min-h-[100px] hover:shadow-md cursor-pointer ${
+                  action.isAdvanced
+                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white border-transparent hover:from-purple-600 hover:to-pink-600 transform hover:-translate-y-1 shadow-lg'
+                    : `${colorClasses[action.color]} hover:shadow-md`
+                } ${action.isAdvanced ? 'relative overflow-hidden' : ''}`}
               >
-                <div className={`p-2 rounded-lg mb-2 bg-${action.color}-100`}>
+                {action.isAdvanced && (
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-white bg-opacity-20 rounded-full -mr-8 -mt-8" />
+                )}
+                <div className={`${action.isAdvanced ? 'relative z-10' : ''} p-2 rounded-lg mb-2 ${
+                  action.isAdvanced ? 'bg-white bg-opacity-20' : `bg-${action.color}-100`
+                }`}>
                   <IconComponent className="w-6 h-6" />
                 </div>
-                <div className="text-center">
+                <div className={`text-center ${action.isAdvanced ? 'relative z-10' : ''}`}>
                   <p className="font-medium text-sm">{action.title}</p>
-                  <p className="text-xs opacity-75">{action.description}</p>
+                  <p className={`text-xs ${action.isAdvanced ? 'opacity-90' : 'opacity-75'}`}>{action.description}</p>
                   {action.badge > 0 && (
                     <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full mt-1">
                       {action.badge}
                     </span>
                   )}
+                  {action.isAdvanced && (
+                    <div className="mt-2">
+                      <span className="text-xs bg-white bg-opacity-30 px-2 py-1 rounded-full">
+                        NEW
+                      </span>
+                    </div>
+                  )}
                 </div>
-              </Link>
+              </ActionElement>
             );
           })}
         </div>

@@ -55,6 +55,36 @@ body {
   background-color: #1d4ed8;
 }
 
+/* Dark mode support */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+.dark .pwa-container {
+  background-color: #111827;
+}
+
+.dark .pwa-header {
+  background-color: #1f2937;
+  border-bottom: 1px solid #374151;
+}
+
+.dark .pwa-card {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+}
+
+/* Theme transition */
+* {
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
 /* Offline indicator */
 .offline-indicator {
   position: fixed;

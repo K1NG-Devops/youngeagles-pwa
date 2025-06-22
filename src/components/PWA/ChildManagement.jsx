@@ -37,7 +37,13 @@ const calculateAge = (dob) => {
 };
 
 const formatDate = (dateString) => {
+  if (!dateString) return '';
   const date = new Date(dateString);
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date provided to formatDate:', dateString);
+    return '';
+  }
   return date.toISOString().split('T')[0];
 };
 
@@ -171,19 +177,38 @@ const ChildManagement = () => {
         status: response.status,
         data: response.data,
         dataType: typeof response.data,
-        isArray: Array.isArray(response.data)
+        isArray: Array.isArray(response.data),
+        hasSuccess: response.data?.success,
+        hasDataArray: Array.isArray(response.data?.data)
       });
       
-      const childrenData = Array.isArray(response.data) ? response.data : response.data.children || [];
+      // Backend returns { success: true, data: [...] } structure
+      const childrenData = response.data.success && Array.isArray(response.data.data) 
+        ? response.data.data 
+        : [];
+      
+      // Add profile status detection
+      const processedChildren = childrenData.map(child => ({
+        ...child,
+        profileStatus: child.profile_data ? 'complete' : 'basic',
+        hasExtendedProfile: Boolean(child.profile_data && 
+          (child.profile_data.medical || child.profile_data.emergencyContacts || 
+           child.profile_data.dietary || child.profile_data.academic))
+      }));
       
       console.log('ChildManagement: Processed children data:', {
-        count: childrenData.length,
-        children: childrenData.map(child => ({ id: child.id, name: child.name }))
+        count: processedChildren.length,
+        children: processedChildren.map(child => ({ 
+          id: child.id, 
+          name: child.name, 
+          profileStatus: child.profileStatus,
+          hasExtendedProfile: child.hasExtendedProfile
+        }))
       });
       
-      setChildren(childrenData);
+      setChildren(processedChildren);
       
-      if (childrenData.length === 0) {
+      if (processedChildren.length === 0) {
         console.log('ChildManagement: No children found for parent', parentId);
       }
     } catch (error) {
@@ -239,7 +264,7 @@ const ChildManagement = () => {
     const setCurrentData = isEditing ? setEditProfileData : setProfileData;
     
     setCurrentData(prev => ({
-      ...prev,
+        ...prev,
       emergencyContacts: prev.emergencyContacts.map((contact, i) =>
         i === index ? { ...contact, [field]: value } : contact
       )
@@ -252,7 +277,7 @@ const ChildManagement = () => {
     const setCurrentData = isEditing ? setEditProfileData : setProfileData;
     
     setCurrentData(prev => ({
-      ...prev,
+        ...prev,
       emergencyContacts: [
         ...prev.emergencyContacts,
         { name: '', relationship: '', phone: '', email: '', isPrimary: false }
@@ -279,23 +304,23 @@ const ChildManagement = () => {
     const loadingKey = isEditing ? 'edit' : 'register';
     setLoading(prev => ({ ...prev, [loadingKey]: true }));
     setResponseMessage('');
-
+    
     const currentData = isEditing ? editProfileData : profileData;
     const parentId = currentData.parent_id || profileData.parent_id;
-
+    
     if (!parentId) {
       setResponseMessage('Parent ID is missing or invalid. Please log in again.');
       setLoading(prev => ({ ...prev, [loadingKey]: false }));
       return;
     }
-
+    
     // Validate required fields
     if (!currentData.name || !currentData.dob || !currentData.gender) {
       setResponseMessage('Please fill out all required basic information fields.');
       setLoading(prev => ({ ...prev, [loadingKey]: false }));
       return;
     }
-
+    
     const data = {
       // Basic info
       name: currentData.name,
@@ -348,7 +373,7 @@ const ChildManagement = () => {
         }
       }
     };
-
+    
     try {
       let response;
       
@@ -359,9 +384,9 @@ const ChildManagement = () => {
         setResponseMessage('Child profile updated successfully!');
         
         // Reset editing state
-        setIsEditing(false);
-        setEditingChild(null);
-        setActiveTab('manage');
+      setIsEditing(false);
+      setEditingChild(null);
+      setActiveTab('manage');
       } else {
         // Create new child
         response = await api.post('/auth/register-child', data);
@@ -425,8 +450,15 @@ const ChildManagement = () => {
 
   // Start editing a child
   const startEditing = (child) => {
+    console.log('🎯 startEditing called with child:', child);
+    console.log('🎯 Current activeTab:', activeTab);
+    console.log('🎯 Current isEditing:', isEditing);
+    
     // Load existing data if available
     const profile = child.profile_data || {};
+    
+    console.log('🎯 Profile data:', profile);
+    console.log('🎯 Child DOB value:', child.dob, 'Type:', typeof child.dob);
     
     setEditProfileData({
       id: child.id,
@@ -481,10 +513,18 @@ const ChildManagement = () => {
       routinePreferences: profile.parentNotes?.routine || ''
     });
     
+    console.log('🎯 Setting editing state...');
     setEditingChild(child.id);
     setIsEditing(true);
     setActiveTab('edit');
     setActiveProfileSection('basic');
+    
+    console.log('🎯 State should be updated to:', {
+      editingChild: child.id,
+      isEditing: true,
+      activeTab: 'edit',
+      activeProfileSection: 'basic'
+    });
   };
   
   // Cancel editing
@@ -493,7 +533,7 @@ const ChildManagement = () => {
     setIsEditing(false);
     setActiveTab('manage');
   };
-
+  
   // Delete child
   const handleDeleteChild = async (childId) => {
     if (!window.confirm('Are you sure you want to delete this child\'s profile? This action cannot be undone.')) {
@@ -615,76 +655,76 @@ const ChildManagement = () => {
         <FaUser className="mr-2" />
         Basic Information
       </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
           <label className="block mb-1 font-semibold text-red-500">Full Name *</label>
-          <input
-            type="text"
-            name="name"
+            <input
+              type="text"
+              name="name"
             value={data.name}
             onChange={handleProfileChange}
-            required
+              required
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter child's full name"
-          />
-        </div>
-        <div>
+            />
+          </div>
+          <div>
           <label className="block mb-1 font-semibold text-red-500">Date of Birth *</label>
-          <input
-            type="date"
-            name="dob"
+            <input
+              type="date"
+              name="dob"
             value={data.dob}
             onChange={handleProfileChange}
-            required
+              required
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-semibold">Age</label>
-          <input
-            type="number"
-            name="age"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Age</label>
+            <input
+              type="number"
+              name="age"
             value={data.age}
-            readOnly
-            className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
-          />
-        </div>
-        <div>
+              readOnly
+              className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
+            />
+          </div>
+          <div>
           <label className="block mb-1 font-semibold text-red-500">Gender *</label>
-          <select
-            name="gender"
+            <select
+              name="gender"
             value={data.gender}
             onChange={handleProfileChange}
-            required
+              required
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div>
-          <label className="block mb-1 font-semibold">Grade</label>
-          <input
-            type="text"
-            name="grade"
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Grade</label>
+            <input
+              type="text"
+              name="grade"
             value={data.grade}
-            readOnly
-            className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
-          />
-        </div>
-        <div>
+              readOnly
+              className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
+            />
+          </div>
+          <div>
           <label className="block mb-1 font-semibold">Class</label>
-          <input
-            type="text"
-            name="className"
+            <input
+              type="text"
+              name="className"
             value={data.className}
-            readOnly
-            className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
-          />
+              readOnly
+              className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
+            />
+          </div>
         </div>
-      </div>
     </div>
   );
 
@@ -1202,23 +1242,23 @@ const ChildManagement = () => {
                 Next
               </button>
             ) : (
-              <button
-                type="submit"
+        <button
+          type="submit"
                 className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition flex items-center"
-                disabled={loading.register}
-              >
-                {loading.register ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
+          disabled={loading.register}
+        >
+          {loading.register ? (
+            <>
+              <FaSpinner className="animate-spin mr-2" />
                     Creating Profile...
-                  </>
-                ) : (
-                  <>
+            </>
+          ) : (
+            <>
                     <FaCheck className="mr-2" />
                     Create Profile
-                  </>
-                )}
-              </button>
+            </>
+          )}
+        </button>
             )}
           </div>
         </div>
@@ -1260,28 +1300,28 @@ const ChildManagement = () => {
         <div className="space-y-4">
           {children.map(child => {
             const profile = child.profile_data || {};
-            const hasExtendedProfile = Object.keys(profile).length > 0;
+            const hasExtendedProfile = child.profileStatus === 'complete' || Object.keys(profile).length > 0;
             
             return (
               <div key={child.id} className="border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition">
                 {/* Child Header */}
                 <div className="p-4 border-b border-gray-100">
-                  <div className="flex justify-between items-start">
+              <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                           <FaChild className="text-blue-600 text-xl" />
-                        </div>
-                        <div>
+                    </div>
+                    <div>
                           <h4 className="text-lg font-semibold text-gray-800">{child.name}</h4>
                           <p className="text-sm text-gray-500">
                             {child.age} years old • {child.className}
                           </p>
-                        </div>
-                      </div>
+                    </div>
+                    </div>
                     </div>
                     
-                    <div className="flex space-x-2">
+                <div className="flex space-x-2">
                       <button
                         onClick={() => viewChildProfile(child)}
                         className="bg-green-600 text-white p-2 rounded-md hover:bg-green-700 transition"
@@ -1289,27 +1329,27 @@ const ChildManagement = () => {
                       >
                         <FaEye />
                       </button>
-                      <button
-                        onClick={() => startEditing(child)}
-                        className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition"
+                  <button
+                    onClick={() => startEditing(child)}
+                    className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition"
                         title="Edit Profile"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteChild(child.id)}
-                        className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 transition"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteChild(child.id)}
+                    className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 transition"
                         title="Delete Profile"
-                        disabled={isDeleting && deletingChildId === child.id}
-                      >
-                        {isDeleting && deletingChildId === child.id ? 
-                          <FaSpinner className="animate-spin" /> : 
-                          <FaTrash />
-                        }
-                      </button>
-                    </div>
-                  </div>
+                    disabled={isDeleting && deletingChildId === child.id}
+                  >
+                    {isDeleting && deletingChildId === child.id ? 
+                      <FaSpinner className="animate-spin" /> : 
+                      <FaTrash />
+                    }
+                  </button>
                 </div>
+              </div>
+            </div>
                 
                 {/* Quick Info */}
                 <div className="p-4">
@@ -1378,7 +1418,10 @@ const ChildManagement = () => {
                           <strong>Incomplete Profile:</strong> Add medical information, emergency contacts, and preferences for better care.
                         </p>
                         <button
-                          onClick={() => startEditing(child)}
+                          onClick={() => {
+                            console.log('🎯 Complete Profile button clicked for child:', child.name);
+                            startEditing(child);
+                          }}
                           className="mt-2 text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition"
                         >
                           Complete Profile
@@ -1404,15 +1447,15 @@ const ChildManagement = () => {
     return (
       <>
         <div className="flex items-center mb-6">
-          <button 
+        <button 
             onClick={() => {
               setViewingChild(null);
               setActiveTab('manage');
             }}
             className="mr-3 text-blue-600 hover:text-blue-800"
-          >
-            <FaArrowLeft />
-          </button>
+        >
+          <FaArrowLeft />
+        </button>
           <div className="flex items-center space-x-3">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <FaChild className="text-blue-600 text-2xl" />
@@ -1431,8 +1474,8 @@ const ChildManagement = () => {
               Edit Profile
             </button>
           </div>
-        </div>
-
+      </div>
+      
         <div className="space-y-6">
           {/* Basic Information */}
           <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -1441,33 +1484,33 @@ const ChildManagement = () => {
               Basic Information
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+          <div>
                 <label className="block text-sm font-medium text-gray-600">Full Name</label>
                 <p className="mt-1 text-gray-900">{viewingChild.name}</p>
-              </div>
-              <div>
+          </div>
+          <div>
                 <label className="block text-sm font-medium text-gray-600">Date of Birth</label>
                 <p className="mt-1 text-gray-900">{new Date(viewingChild.dob).toLocaleDateString()}</p>
-              </div>
-              <div>
+          </div>
+          <div>
                 <label className="block text-sm font-medium text-gray-600">Age</label>
                 <p className="mt-1 text-gray-900">{viewingChild.age} years old</p>
-              </div>
-              <div>
+          </div>
+          <div>
                 <label className="block text-sm font-medium text-gray-600">Gender</label>
                 <p className="mt-1 text-gray-900 capitalize">{viewingChild.gender}</p>
-              </div>
-              <div>
+          </div>
+          <div>
                 <label className="block text-sm font-medium text-gray-600">Grade</label>
                 <p className="mt-1 text-gray-900">{viewingChild.grade}</p>
-              </div>
-              <div>
+          </div>
+          <div>
                 <label className="block text-sm font-medium text-gray-600">Class</label>
                 <p className="mt-1 text-gray-900">{viewingChild.className}</p>
               </div>
-            </div>
           </div>
-
+        </div>
+        
           {/* Medical Information */}
           {profile.medical && Object.values(profile.medical).some(val => val) && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -1808,23 +1851,23 @@ const ChildManagement = () => {
                 Next
               </button>
             ) : (
-              <button
-                type="submit"
+          <button
+            type="submit"
                 className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition flex items-center"
-                disabled={loading.edit}
-              >
-                {loading.edit ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
+            disabled={loading.edit}
+          >
+            {loading.edit ? (
+              <>
+                <FaSpinner className="animate-spin mr-2" />
                     Saving Changes...
-                  </>
-                ) : (
-                  <>
-                    <FaCheck className="mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </button>
+              </>
+            ) : (
+              <>
+                <FaCheck className="mr-2" />
+                Save Changes
+              </>
+            )}
+          </button>
             )}
           </div>
         </div>
@@ -1832,28 +1875,36 @@ const ChildManagement = () => {
     </>
   );
 
+  console.log('🎯 ChildManagement render - Current state:', {
+    activeTab,
+    isEditing,
+    editingChild,
+    childrenCount: children.length,
+    activeProfileSection
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 p-4 md:p-6">
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-lg">
         <div className="p-6 md:p-8">
-          <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
+        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
             Child Profile Management
-          </h2>
-          
-          {renderTabs()}
-          
-          {activeTab === 'register' && renderRegisterForm()}
-          {activeTab === 'manage' && renderChildrenList()}
+        </h2>
+        
+        {renderTabs()}
+        
+        {activeTab === 'register' && renderRegisterForm()}
+        {activeTab === 'manage' && renderChildrenList()}
           {activeTab === 'view' && renderProfileView()}
-          {activeTab === 'edit' && renderEditForm()}
-          
+        {activeTab === 'edit' && renderEditForm()}
+        
           <div className="mt-8 pt-6 border-t border-gray-200">
-            <Link
-              to="/dashboard"
+          <Link
+            to="/dashboard"
               className="block text-center bg-gray-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-700 transition"
-            >
-              Back to Dashboard
-            </Link>
+          >
+            Back to Dashboard
+          </Link>
           </div>
         </div>
       </div>

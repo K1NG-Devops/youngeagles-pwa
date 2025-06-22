@@ -4,6 +4,7 @@ import { FaHome, FaBook, FaBell, FaUser, FaChalkboardTeacher, FaExternalLinkAlt,
 import useAuth from '../hooks/useAuth'
 import usePWA from '../hooks/usePWA'
 import { toast } from 'react-toastify'
+import { useTheme } from '../hooks/useTheme.jsx'
 
 // Import dashboard components
 import PWAParentDashboard from './PWA/PWAParentDashboard'
@@ -17,7 +18,8 @@ import Register from './Register'
 import PasswordReset from './PasswordReset'
 import TeacherLogin from './TeacherLogin'
 import AuthTest from './AuthTest'
-import MessagingCenter from './MessagingCenter'
+import WhatsAppMessaging from './MessagingSystem/WhatsAppMessaging'
+import TopNotificationManager from './TopNotificationManager'
 import PrivateRoutePWA from './PWA/PrivateRoutePWA'
 import AdminLogin from './AdminLogin'
 import Registration2026 from '../pages/Registration2026'
@@ -35,8 +37,8 @@ const PWALayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { logout } = useAuth()
-  // Get the isOnline state from usePWA (which is always true)
   const { isOnline } = usePWA()
+  const { isDark } = useTheme()
   
   // Simple localStorage-based auth like the full website
   const accessToken = localStorage.getItem('accessToken')
@@ -263,9 +265,10 @@ const PWALayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} flex flex-col transition-colors duration-200`}>
+      <TopNotificationManager />
       {/* Mobile-First PWA Header */}
-      <header className="bg-blue-600 text-white px-3 py-2 shadow-lg">
+      <header className={`${isDark ? 'bg-gray-800' : 'bg-blue-600'} text-white px-3 py-2 shadow-lg transition-colors duration-200`}>
         <div className="flex justify-between items-center">
           {/* Logo and Title - Simplified for mobile */}
           <div className="flex items-center space-x-2">
@@ -278,7 +281,7 @@ const PWALayout = () => {
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2">
               <h1 className="text-sm sm:text-lg font-bold">Young Eagles</h1>
-              <span className="hidden sm:inline text-xs bg-blue-500 px-1.5 py-0.5 rounded-full">PWA</span>
+              <span className={`hidden sm:inline text-xs px-1.5 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-blue-500'} transition-colors duration-200`}>PWA</span>
             </div>
           </div>
           
@@ -287,7 +290,7 @@ const PWALayout = () => {
             {/* Only show essential actions on mobile */}
             <button
               onClick={handleOpenWebsite}
-              className="p-2 hover:bg-blue-500 rounded-lg transition-colors duration-200 hidden sm:block"
+              className={`p-2 rounded-lg transition-colors duration-200 hidden sm:block ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-500'}`}
               title="Open full website"
             >
               <FaExternalLinkAlt className="text-sm" />
@@ -296,7 +299,7 @@ const PWALayout = () => {
             {/* Mobile menu button / Profile */}
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-blue-500 rounded-lg transition-colors duration-200"
+              className={`p-2 rounded-lg transition-colors duration-200 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-500'}`}
               title="Profile & Logout"
             >
               <FaUser className="text-sm" />
@@ -306,17 +309,20 @@ const PWALayout = () => {
         
         {/* User info - Mobile optimized */}
         {auth?.user && (
-          <div className="mt-1 text-xs sm:text-sm opacity-90 truncate">
-            <span className="font-medium">{auth.user.name || auth.user.email}</span>
-            <span className="ml-2 text-xs bg-blue-500 px-1.5 py-0.5 rounded uppercase">
-              {auth.user.role}
+          <div className="mt-2 text-xs sm:text-sm">
+            <span className={`${isDark ? 'text-gray-300' : 'text-blue-100'}`}>
+              Welcome, {auth.user.name || 'User'}
+            </span>
+            <span className={`mx-2 ${isDark ? 'text-gray-500' : 'text-blue-300'}`}>•</span>
+            <span className={`${isDark ? 'text-gray-400' : 'text-blue-200'} capitalize`}>
+              {auth.user.role || 'Student'}
             </span>
           </div>
         )}
       </header>
 
-      {/* Main Content - Mobile optimized */}
-      <main className="flex-1 overflow-auto pb-16 sm:pb-20">
+      {/* Main Content - Full Viewport Width, No Padding */}
+      <main className="flex-1 overflow-hidden">
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -331,7 +337,7 @@ const PWALayout = () => {
             <Route path="/dashboard" element={<PWAParentDashboard />} />
             <Route path="/student/homework" element={<HomeworkList />} />
             <Route path="/submit-work" element={<SubmitWork />} />
-            <Route path="/messages" element={<MessagingCenter />} />
+            <Route path="/messages" element={<WhatsAppMessaging />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/manage-children" element={<ChildManagement />} />
             <Route path="/teacher-dashboard" element={<PWATeacherDashboard />} />
@@ -354,9 +360,13 @@ const PWALayout = () => {
         </Routes>
       </main>
 
-      {/* Mobile-First Bottom Navigation */}
+      {/* Mobile-First Bottom Navigation - Theme Aware */}
       {auth?.user && navigationItems.length > 0 && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+        <nav className={`fixed bottom-0 left-0 right-0 border-t shadow-lg transition-colors duration-200 ${
+          isDark 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-white border-gray-200'
+        }`}>
           <div className="flex justify-around items-center h-16 px-2">
             {navigationItems.map((item) => {
               const IconComponent = item.icon
@@ -371,8 +381,12 @@ const PWALayout = () => {
                   }}
                   className={`flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-lg transition-colors duration-200 min-h-[48px] ${
                     isActive 
-                      ? 'text-blue-600 bg-blue-50' 
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                      ? isDark
+                        ? 'text-blue-400 bg-blue-900/50'
+                        : 'text-blue-600 bg-blue-50'
+                      : isDark
+                        ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700'
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                 >
                   <IconComponent className={`${isActive ? 'text-xl' : 'text-lg'} mb-1`} />

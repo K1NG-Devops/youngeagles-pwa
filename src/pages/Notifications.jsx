@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaCheck, FaTrash, FaEye, FaClock, FaExclamationTriangle, FaInfo, FaCheckCircle, FaSpinner } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../components/TopNotificationManager';
 import useAuth from '../hooks/useAuth';
 import parentService from '../services/parentService';
+import FloatingBackButton from '../components/FloatingBackButton';
 
 const Notifications = () => {
   const { auth } = useAuth();
@@ -22,7 +23,7 @@ const Notifications = () => {
         setNotifications(Array.isArray(res) ? res : res.notifications || []);
       } catch (err) {
         setError('Failed to load notifications');
-        toast.error('Failed to load notifications');
+        showTopNotification('Failed to load notifications', 'error');
       } finally {
         setIsLoading(false);
       }
@@ -53,9 +54,9 @@ const Notifications = () => {
             : notification
         )
       );
-      toast.success('Notification marked as read');
+      showTopNotification('Notification marked as read', 'success');
     } catch (err) {
-      toast.error('Failed to update notification');
+      showTopNotification('Failed to update notification', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -68,9 +69,9 @@ const Notifications = () => {
         notifications.filter(n => !n.read).map(n => parentService.markNotificationAsRead(n.id))
       );
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      toast.success('All notifications marked as read');
+      showTopNotification('All notifications marked as read', 'success');
     } catch (err) {
-      toast.error('Failed to update notifications');
+      showTopNotification('Failed to update notifications', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -81,9 +82,9 @@ const Notifications = () => {
     try {
       // No backend delete, just remove locally
       setNotifications(prev => prev.filter(notification => notification.id !== notificationId));
-      toast.success('Notification deleted');
+      showTopNotification('Notification deleted', 'success');
     } catch (err) {
-      toast.error('Failed to delete notification');
+      showTopNotification('Failed to delete notification', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -144,7 +145,9 @@ const Notifications = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
+    <div className="min-h-screen w-full bg-gray-50">
+      <FloatingBackButton theme="primary" />
+      <div className="p-4 space-y-4 pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
         <h1 className="text-xl font-bold mb-1">Notifications</h1>
@@ -204,6 +207,7 @@ const Notifications = () => {
             <p className="text-gray-500">You're all caught up! No notifications to display.</p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

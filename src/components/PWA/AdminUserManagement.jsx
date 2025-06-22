@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import AdminService from '../../services/adminService';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaUser, FaEnvelope, FaPhone, FaUserTie, FaUserFriends, FaSpinner, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useTheme } from '../../hooks/useTheme.jsx';
 
 const AdminUserManagement = () => {
+  const { isDark } = useTheme();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,21 +30,30 @@ const AdminUserManagement = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Optimized input handlers with useCallback to prevent focus loss
-  const handleNewUserChange = useCallback((field) => (e) => {
-    const value = e.target.value;
+  const handleNewUserChange = useCallback((field, value) => {
     setNewUser(prev => ({
       ...prev,
       [field]: value
     }));
     
-    // Clear field-specific errors when user starts typing
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  }, [formErrors]);
+    // Clear field-specific errors when user starts typing (optimized)
+    setFormErrors(prev => {
+      if (prev[field]) {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      }
+      return prev;
+    });
+  }, []); // No dependencies to prevent recreation
+
+  // Create stable onChange handlers
+  const handleNameChange = useCallback((e) => handleNewUserChange('name', e.target.value), [handleNewUserChange]);
+  const handleEmailChange = useCallback((e) => handleNewUserChange('email', e.target.value), [handleNewUserChange]);
+  const handlePhoneChange = useCallback((e) => handleNewUserChange('phone', e.target.value), [handleNewUserChange]);
+  const handleRoleChange = useCallback((e) => handleNewUserChange('role', e.target.value), [handleNewUserChange]);
+  const handlePasswordChange = useCallback((e) => handleNewUserChange('password', e.target.value), [handleNewUserChange]);
+  const handleConfirmPasswordChange = useCallback((e) => handleNewUserChange('confirmPassword', e.target.value), [handleNewUserChange]);
 
   const handleSelectedUserChange = useCallback((field) => (e) => {
     const value = e.target.value;
@@ -51,12 +62,13 @@ const AdminUserManagement = () => {
       [field]: value
     }));
     
-    // Clear field-specific errors when user starts typing
+    // Clear field-specific errors when user starts typing (optimized)
     if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   }, [formErrors]);
 
@@ -344,27 +356,30 @@ const AdminUserManagement = () => {
     );
   };
 
-  const InputField = ({ label, type = "text", value, onChange, error, required = false, ...props }) => (
+  const InputField = React.memo(({ label, type = "text", value, onChange, error, required = false, autoFocus = false, ...props }) => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         type={type}
         value={value || ''}
         onChange={onChange}
-        className={`mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          error ? 'border-red-500' : 'border-gray-300'
+        autoFocus={autoFocus}
+        className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+          isDark 
+            ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${error ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'focus:border-blue-400'}` 
+            : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`
         }`}
         {...props}
       />
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className={`mt-1 text-sm ${isDark ? 'text-red-400' : 'text-red-600'}`}>{error}</p>}
     </div>
-  );
+  ));
 
-  const PasswordField = ({ label, value, onChange, error, showPassword, onToggleVisibility, required = false, showStrengthIndicator = false, ...props }) => (
+  const PasswordField = React.memo(({ label, value, onChange, error, showPassword, onToggleVisibility, required = false, showStrengthIndicator = false, ...props }) => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
@@ -372,28 +387,30 @@ const AdminUserManagement = () => {
           type={showPassword ? 'text' : 'password'}
           value={value || ''}
           onChange={onChange}
-          className={`mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            error ? 'border-red-500' : 'border-gray-300'
+          className={`block w-full rounded-lg px-3 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+            isDark 
+              ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${error ? 'border-red-400' : 'border-gray-600'}` 
+              : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${error ? 'border-red-500' : 'border-gray-300'}`
           }`}
           {...props}
         />
         <button
           type="button"
           onClick={onToggleVisibility}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none p-1"
+          className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} focus:outline-none p-1`}
         >
           {showPassword ? <FaEyeSlash /> : <FaEye />}
         </button>
       </div>
       {showStrengthIndicator && <PasswordStrengthIndicator password={value} />}
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-500'}`}>{error}</p>}
     </div>
-  );
+  ));
 
   return (
-    <div className="px-3 py-4 sm:p-6 bg-white rounded-lg shadow-lg">
+    <div className={`px-3 py-4 sm:p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-lg transition-colors duration-200`}>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">User Management</h2>
+        <h2 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>User Management</h2>
         <button
           onClick={() => setShowCreateModal(true)}
           className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 sm:py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-base sm:text-sm"
@@ -405,13 +422,17 @@ const AdminUserManagement = () => {
       {/* Mobile-First Search Bar */}
       <div className="mb-6">
         <div className="relative">
-          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
           <input
             type="text"
             placeholder="Search users by name or email..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
           />
         </div>
       </div>
@@ -420,10 +441,10 @@ const AdminUserManagement = () => {
       {loading ? (
         <div className="text-center py-8">
           <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">Loading users...</p>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Loading users...</p>
         </div>
       ) : error ? (
-        <div className="text-center py-8 text-red-600">
+        <div className={`text-center py-8 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
           <p>{error}</p>
           <button
             onClick={fetchUsers}
@@ -437,14 +458,14 @@ const AdminUserManagement = () => {
           {/* Mobile: Card Layout, Desktop: Table Layout */}
           <div className="block sm:hidden space-y-4">
             {users.map((user) => (
-              <div key={user.id} className="bg-gray-50 rounded-lg p-4 border">
+              <div key={user.id} className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 border ${isDark ? 'border-gray-600' : 'border-gray-200'} transition-colors duration-200`}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <div className={`w-10 h-10 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-200'} flex items-center justify-center`}>
                       {getRoleIcon(user.role)}
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">
+                      <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {user.name || `${user.first_name} ${user.last_name}`}
                       </div>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadge(user.role)}`}>
@@ -458,29 +479,29 @@ const AdminUserManagement = () => {
                         setSelectedUser(user);
                         setShowEditModal(true);
                       }}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                      className={`p-2 text-blue-600 ${isDark ? 'hover:bg-blue-900' : 'hover:bg-blue-50'} rounded-lg transition-colors duration-200`}
                     >
                       <FaEdit size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteUser(user)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      className={`p-2 text-red-600 ${isDark ? 'hover:bg-red-900' : 'hover:bg-red-50'} rounded-lg transition-colors duration-200`}
                     >
                       <FaTrash size={16} />
                     </button>
                   </div>
                 </div>
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <FaEnvelope className="text-xs" />
-                    {user.email}
+                    <FaEnvelope className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{user.email}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <FaPhone className="text-xs" />
-                    {user.phone || 'N/A'}
+                    <FaPhone className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{user.phone || 'N/A'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Status:</span>
+                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Status:</span>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
@@ -494,41 +515,41 @@ const AdminUserManagement = () => {
 
           {/* Desktop: Table Layout */}
           <div className="hidden sm:block overflow-x-auto">
-            <table className="min-w-full bg-white">
-              <thead className="bg-gray-50">
+            <table className={`min-w-full ${isDark ? 'bg-gray-800' : 'bg-white'} transition-colors duration-200`}>
+              <thead className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
                     Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={`px-6 py-3 text-left text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className={`${isDark ? 'bg-gray-800 divide-gray-600' : 'bg-white divide-gray-200'} divide-y transition-colors duration-200`}>
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <div className={`h-10 w-10 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-200'} flex items-center justify-center`}>
                             {getRoleIcon(user.role)}
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {user.name || `${user.first_name} ${user.last_name}`}
                           </div>
-                          <div className="text-sm text-gray-500 flex items-center gap-1">
+                          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} flex items-center gap-1`}>
                             <FaEnvelope className="text-xs" />
                             {user.email}
                           </div>
@@ -540,9 +561,9 @@ const AdminUserManagement = () => {
                         {user.role === 'admin' ? 'Teacher' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDark ? 'text-gray-300' : 'text-gray-900'}`}>
                       <div className="flex items-center gap-1">
-                        <FaPhone className="text-xs text-gray-400" />
+                        <FaPhone className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
                         {user.phone || 'N/A'}
                       </div>
                     </td>
@@ -608,96 +629,117 @@ const AdminUserManagement = () => {
         </>
       )}
 
-      {/* Mobile-First Create User Modal */}
+      {/* Slide-in Panel for Create User - NO MORE FOCUS ISSUES! */}
       {showCreateModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              handleModalClose();
-            }
-          }}
-        >
-          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-semibold mb-4">Add New User</h3>
-              <form onSubmit={handleCreateUser}>
-                <div className="space-y-4">
-                  <InputField
-                    label="Name"
-                    value={newUser.name}
-                    onChange={handleNewUserChange('name')}
-                    error={formErrors.name}
-                    required
-                  />
-                  
-                  <InputField
-                    label="Email"
-                    type="email"
-                    value={newUser.email}
-                    onChange={handleNewUserChange('email')}
-                    error={formErrors.email}
-                    required
-                  />
-                  
-                  <InputField
-                    label="Phone"
-                    type="tel"
-                    value={newUser.phone}
-                    onChange={handleNewUserChange('phone')}
-                    error={formErrors.phone}
-                    placeholder="e.g., 0123456789"
-                  />
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Role <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={newUser.role}
-                      onChange={handleNewUserChange('role')}
-                      className="w-full px-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="parent">Parent</option>
-                      <option value="teacher">Teacher</option>
-                    </select>
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={handleModalClose}
+          />
+          
+          {/* Slide-in Panel */}
+          <div className={`absolute right-0 top-0 h-full w-full max-w-md ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl transform transition-transform`}>
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className={`flex items-center justify-between p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Add New User</h3>
+                <button
+                  onClick={handleModalClose}
+                  disabled={isSubmitting}
+                  className={`${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Form Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <form onSubmit={handleCreateUser} id="create-user-form">
+                  <div className="space-y-6">
+                    <InputField
+                      label="Name"
+                      value={newUser.name}
+                      onChange={handleNameChange}
+                      error={formErrors.name}
+                      required
+                      autoFocus
+                    />
+                    
+                    <InputField
+                      label="Email"
+                      type="email"
+                      value={newUser.email}
+                      onChange={handleEmailChange}
+                      error={formErrors.email}
+                      required
+                    />
+                    
+                    <InputField
+                      label="Phone"
+                      type="tel"
+                      value={newUser.phone}
+                      onChange={handlePhoneChange}
+                      error={formErrors.phone}
+                      placeholder="e.g., 0123456789"
+                    />
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Role <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={newUser.role}
+                        onChange={handleRoleChange}
+                        className="w-full px-3 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="parent">Parent</option>
+                        <option value="teacher">Teacher</option>
+                      </select>
+                    </div>
+                    
+                    <PasswordField
+                      label="Password"
+                      value={newUser.password}
+                      onChange={handlePasswordChange}
+                      error={formErrors.password}
+                      showPassword={showPassword}
+                      onToggleVisibility={() => setShowPassword(!showPassword)}
+                      required
+                      showStrengthIndicator={showPassword}
+                      placeholder="Minimum 8 characters, uppercase, lowercase, numbers, and special characters"
+                    />
+                    
+                    <PasswordField
+                      label="Confirm Password"
+                      value={newUser.confirmPassword}
+                      onChange={handleConfirmPasswordChange}
+                      error={formErrors.confirmPassword}
+                      showPassword={showConfirmPassword}
+                      onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+                      required
+                      showStrengthIndicator={showConfirmPassword}
+                      placeholder="Re-enter password"
+                    />
                   </div>
-                  
-                  <PasswordField
-                    label="Password"
-                    value={newUser.password}
-                    onChange={handleNewUserChange('password')}
-                    error={formErrors.password}
-                    showPassword={showPassword}
-                    onToggleVisibility={toggleShowPassword}
-                    required
-                    showStrengthIndicator={showPassword}
-                    placeholder="Minimum 8 characters, uppercase, lowercase, numbers, and special characters"
-                  />
-                  
-                  <PasswordField
-                    label="Confirm Password"
-                    value={newUser.confirmPassword}
-                    onChange={handleNewUserChange('confirmPassword')}
-                    error={formErrors.confirmPassword}
-                    showPassword={showConfirmPassword}
-                    onToggleVisibility={toggleShowConfirmPassword}
-                    required
-                    showStrengthIndicator={showConfirmPassword}
-                    placeholder="Re-enter password"
-                  />
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                </form>
+              </div>
+
+              {/* Footer with Actions */}
+              <div className="border-t border-gray-200 p-6">
+                <div className="flex flex-col gap-3">
                   <button
                     type="submit"
+                    form="create-user-form"
                     disabled={isSubmitting}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-3 sm:py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-base sm:text-sm"
+                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-base font-medium"
                   >
                     {isSubmitting ? (
                       <>
                         <FaSpinner className="animate-spin" />
-                        Creating...
+                        Creating User...
                       </>
                     ) : (
                       <>
@@ -710,85 +752,106 @@ const AdminUserManagement = () => {
                     type="button"
                     disabled={isSubmitting}
                     onClick={handleModalClose}
-                    className="flex-1 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-700 py-3 sm:py-2 rounded-lg transition-colors text-base sm:text-sm"
+                    className="w-full bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 py-3 rounded-lg transition-colors text-base font-medium"
                   >
                     Cancel
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Mobile-First Edit User Modal */}
+      {/* Slide-in Panel for Edit User */}
       {showEditModal && selectedUser && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              handleModalClose();
-            }
-          }}
-        >
-          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-semibold mb-4">Edit User</h3>
-              <form onSubmit={handleUpdateUser}>
-                <div className="space-y-4">
-                  <InputField
-                    label="Name"
-                    value={selectedUser.name || ''}
-                    onChange={handleSelectedUserChange('name')}
-                    error={formErrors.name}
-                    required
-                  />
-                  
-                  <InputField
-                    label="Email"
-                    type="email"
-                    value={selectedUser.email || ''}
-                    onChange={handleSelectedUserChange('email')}
-                    error={formErrors.email}
-                    required
-                  />
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Role
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedUser.role || ''}
-                      className="w-full px-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-lg bg-gray-100"
-                      disabled
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={handleModalClose}
+          />
+          
+          {/* Slide-in Panel */}
+          <div className={`absolute right-0 top-0 h-full w-full max-w-md ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl transform transition-transform`}>
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className={`flex items-center justify-between p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Edit User</h3>
+                <button
+                  onClick={handleModalClose}
+                  disabled={isSubmitting}
+                  className={`${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Form Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <form onSubmit={handleUpdateUser} id="edit-user-form">
+                  <div className="space-y-6">
+                    <InputField
+                      label="Name"
+                      value={selectedUser.name || ''}
+                      onChange={handleSelectedUserChange('name')}
+                      error={formErrors.name}
+                      required
+                      autoFocus
                     />
-                    <p className="text-xs text-gray-500 mt-1">Role cannot be changed</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Source
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedUser.source === 'staff_table' ? 'Staff (Teachers/Admins)' : 'Users (Parents)'}
-                      className="w-full px-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-lg bg-gray-100"
-                      disabled
+                    
+                    <InputField
+                      label="Email"
+                      type="email"
+                      value={selectedUser.email || ''}
+                      onChange={handleSelectedUserChange('email')}
+                      error={formErrors.email}
+                      required
                     />
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Role
+                      </label>
+                      <input
+                        type="text"
+                        value={selectedUser.role || ''}
+                        className="w-full px-3 py-3 text-base border border-gray-300 rounded-lg bg-gray-100"
+                        disabled
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Role cannot be changed</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Source
+                      </label>
+                      <input
+                        type="text"
+                        value={selectedUser.source === 'staff_table' ? 'Staff (Teachers/Admins)' : 'Users (Parents)'}
+                        className="w-full px-3 py-3 text-base border border-gray-300 rounded-lg bg-gray-100"
+                        disabled
+                      />
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                </form>
+              </div>
+
+              {/* Footer with Actions */}
+              <div className="border-t border-gray-200 p-6">
+                <div className="flex flex-col gap-3">
                   <button
                     type="submit"
+                    form="edit-user-form"
                     disabled={isSubmitting}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-3 sm:py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-base sm:text-sm"
+                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-base font-medium"
                   >
                     {isSubmitting ? (
                       <>
                         <FaSpinner className="animate-spin" />
-                        Updating...
+                        Updating User...
                       </>
                     ) : (
                       <>
@@ -801,12 +864,12 @@ const AdminUserManagement = () => {
                     type="button"
                     disabled={isSubmitting}
                     onClick={handleModalClose}
-                    className="flex-1 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-700 py-3 sm:py-2 rounded-lg transition-colors text-base sm:text-sm"
+                    className="w-full bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 py-3 rounded-lg transition-colors text-base font-medium"
                   >
                     Cancel
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>

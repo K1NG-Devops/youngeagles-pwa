@@ -89,7 +89,33 @@ class AssignmentService {
       );
 
       console.log('✅ Teacher assignments fetched:', response.data);
-      return this.handleResponse(response);
+      
+      // Handle the corrected API response format
+      const data = this.handleResponse(response);
+      
+      if (data.success && data.homeworks) {
+        // Transform the data to match expected format
+        return {
+          success: true,
+          data: data.homeworks.map(hw => ({
+            id: hw.id,
+            title: hw.title,
+            instructions: hw.instructions,
+            due_date: hw.due_date,
+            class_name: hw.class_name,
+            grade: hw.grade,
+            submissionCount: hw.submissionCount || 0,
+            totalStudents: hw.totalStudents || 0,
+            completionRate: hw.completionRate || 0,
+            created_at: hw.created_at,
+            assignments: [hw] // Wrap single homework in assignments array for compatibility
+          })),
+          individualAssignments: data.totalHomeworks || 0,
+          teacher: data.teacher
+        };
+      }
+      
+      return data;
     } catch (error) {
       this.handleError(error, operation);
     }
@@ -355,4 +381,4 @@ class AssignmentService {
 }
 
 // Export singleton instance
-export default new AssignmentService(); 
+export default new AssignmentService();

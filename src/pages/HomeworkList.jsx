@@ -1,35 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { FaBook, FaClock, FaCalendarAlt, FaFileAlt, FaEye, FaCheckCircle, FaExclamationTriangle, FaSpinner, FaPlay, FaPlusCircle, FaPlus } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../components/TopNotificationManager';
 import useAuth from '../hooks/useAuth';
 import { api } from '../services/httpClient';
 import { API_CONFIG } from '../config/api';
 import parentService from '../services/parentService';
+import FloatingBackButton from '../components/FloatingBackButton';
 
 // Error handler for homework fetch errors - moved outside component to prevent re-renders
 const handleHomeworkError = (err, navigate, isTeacher) => {
   if (!err.response) {
-    toast.error('Network error. Please check your connection and try again.');
+    showTopNotification('Network error. Please check your connection and try again.', 'error');
     return;
   }
 
   const { status } = err.response;
   switch (status) {
     case 401:
-      toast.error('Your session has expired. Please log in again.');
+      showTopNotification('Your session has expired. Please log in again.', 'error');
       navigate('/login');
       break;
     case 403:
-      toast.error('You do not have permission to view homeworks.');
+      showTopNotification('You do not have permission to view homeworks.', 'error');
       break;
     case 404:
       if (isTeacher) {
-        toast.info('No homework assignments found.');
+        showTopNotification('No homework assignments found.', 'info');
       }
       break;
     default:
-      toast.error('Failed to load homework assignments. Please try again later.');
+      showTopNotification('Failed to load homework assignments. Please try again later.', 'error');
   }
 };
 
@@ -202,21 +203,21 @@ const HomeworkList = () => {
               return; // Component will re-render with new token
             }
             
-            toast.error('Your session has expired. Please log in again.');
+            showTopNotification('Your session has expired. Please log in again.', 'error');
             navigate('/login');
           } else if (status === 403) {
-            toast.error('You do not have permission to view children.');
+            showTopNotification('You do not have permission to view children.', 'error');
           } else if (status === 404) {
             console.log('HomeworkList: No children found for parent_id:', parent_id);
             setChildren([]);
-            toast.info('No children found. Please register a child first.');
+            showTopNotification('No children found. Please register a child first.', 'info');
             // Redirect to the correct child management page
             navigate('/manage-children');
           } else {
-            toast.error(`Failed to load children: ${data?.message || 'Unknown error'}`);
+            showTopNotification(`Failed to load children: ${data?.message || 'Unknown error'}`, 'error');
           }
         } else {
-          toast.error('Network error. Please check your connection and try again.');
+          showTopNotification('Network error. Please check your connection and try again.', 'error');
         }
       } finally {
         setIsLoading(prev => ({ ...prev, children: false }));
@@ -302,14 +303,14 @@ const HomeworkList = () => {
         setHomeworks([]);
         
         if (err.response?.status === 401) {
-          toast.error('Your session has expired. Please log in again.');
+          showTopNotification('Your session has expired. Please log in again.', 'error');
           navigate('/login');
         } else if (err.response?.status === 403) {
-          toast.error('You do not have permission to view homework assignments.');
+          showTopNotification('You do not have permission to view homework assignments.', 'error');
         } else if (err.response?.status === 404) {
-          toast.info('No homework assignments found.');
+          showTopNotification('No homework assignments found.', 'info');
         } else {
-          toast.error(`Failed to load homework: ${errorMessage}`);
+          showTopNotification(`Failed to load homework: ${errorMessage}`, 'error');
         }
       } finally {
         if (isMounted) {
@@ -430,7 +431,9 @@ const HomeworkList = () => {
   });
 
   return (
-    <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
+    <div className="min-h-screen w-full bg-gray-50">
+      <FloatingBackButton theme="primary" />
+      <div className="p-4 space-y-4 pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
         <h1 className="text-xl font-bold mb-1">
@@ -638,6 +641,7 @@ const HomeworkList = () => {
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
