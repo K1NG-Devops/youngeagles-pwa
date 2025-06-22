@@ -10,9 +10,10 @@ export const API_CONFIG = {
   
   // Get the appropriate API URL based on environment
   getApiUrl() {
-    // Always use production API unless explicitly set to use local
+    // Use local API during development for Phase 6 testing
     const forceLocal = import.meta.env.VITE_FORCE_LOCAL_API === 'true';
-    if (forceLocal && this.isDevelopment) {
+    if (this.isDevelopment || forceLocal) {
+      console.log('🔧 Using LOCAL API for development:', this.LOCAL_URL);
       return this.LOCAL_URL;
     }
     return this.BASE_URL;
@@ -36,6 +37,7 @@ export const API_CONFIG = {
     // Parent-specific
     PARENT_DASHBOARD: '/parent/dashboard',
     CHILDREN: '/children',
+    REGISTER_CHILD: '/auth/register-child',
     
     // Teacher-specific
     TEACHER_DASHBOARD: '/teacher/dashboard',
@@ -49,15 +51,27 @@ export const API_CONFIG = {
     
     // Homework
     HOMEWORK_LIST: '/homeworks/list',
-    HOMEWORK_SUBMIT: '/homeworks/submit',
-    HOMEWORK_CREATE: '/homeworks/create',
+    HOMEWORK_SUBMIT: '/homework/submit/:homeworkId',
+    HOMEWORK_CREATE: '/homework/create',
     HOMEWORK_DETAIL: '/homeworks/:id',
     HOMEWORK_FOR_PARENT: '/homework/parent/:parentId/child/:childId',
-    HOMEWORK_FOR_TEACHER: '/homeworks/teacher/:teacherId',
-    HOMEWORK_SUBMISSIONS: '/homeworks/submissions',
+    HOMEWORK_FOR_TEACHER: '/homework/teacher/:teacherId',
+    HOMEWORK_SUBMISSIONS: '/homework/submissions/parent/:parentId',
+    HOMEWORK_SUBMISSION_UPDATE: '/homework/submissions/:submissionId',
+    HOMEWORK_SUBMISSION_DELETE: '/homework/submissions/:submissionId',
+    
+    // Assignment Management (Phase 6)
+    ASSIGNMENT_CREATE: '/homework/create',
+    ASSIGNMENT_UPDATE: '/homework/:homeworkId',
+    ASSIGNMENT_DELETE: '/homework/:homeworkId',
+    ASSIGNMENT_SUBMISSIONS: '/homework/:homeworkId/submissions',
+    SUBMISSION_GRADE: '/homework/submissions/:submissionId/grade',
+    
+    // Grades
+    HOMEWORK_GRADES: '/homeworks/grades/child/:childId',
     
     // Reports
-    REPORTS: '/reports/parent/:parentId/child/:childId',
+    REPORTS: '/public/parent/reports',
     
     // Notifications
     NOTIFICATIONS: '/notifications',

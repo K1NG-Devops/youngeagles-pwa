@@ -23,7 +23,13 @@ import AdminLogin from './AdminLogin'
 import Registration2026 from '../pages/Registration2026'
 import ContactUs from '../pages/ContactUs'
 import AdminTeachers from './PWA/AdminTeachers'
+import AdminUserManagement from './PWA/AdminUserManagement'
 import ChildManagement from './PWA/ChildManagement'
+import AssignmentCreate from './PWA/AssignmentCreate'
+import AssignmentManagement from './PWA/AssignmentManagement'
+import TeacherStudentList from './PWA/TeacherStudentList'
+import TeacherReports from './PWA/TeacherReports'
+import ActivityBuilder from './PWA/ActivityBuilder'
 
 const PWALayout = () => {
   const navigate = useNavigate()
@@ -258,72 +264,61 @@ const PWALayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Offline Indicator removed to prevent false offline detection */}
-      
-      {/* PWA Header */}
-      <header className="bg-blue-600 text-white p-4 shadow-lg">
+      {/* Mobile-First PWA Header */}
+      <header className="bg-blue-600 text-white px-3 py-2 shadow-lg">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full overflow-hidden shadow-lg border-2 border-white/20">
+          {/* Logo and Title - Simplified for mobile */}
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden shadow-lg border border-white/20">
               <img 
                 src="/icon-48x48.png" 
-                alt="Young Eagles Home Care Centre Logo" 
+                alt="Young Eagles Logo" 
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-lg font-bold">Young Eagles</h1>
-              <span className="text-xs bg-blue-500 px-2 py-1 rounded-full">PWA</span>
-              <span className="text-xs bg-green-500 px-2 py-1 rounded-full">v1.0</span>
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <h1 className="text-sm sm:text-lg font-bold">Young Eagles</h1>
+              <span className="hidden sm:inline text-xs bg-blue-500 px-1.5 py-0.5 rounded-full">PWA</span>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            {import.meta.env.DEV && (
-              <button
-                onClick={() => {
-                  console.log('🔔 Test notification clicked')
-                  toast.info('Test notification!')
-                }}
-                className="p-2 hover:bg-blue-500 rounded-lg transition-colors duration-200"
-                title="Test Notifications"
-              >
-                <FaBell className="text-sm" />
-              </button>
-            )}
-            
+          {/* Right side actions - Mobile optimized */}
+          <div className="flex items-center space-x-1">
+            {/* Only show essential actions on mobile */}
             <button
               onClick={handleOpenWebsite}
-              className="p-2 hover:bg-blue-500 rounded-lg transition-colors duration-200"
+              className="p-2 hover:bg-blue-500 rounded-lg transition-colors duration-200 hidden sm:block"
               title="Open full website"
             >
               <FaExternalLinkAlt className="text-sm" />
             </button>
             
+            {/* Mobile menu button / Profile */}
             <button
               onClick={handleLogout}
               className="p-2 hover:bg-blue-500 rounded-lg transition-colors duration-200"
-              title="Logout"
+              title="Profile & Logout"
             >
               <FaUser className="text-sm" />
             </button>
           </div>
         </div>
         
+        {/* User info - Mobile optimized */}
         {auth?.user && (
-          <div className="mt-2 text-sm opacity-90">
-            Welcome, {auth.user.name || auth.user.email}
-            <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">
+          <div className="mt-1 text-xs sm:text-sm opacity-90 truncate">
+            <span className="font-medium">{auth.user.name || auth.user.email}</span>
+            <span className="ml-2 text-xs bg-blue-500 px-1.5 py-0.5 rounded uppercase">
               {auth.user.role}
             </span>
           </div>
         )}
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      {/* Main Content - Mobile optimized */}
+      <main className="flex-1 overflow-auto pb-16 sm:pb-20">
         <Routes>
-          {/* Public routes - these should check for authentication and redirect if already logged in */}
+          {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/password-reset" element={<PasswordReset />} />
@@ -341,23 +336,28 @@ const PWALayout = () => {
             <Route path="/manage-children" element={<ChildManagement />} />
             <Route path="/teacher-dashboard" element={<PWATeacherDashboard />} />
             <Route path="/teacher/homework-list" element={<HomeworkList />} />
+            <Route path="/teacher/assignments" element={<AssignmentManagement />} />
+            <Route path="/teacher/assignments/create" element={<AssignmentCreate />} />
+            <Route path="/teacher-children-list" element={<TeacherStudentList />} />
+            <Route path="/teacher-reports" element={<TeacherReports />} />
+            <Route path="/teacher-dashboard/activity-builder" element={<ActivityBuilder />} />
             <Route path="/admin-dashboard" element={<PWAAdminDashboard />} />
             <Route path="/admin-teachers" element={<AdminTeachers />} />
-            <Route path="/admin-users" element={<AdminTeachers />} />
+            <Route path="/admin-users" element={<AdminUserManagement />} />
             <Route path="/admin-reports" element={<AdminTeachers />} />
             <Route path="/admin-settings" element={<AdminTeachers />} />
           </Route>
 
-<Route path="/register-2026" element={<Registration2026 />} />
+          <Route path="/register-2026" element={<Registration2026 />} />
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>
 
-      {/* Bottom Navigation */}
+      {/* Mobile-First Bottom Navigation */}
       {auth?.user && navigationItems.length > 0 && (
-        <nav className="bg-white border-t border-gray-200 p-2">
-          <div className="flex justify-around">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+          <div className="flex justify-around items-center h-16 px-2">
             {navigationItems.map((item) => {
               const IconComponent = item.icon
               const isActive = activeTab === item.id
@@ -369,14 +369,18 @@ const PWALayout = () => {
                     setActiveTab(item.id)
                     navigate(item.path)
                   }}
-                  className={`flex flex-col items-center p-2 rounded-lg transition-colors duration-200 ${
+                  className={`flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-lg transition-colors duration-200 min-h-[48px] ${
                     isActive 
                       ? 'text-blue-600 bg-blue-50' 
                       : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                 >
-                  <IconComponent className="text-lg mb-1" />
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <IconComponent className={`${isActive ? 'text-xl' : 'text-lg'} mb-1`} />
+                  <span className={`text-xs font-medium leading-tight text-center ${
+                    isActive ? 'font-semibold' : ''
+                  }`}>
+                    {item.label}
+                  </span>
                 </button>
               )
             })}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -96,37 +96,37 @@ const PWATeacherDashboard = () => {
 
   const quickActions = [
     {
-      id: 'homework',
-      title: 'Post Homework',
-      description: 'Create assignments',
-      icon: FaBook,
+      id: 'create-assignment',
+      title: 'Create Assignment',
+      description: 'New homework task',
+      icon: FaPlus,
       color: 'blue',
-      path: '/homework/upload',
+      path: '/teacher/assignments/create',
       badge: null
+    },
+    {
+      id: 'manage-assignments',
+      title: 'My Assignments',
+      description: 'Manage homework',
+      icon: FaBook,
+      color: 'green',
+      path: '/teacher/assignments',
+      badge: teacherStats.totalHomeworks
     },
     {
       id: 'submissions',
       title: 'View Submissions',
       description: 'Check student work',
       icon: FaEye,
-      color: 'green',
-      path: '/teacher-submissions',
-      badge: teacherStats.totalSubmissions
-    },
-    {
-      id: 'attendance',
-      title: 'Attendance',
-      description: 'Mark attendance',
-      icon: FaChalkboardTeacher,
       color: 'purple',
-      path: '/teacher-attendance',
-      badge: null
+      path: '/teacher/assignments',
+      badge: teacherStats.totalSubmissions
     },
     {
       id: 'reports',
       title: 'Create Reports',
       description: 'Student reports',
-      icon: FaFileUpload,
+      icon: FaUsers,
       color: 'orange',
       path: '/teacher-reports',
       badge: null
@@ -317,7 +317,7 @@ const PWATeacherDashboard = () => {
               
               {recentSubmissions.length > 0 && (
                 <Link
-                  to="/teacher-submissions"
+                  to="/teacher/assignments"
                   className="block w-full p-3 text-center bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
                 >
                   View All Submissions

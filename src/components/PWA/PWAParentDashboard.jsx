@@ -44,7 +44,7 @@ const PWAParentDashboard = () => {
     
     try {
       const res = await axios.get(
-        `${API_CONFIG.getApiUrl()}/auth/parents/${parent_id}/children`,
+        `${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.CHILDREN}/${parent_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -52,14 +52,42 @@ const PWAParentDashboard = () => {
         }
       );
       
-      const childrenData = Array.isArray(res.data) ? res.data : res.data.children || [];
+      // Handle different response structures from the API
+      let childrenData = [];
+      if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        // New API format: {success: true, data: [...]}
+        childrenData = res.data.data;
+      } else if (Array.isArray(res.data)) {
+        // Direct array format: [...]
+        childrenData = res.data;
+      } else if (res.data && res.data.children && Array.isArray(res.data.children)) {
+        // Nested format: {children: [...]}
+        childrenData = res.data.children;
+      } else {
+        console.warn('PWAParentDashboard: Unexpected API response format:', res.data);
+        childrenData = [];
+      }
+      
+      console.log('PWAParentDashboard: Fetched children:', childrenData.map(child => ({ id: child.id, name: child.name })));
       setChildren(childrenData);
       
-      // Auto-select first child if no child is selected
-      if (childrenData.length > 0 && !selectedChild) {
-        const firstChildId = childrenData[0].id.toString();
-        setSelectedChild(firstChildId);
-        localStorage.setItem('selectedChild', firstChildId);
+      // Auto-select first child if no child is selected or if selected child doesn't exist
+      if (childrenData.length > 0) {
+        const currentSelectedChild = selectedChild;
+        const childExists = currentSelectedChild ? childrenData.some(child => child.id.toString() === currentSelectedChild) : false;
+        
+        if (!currentSelectedChild || !childExists) {
+          const firstChildId = childrenData[0].id.toString();
+          console.log(`PWAParentDashboard: ${!currentSelectedChild ? 'Auto-selecting' : 'Switching to'} first child: ${firstChildId} (${childrenData[0].name})`);
+          setSelectedChild(firstChildId);
+          localStorage.setItem('selectedChild', firstChildId);
+        } else {
+          console.log(`PWAParentDashboard: Selected child ${currentSelectedChild} exists in fetched children`);
+        }
+      } else {
+        console.log('PWAParentDashboard: No children found, clearing selectedChild');
+        setSelectedChild('');
+        localStorage.removeItem('selectedChild');
       }
     } catch (err) {
       console.error('Error fetching children:', err);
@@ -69,7 +97,7 @@ const PWAParentDashboard = () => {
     } finally {
       setIsLoading(prev => ({ ...prev, children: false }));
     }
-  }, [parent_id, token, selectedChild]);
+  }, [parent_id, token]);
 
   // Fetch homework data for progress tracking
   const fetchHomeworkData = useCallback(async () => {
@@ -88,11 +116,14 @@ const PWAParentDashboard = () => {
         throw new Error(result.error || 'Failed to fetch homework');
       }
       
-      const hwList = Array.isArray(result.data) ? result.data : result.data.homeworks || [];
+      // The API returns: { success: true, data: [...], total: 2, completed: 1 }
+      // result.data contains the full API response
+      const apiResponse = result.data;
+      const hwList = Array.isArray(apiResponse.data) ? apiResponse.data : apiResponse.homeworks || [];
       
-      // Calculate progress
-      const total = hwList.length;
-      const submitted = hwList.filter(hw => hw.submitted).length;
+      // Use the calculated values from API if available, otherwise calculate manually
+      const total = apiResponse.total || hwList.length;
+      const submitted = apiResponse.completed || hwList.filter(hw => hw.submitted).length;
       const percentage = total > 0 ? (submitted / total) * 100 : 0;
       
       setHomeworkProgress({
@@ -117,11 +148,11 @@ const PWAParentDashboard = () => {
         setErrors(prev => ({ ...prev, homework: 'Please select a child first' }));
       } else {
         setErrors(prev => ({ ...prev, homework: errorMessage }));
-        setHomeworkProgress({
-          total: 0,
-          submitted: 0,
-          percentage: 0
-        });
+      setHomeworkProgress({
+        total: 0,
+        submitted: 0,
+        percentage: 0
+      });
       }
     } finally {
       setIsLoading(prev => ({ ...prev, homework: false }));
@@ -175,7 +206,9 @@ const PWAParentDashboard = () => {
       color: 'green',
       path: '/submit-work',
       disabled: false,
-      showBadgeWhenZero: false
+      showBadgeWhenZero: false,
+      badge: homeworkProgress.total > homeworkProgress.submitted ? (homeworkProgress.total - homeworkProgress.submitted) : 0,
+      highlight: homeworkProgress.total > homeworkProgress.submitted
     },
     {
       id: 'children',
@@ -292,16 +325,16 @@ const PWAParentDashboard = () => {
   }, [selectedChild, selectedChildData, fetchProgressReport, isLoading.homework]);
 
   return (
-    <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
-      {/* Welcome Section */}
+    <div className="px-3 py-4 space-y-4 max-w-full overflow-x-hidden">
+      {/* Mobile-First Welcome Section */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
-        <h2 className="text-xl font-bold mb-1">Welcome back, {userName}!</h2>
+        <h2 className="text-lg sm:text-xl font-bold mb-1">Welcome back, {userName}!</h2>
         <p className="text-sm text-blue-100">Track your child's learning progress</p>
       </div>
 
-      {/* Child Selection */}
+      {/* Child Selection - Mobile Optimized */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Select Child</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Select Child</h3>
         {isLoading.children ? (
           <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
             <FaSpinner className="animate-spin text-gray-400" />
@@ -310,7 +343,7 @@ const PWAParentDashboard = () => {
         ) : (
           <>
             <select
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-black text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
+              className="w-full p-4 text-base border border-gray-300 rounded-lg bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[48px] appearance-none"
               value={selectedChild}
               onChange={e => {
                 setSelectedChild(e.target.value);
@@ -327,67 +360,102 @@ const PWAParentDashboard = () => {
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3">
-          {quickActions.map((action) => {
-            const IconComponent = action.icon;
-            return (
-              <Link
-                key={action.id}
+      {/* Mobile-First Quick Actions Grid */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {quickActions.map((action) => {
+          const IconComponent = action.icon;
+          const isHighlighted = action.highlight;
+          const colorClasses = {
+            blue: isHighlighted 
+              ? 'bg-gradient-to-br from-blue-100 to-blue-200 border-blue-300 text-blue-800 ring-2 ring-blue-300 ring-opacity-50' 
+              : 'bg-blue-50 border-blue-200 text-blue-700',
+            green: isHighlighted 
+              ? 'bg-gradient-to-br from-green-100 to-green-200 border-green-300 text-green-800 ring-2 ring-green-300 ring-opacity-50' 
+              : 'bg-green-50 border-green-200 text-green-700',
+            purple: isHighlighted 
+              ? 'bg-gradient-to-br from-purple-100 to-purple-200 border-purple-300 text-purple-800 ring-2 ring-purple-300 ring-opacity-50' 
+              : 'bg-purple-50 border-purple-200 text-purple-700',
+            yellow: isHighlighted 
+              ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 border-yellow-300 text-yellow-800 ring-2 ring-yellow-300 ring-opacity-50' 
+              : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+          };
+          
+          return (
+            <Link
+              key={action.id}
               to={action.path}
               onClick={action.onClick}
-              className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all min-h-[100px] ${
-                  action.disabled 
+              className={`flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 transition-all min-h-[80px] sm:min-h-[100px] ${
+                action.disabled 
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : `bg-${action.color}-50 border-${action.color}-200 text-${action.color}-700 hover:shadow-md cursor-pointer`
-                }`}
+                  : isHighlighted
+                  ? `${colorClasses[action.color]} hover:shadow-lg cursor-pointer`
+                  : `${colorClasses[action.color]} hover:shadow-md cursor-pointer`
+              }`}
               tabIndex={action.disabled ? -1 : 0}
               aria-disabled={action.disabled}
-              >
-              <div className={`p-2 rounded-lg mb-2 bg-${action.color}-100`}>
-                <IconComponent className="w-6 h-6" />
-                </div>
+            >
+              <div className={`p-2 rounded-lg mb-2 ${
+                isHighlighted 
+                  ? `bg-${action.color}-200` 
+                  : `bg-${action.color}-100`
+              }`}>
+                <IconComponent className={`w-5 h-5 sm:w-6 sm:h-6 ${isHighlighted ? 'animate-pulse' : ''}`} />
+              </div>
               <div className="text-center">
-                <p className="font-medium text-sm">{action.title}</p>
-                <p className="text-xs opacity-75">{action.description}</p>
+                <p className={`font-medium text-xs sm:text-sm ${isHighlighted ? 'font-bold' : ''}`}>
+                  {action.title}
+                </p>
+                <p className="text-xs opacity-75 hidden sm:block">{action.description}</p>
                 {action.badge && (action.showBadgeWhenZero || action.badge > 0) && (
-                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full mt-1">
-                        {action.badge}
-                      </span>
-                    )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                  <span className={`inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white rounded-full mt-1 ${
+                    isHighlighted ? 'bg-orange-500 animate-bounce' : 'bg-red-500'
+                  }`}>
+                    {action.badge}
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
 
-      {/* Homework Progress */}
+      {/* Mobile-First Homework Progress */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Homework Progress</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Homework Progress</h3>
         {isLoading.homework ? (
           <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
             <FaSpinner className="animate-spin text-gray-400" />
             <span className="text-sm text-gray-500">Loading homework...</span>
-      </div>
+          </div>
         ) : (
-          <>
-            <div className="flex items-center justify-between mb-2">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
               <span className="text-sm text-gray-700">Total Assignments:</span>
               <span className="font-bold text-lg text-blue-700">{homeworkProgress.total}</span>
-                    </div>
-            <div className="flex items-center justify-between mb-2">
+            </div>
+            <div className="flex items-center justify-between">
               <span className="text-sm text-gray-700">Submitted:</span>
               <span className="font-bold text-lg text-green-700">{homeworkProgress.submitted}</span>
-                    </div>
-            <div className="flex items-center justify-between mb-2">
+            </div>
+            <div className="flex items-center justify-between">
               <span className="text-sm text-gray-700">Completion:</span>
               <span className="font-bold text-lg text-purple-700">{Math.round(homeworkProgress.percentage)}%</span>
-                  </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-3">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-500"
+                style={{ width: `${homeworkProgress.percentage}%` }}
+              ></div>
+            </div>
+            
             {errors.homework && <div className="text-red-500 text-sm mt-2">{errors.homework}</div>}
-          </>
+          </div>
         )}
-                </div>
-                
+      </div>
+
       {/* Progress Report - Collapsible */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <button
@@ -485,6 +553,31 @@ const PWAParentDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Quick File Upload Widget */}
+      {selectedChild && homeworkProgress.total > homeworkProgress.submitted && (
+        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl shadow-sm border-2 border-orange-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <FaClipboardList className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-orange-800">Pending Assignments</h3>
+                <p className="text-xs text-orange-600">
+                  {homeworkProgress.total - homeworkProgress.submitted} assignment(s) waiting for submission
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/submit-work"
+              className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm"
+            >
+              Upload Now
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

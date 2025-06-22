@@ -161,13 +161,13 @@ class AuthService {
       }
     } catch (error) {
       if (!silent) {
-        console.warn('Logout API call failed:', error.message);
+      console.warn('Logout API call failed:', error.message);
       }
     } finally {
       this.clearAuthData();
       if (!silent) {
-        console.log('👋 User logged out');
-        toast.info('You have been logged out.');
+      console.log('👋 User logged out');
+      toast.info('You have been logged out.');
       }
     }
   }
@@ -192,7 +192,7 @@ class AuthService {
         return retryResponse.data;
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError.message);
-        throw error;
+      throw error;
       }
     }
   }
@@ -329,6 +329,22 @@ class AuthService {
       console.error('🚨 Profile update failed:', error);
       const errorMessage = error.response?.data?.message || 'Profile update failed. Please try again.';
       toast.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
+
+  // Change user password
+  async changePassword(passwordData) {
+    try {
+      console.log('🔐 Attempting password change...');
+      
+      const response = await api.post('/api/auth/change-password', passwordData);
+      
+      console.log('✅ Password changed successfully');
+      return response.data;
+    } catch (error) {
+      console.error('🚨 Password change failed:', error);
+      const errorMessage = error.response?.data?.message || 'Password change failed. Please try again.';
       throw new Error(errorMessage);
     }
   }

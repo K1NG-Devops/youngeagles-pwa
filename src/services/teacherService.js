@@ -2,26 +2,94 @@ import { api } from './httpClient.js';
 import { API_CONFIG } from '../config/api.js';
 
 class TeacherService {
-  // Get teacher dashboard data
-  async getDashboardData() {
-    const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_DASHBOARD);
-    return response.data;
+  constructor() {
+    this.apiUrl = API_CONFIG.BASE_URL;
   }
 
-  // Get teacher's classes
+  // Get authentication headers
+  getAuthHeaders() {
+    const token = localStorage.getItem('accessToken');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'X-Request-Source': 'pwa-teacher-service'
+    };
+  }
+
+  // Get teacher dashboard data
+  async getDashboardData(teacherId) {
+    try {
+      console.log('TeacherService: Fetching real dashboard data for teacher:', teacherId);
+      
+      // Use existing API pattern for consistency
+      const response = await api.get(`/api/teacher/${teacherId}/dashboard`, {
+        headers: {
+          'X-Request-Source': 'pwa-teacher-dashboard'
+        }
+      });
+      
+      console.log('✅ Real teacher dashboard data fetched:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('❌ Error fetching teacher dashboard data:', error);
+      // Return empty data structure instead of mock data
+      return {
+        success: false,
+        error: error.message,
+        data: {
+          teacherStats: {
+            totalHomeworks: 0,
+            totalSubmissions: 0,
+            totalStudents: 0,
+            submissionRate: 0
+          },
+          recentSubmissions: [],
+          teacherClass: '',
+          upcomingDeadlines: []
+        }
+      };
+    }
+  }
+
+  // Get teacher classes
   async getClasses() {
     const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_CLASSES);
     return response.data;
   }
 
   // Get students in teacher's classes
-  async getStudents(classId = null) {
-    const url = classId 
-      ? `/teacher/students?class_id=${classId}`
-      : '/teacher/students';
-    
-    const response = await api.get(url);
+  async getStudents() {
+    const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_STUDENTS);
     return response.data;
+  }
+
+  // Get homework assignments created by teacher
+  async getHomeworkAssignments(teacherId) {
+    try {
+      console.log('TeacherService: Fetching real homework assignments for teacher:', teacherId);
+      const url = API_CONFIG.ENDPOINTS.HOMEWORK_FOR_TEACHER.replace(':teacherId', teacherId);
+      const response = await api.get(url, {
+        headers: {
+          'X-Request-Source': 'pwa-teacher-homework'
+        }
+      });
+      
+      console.log('✅ Real homework assignments fetched:', response.data);
+      return {
+        success: true,
+        data: response.data.homeworks || response.data || []
+      };
+    } catch (error) {
+      console.error('❌ Error fetching homework assignments:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        data: []
+      };
+    }
   }
 
   // Create homework assignment
@@ -35,31 +103,48 @@ class TeacherService {
     }
   }
 
-  // Get homework assignments created by teacher
-  async getHomeworkAssignments() {
-    const response = await api.get('/teacher/homework');
-    return response.data;
-  }
-
-  // Get homework submissions
-  async getHomeworkSubmissions(homeworkId = null) {
-    const url = homeworkId 
-      ? `/teacher/submissions?homework_id=${homeworkId}`
-      : '/teacher/submissions';
-    
-    const response = await api.get(url);
-    return response.data;
+  // Get submissions for teacher's homework
+  async getSubmissions(teacherId) {
+    try {
+      console.log('TeacherService: Fetching real submissions for teacher:', teacherId);
+      
+      // Use existing API pattern for consistency
+      const response = await api.get(`/api/teacher/${teacherId}/submissions`, {
+        headers: {
+          'X-Request-Source': 'pwa-teacher-submissions'
+        }
+      });
+      
+      console.log('✅ Real submissions data fetched:', response.data);
+      return {
+        success: true,
+        data: response.data.submissions || response.data || []
+      };
+    } catch (error) {
+      console.error('❌ Error fetching submissions:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+        data: []
+      };
+    }
   }
 
   // Grade homework submission
   async gradeSubmission(submissionId, gradeData) {
     try {
-      const response = await api.patch(`/teacher/submissions/${submissionId}/grade`, gradeData);
+      const response = await api.post(`${API_CONFIG.ENDPOINTS.GRADE_SUBMISSION}/${submissionId}`, gradeData);
       return response.data;
     } catch (error) {
       console.error('Failed to grade submission:', error);
       throw error;
     }
+  }
+
+  // Get messages
+  async getMessages() {
+    const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_MESSAGES);
+    return response.data;
   }
 
   // Send message to parent
@@ -71,12 +156,6 @@ class TeacherService {
       console.error('Failed to send message:', error);
       throw error;
     }
-  }
-
-  // Get teacher's messages
-  async getMessages() {
-    const response = await api.get(API_CONFIG.ENDPOINTS.MESSAGES);
-    return response.data;
   }
 
   // Update attendance
@@ -297,5 +376,7 @@ class TeacherService {
 // Create singleton instance
 const teacherService = new TeacherService();
 
+// Export both the class and the singleton instance
+export { TeacherService, teacherService };
 export default teacherService;
 

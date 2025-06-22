@@ -8,47 +8,24 @@ class AdminService {
     return response.data;
   }
 
-  // Get all users
-  async getUsers() {
+  // Get all users (returns combined users from both users and staff tables)
+  async getUsers(page = 1, limit = 20, search = '') {
     try {
-      // Try the correct endpoint for the backend
-      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_USERS);
-      return response.data;
+      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_USERS, {
+        params: { page, limit, search }
+      });
+      return response.data.users || response.data; // Handle both formats
     } catch (error) {
       console.error('Failed to fetch users:', error);
-      if (error.response?.status === 404) {
-        // If not found, try the alternative endpoint format
-        try {
-          const teachersResponse = await api.get(API_CONFIG.ENDPOINTS.ADMIN_TEACHERS);
-          return teachersResponse.data;
-        } catch (innerError) {
-          console.error('Both user endpoints failed:', innerError);
-          throw innerError;
-        }
-      } else {
-        throw error;
-      }
+      throw error;
     }
   }
 
   // Create new user
   async createUser(userData) {
     try {
-      // Use the correct endpoint based on the user role that matches the backend routes
-      let endpoint;
-      
-      if (userData.role === 'teacher') {
-        // The backend expects /admin/teachers for teacher creation
-        endpoint = API_CONFIG.ENDPOINTS.ADMIN_TEACHERS;
-      } else if (userData.role === 'parent') {
-        // The backend expects /admin/parents for parent creation
-        endpoint = API_CONFIG.ENDPOINTS.ADMIN_PARENTS;
-      } else {
-        endpoint = API_CONFIG.ENDPOINTS.ADMIN_USERS;
-      }
-      
-      console.log(`Creating ${userData.role} using endpoint: ${endpoint}`);
-      const response = await api.post(endpoint, userData);
+      console.log(`Creating ${userData.role} using unified endpoint`);
+      const response = await api.post(API_CONFIG.ENDPOINTS.ADMIN_USERS, userData);
       return response.data;
     } catch (error) {
       console.error('Failed to create user:', error);
@@ -77,21 +54,8 @@ class AdminService {
   // Update user
   async updateUser(userId, userData) {
     try {
-      // Use the correct endpoint based on the user role that matches the backend routes
-      let endpoint;
-      
-      if (userData.role === 'teacher') {
-        // The backend expects /admin/teachers/:id for teacher updates
-        endpoint = `${API_CONFIG.ENDPOINTS.ADMIN_TEACHERS}/${userId}`;
-      } else if (userData.role === 'parent') {
-        // The backend expects /admin/parents/:id for parent updates
-        endpoint = `${API_CONFIG.ENDPOINTS.ADMIN_PARENTS}/${userId}`;
-      } else {
-        endpoint = `${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`;
-      }
-      
-      console.log(`Updating ${userData.role} using endpoint: ${endpoint}`);
-      const response = await api.put(endpoint, userData);
+      console.log(`Updating ${userData.role} using unified endpoint`);
+      const response = await api.put(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`, userData);
       return response.data;
     } catch (error) {
       console.error('Failed to update user:', error);
@@ -118,23 +82,12 @@ class AdminService {
   }
 
   // Delete user
-  async deleteUser(userId) {
+  async deleteUser(userId, userSource) {
     try {
-      // First check if this is a teacher or parent by retrieving user details
-      const users = await this.getUsers();
-      const user = users.find(u => u.id.toString() === userId.toString());
-      
-      let endpoint;
-      if (user?.role === 'teacher') {
-        endpoint = `${API_CONFIG.ENDPOINTS.ADMIN_TEACHERS}/${userId}`;
-      } else if (user?.role === 'parent') {
-        endpoint = `${API_CONFIG.ENDPOINTS.ADMIN_PARENTS}/${userId}`;
-      } else {
-        endpoint = `${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`;
-      }
-      
-      console.log(`Deleting user with role ${user?.role} using endpoint: ${endpoint}`);
-      const response = await api.delete(endpoint);
+      console.log(`Deleting user using unified endpoint`);
+      const response = await api.delete(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`, {
+        data: { source: userSource }
+      });
       return response.data;
     } catch (error) {
       console.error('Failed to delete user:', error);
@@ -194,7 +147,90 @@ class AdminService {
     }
   }
 
-  // Mock data methods remain the same...
+  // Dashboard & Analytics
+  async getDashboardStats() {
+    try {
+      const response = await api.get('/admin/dashboard');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch dashboard stats:', error);
+      throw error;
+    }
+  }
+
+  async getAnalytics() {
+    try {
+      const response = await api.get('/admin/analytics');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+      throw error;
+    }
+  }
+
+  async getQuickActions() {
+    try {
+      const response = await api.get('/admin/quick-actions');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch quick actions:', error);
+      throw error;
+    }
+  }
+
+  // Children Management
+  async getChildren(page = 1, limit = 20, search = '') {
+    try {
+      const response = await api.get('/admin/children', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch children:', error);
+      throw error;
+    }
+  }
+
+  async createChild(childData) {
+    try {
+      const response = await api.post('/admin/children', childData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create child:', error);
+      throw error;
+    }
+  }
+
+  async updateChild(childId, childData) {
+    try {
+      const response = await api.put(`/admin/children/${childId}`, childData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update child:', error);
+      throw error;
+    }
+  }
+
+  async deleteChild(childId) {
+    try {
+      const response = await api.delete(`/admin/children/${childId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete child:', error);
+      throw error;
+    }
+  }
+
+  // System Health
+  async getSystemHealth() {
+    try {
+      const response = await api.get('/admin/system-health');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch system health:', error);
+      throw error;
+    }
+  }
 }
 
 // Create singleton instance

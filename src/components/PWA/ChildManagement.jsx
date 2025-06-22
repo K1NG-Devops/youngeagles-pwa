@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '../../config/api';
 import { api } from '../../services/httpClient';
@@ -6,16 +6,18 @@ import { toast } from 'react-toastify';
 import { FaChild, FaPlus, FaEdit, FaTrash, FaPen, FaSpinner, FaUserPlus, FaList, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
 
 const getClassByAge = (age) => {
-  if (age >= 1 && age <= 3) return 'Curious Cubs';
-  if (age === 4 || age === 5 || age === 6) return 'Panda';
-  return '';
+  if (age < 2) return 'Little Explorers';  // Under 2 years - Nursery
+  if (age >= 2 && age <= 3) return 'Curious Cubs';  // Ages 2-3 - Elementary
+  if (age >= 4 && age <= 6) return 'Panda Class';   // Ages 4-6 - Grade RR/R
+  return 'General Class';  // Fallback for older children
 };
 
 const getGradeByAge = (age) => {
-  if (age >= 1 && age <= 3) return 'Nursery';
-  if (age === 4 || age === 5) return 'RR';
-  if (age === 6) return 'R';
-  return '';
+  if (age < 2) return 'Nursery';     // Under 2 years
+  if (age >= 2 && age <= 3) return 'Elementary';  // Ages 2-3
+  if (age === 4 || age === 5) return 'Grade RR';  // Ages 4-5
+  if (age === 6) return 'Grade R';   // Age 6
+  return 'General';  // Fallback
 };
 
 const calculateAge = (dob) => {
@@ -126,7 +128,7 @@ const ChildManagement = () => {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
 
     if (name === 'dob') {
@@ -146,10 +148,10 @@ const ChildManagement = () => {
         [name]: value,
       }));
     }
-  };
+  }, []);
 
   // Edit child form handlers
-  const handleEditChange = (e) => {
+  const handleEditChange = useCallback((e) => {
     const { name, value } = e.target;
     
     if (name === 'dob') {
@@ -169,7 +171,7 @@ const ChildManagement = () => {
         [name]: value,
       }));
     }
-  };
+  }, []);
   
   // Start editing a child
   const startEditing = (child) => {
@@ -305,7 +307,7 @@ const ChildManagement = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setLoading(prev => ({ ...prev, register: true }));
     setResponseMessage('');
@@ -393,10 +395,10 @@ const ChildManagement = () => {
     } finally {
       setLoading(prev => ({ ...prev, register: false }));
     }
-  };
+  }, [formData, fetchChildren, navigate]);
 
   // Render tab navigation
-  const renderTabs = () => (
+  const renderTabs = useCallback(() => (
     <div className="flex border-b border-gray-200 mb-6">
       <button
         onClick={() => setActiveTab('register')}
@@ -421,10 +423,10 @@ const ChildManagement = () => {
         Manage Children
       </button>
     </div>
-  );
+  ), [activeTab]);
 
   // Render child registration form
-  const renderRegisterForm = () => (
+  const renderRegisterForm = useCallback(() => (
     <>
       <h3 className="text-xl font-bold mb-4 text-blue-700">
         Register New Child
@@ -524,7 +526,7 @@ const ChildManagement = () => {
         </div>
       )}
     </>
-  );
+  ), [formData, handleChange, handleSubmit, loading.register, responseMessage]);
 
   // Render children list for management
   const renderChildrenList = () => (

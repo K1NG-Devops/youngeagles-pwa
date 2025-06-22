@@ -40,21 +40,20 @@ const HomeworkList = () => {
   const [homeworks, setHomeworks] = useState([]);
   const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(() => {
-    // Try to get child_id from multiple sources with validation
+    // Get child_id from query params first, but don't store invalid values
     const queryChild = searchParams.get('child_id');
     const storedChild = localStorage.getItem('selectedChild');
     
-    // Validate the child_id to ensure it's not null, undefined, or empty string
-    if (queryChild && queryChild.trim() !== '') {
+    // Only use valid child IDs (non-empty strings that aren't just whitespace)
+    if (queryChild && queryChild.trim() !== '' && queryChild !== 'null' && queryChild !== 'undefined') {
       console.log('HomeworkList: Using child_id from query params:', queryChild);
-      // Store it in localStorage for persistence
       localStorage.setItem('selectedChild', queryChild);
       return queryChild;
-    } else if (storedChild && storedChild.trim() !== '') {
+    } else if (storedChild && storedChild.trim() !== '' && storedChild !== 'null' && storedChild !== 'undefined') {
       console.log('HomeworkList: Using child_id from localStorage:', storedChild);
       return storedChild;
     }
-    console.log('HomeworkList: No valid child_id found in query or localStorage');
+    console.log('HomeworkList: No valid child_id found, will auto-select first child');
     return '';
   });
   const [filter, setFilter] = useState('all'); // all, pending, submitted, overdue
@@ -147,27 +146,46 @@ const HomeworkList = () => {
           status: res.status,
           hasData: !!res.data,
           isArray: Array.isArray(res.data),
-          dataLength: Array.isArray(res.data) ? res.data.length : (res.data && res.data.children ? res.data.children.length : 'N/A')
+          dataLength: Array.isArray(res.data) ? res.data.length : (res.data && res.data.children ? res.data.children.length : 'N/A'),
+          responseStructure: res.data
         });
-        const childrenData = Array.isArray(res.data) ? res.data : res.data.children || [];
-        console.log(`HomeworkList: Fetched ${childrenData.length} children`);
+        
+        // Handle different response structures from the API
+        let childrenData = [];
+        if (res.data && res.data.success && Array.isArray(res.data.data)) {
+          // New API format: {success: true, data: [...]}
+          childrenData = res.data.data;
+        } else if (Array.isArray(res.data)) {
+          // Direct array format: [...]
+          childrenData = res.data;
+        } else if (res.data && res.data.children && Array.isArray(res.data.children)) {
+          // Nested format: {children: [...]}
+          childrenData = res.data.children;
+        } else {
+          console.warn('HomeworkList: Unexpected API response format:', res.data);
+          childrenData = [];
+        }
+        
+        console.log(`HomeworkList: Fetched ${childrenData.length} children:`, childrenData.map(child => ({ id: child.id, name: child.name })));
         setChildren(childrenData);
         
-        // Auto-select first child if no child is selected
-        if (childrenData.length > 0 && !selectedChild) {
-          const firstChildId = childrenData[0].id.toString();
-          console.log(`HomeworkList: Auto-selecting first child: ${firstChildId}`);
-          setSelectedChild(firstChildId);
-          localStorage.setItem('selectedChild', firstChildId);
-        } else if (childrenData.length > 0) {
-          // Validate that the selected child exists in the fetched children
-          const childExists = childrenData.some(child => child.id.toString() === selectedChild);
-          if (!childExists) {
-            console.log(`HomeworkList: Selected child ${selectedChild} not found in fetched children, selecting first child`);
+        // Auto-select first child if no child is selected or if selected child doesn't exist
+        if (childrenData.length > 0) {
+          const currentSelectedChild = selectedChild;
+          const childExists = currentSelectedChild ? childrenData.some(child => child.id.toString() === currentSelectedChild) : false;
+          
+          if (!currentSelectedChild || !childExists) {
             const firstChildId = childrenData[0].id.toString();
+            console.log(`HomeworkList: ${!currentSelectedChild ? 'Auto-selecting' : 'Switching to'} first child: ${firstChildId} (${childrenData[0].name})`);
             setSelectedChild(firstChildId);
             localStorage.setItem('selectedChild', firstChildId);
+          } else {
+            console.log(`HomeworkList: Selected child ${currentSelectedChild} exists in fetched children`);
           }
+        } else {
+          console.log('HomeworkList: No children found, clearing selectedChild');
+          setSelectedChild('');
+          localStorage.removeItem('selectedChild');
         }
       } catch (err) {
         console.error('HomeworkList: Error fetching children:', err);
@@ -206,7 +224,7 @@ const HomeworkList = () => {
     };
 
     fetchChildren();
-  }, [isTeacher, parent_id, token, selectedChild, navigate]);
+  }, [isTeacher, parent_id, token, navigate]);
 
   // Fetch homeworks
   useEffect(() => {
@@ -251,7 +269,24 @@ const HomeworkList = () => {
         
         if (!isMounted) return;
         
-        const hwList = Array.isArray(homeworkData) ? homeworkData : homeworkData.homeworks || [];
+        // Handle different response structures
+        let hwList;
+        if (Array.isArray(homeworkData)) {
+          hwList = homeworkData;
+        } else if (homeworkData.data && Array.isArray(homeworkData.data)) {
+          hwList = homeworkData.data;
+        } else if (homeworkData.homeworks && Array.isArray(homeworkData.homeworks)) {
+          hwList = homeworkData.homeworks;
+        } else {
+          hwList = [];
+        }
+        
+        console.log('HomeworkList: Processing homework data:', {
+          originalData: homeworkData,
+          extractedList: hwList,
+          listLength: hwList.length
+        });
+        
         setHomeworks(hwList);
         
         // Clear any existing errors

@@ -1,75 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUsers, FaChalkboardTeacher, FaBook, FaBell, FaChartBar, FaCog, FaClipboardList, FaSpinner, FaUserShield, FaSchool } from 'react-icons/fa';
+import { FaUsers, FaChalkboardTeacher, FaBook, FaBell, FaChartBar, FaCog, FaClipboardList, FaSpinner, FaUserShield, FaSchool, FaChild, FaBaby, FaExclamationTriangle, FaCheckCircle, FaPlus, FaUserPlus } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { API_CONFIG } from '../../config/api';
+import AdminService from '../../services/adminService';
+import AdminUserManagement from './AdminUserManagement';
+import ChildrenManagement from './ChildrenManagement';
 
 const PWAAdminDashboard = () => {
   const navigate = useNavigate();
   const { auth } = useAuth();
-  const [adminStats, setAdminStats] = useState({
-    totalUsers: 0,
-    totalTeachers: 0,
-    totalParents: 0,
-    totalHomeworks: 0,
-    totalSubmissions: 0,
-    systemHealth: 'Good'
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [quickActions, setQuickActions] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    const fetchAdminStats = async () => {
-      setIsLoading(true);
-      try {
-        if (import.meta.env.DEV) {
-          // Mock data for development
-      setTimeout(() => {
-        setAdminStats({
-          totalUsers: 150,
-          totalTeachers: 12,
-          totalParents: 138,
-          totalHomeworks: 45,
-          totalSubmissions: 234,
-          systemHealth: 'Excellent'
-        });
-            setRecentActivity([
-              { message: 'New parent registered: Sarah Johnson', timestamp: '2 hours ago' },
-              { message: 'Teacher posted new homework', timestamp: '4 hours ago' },
-              { message: 'System backup completed', timestamp: '6 hours ago' }
-            ]);
-            setIsLoading(false);
-          }, 1000);
-        } else {
-          // Fetch real data from backend
-          const token = localStorage.getItem('accessToken');
-          const res = await axios.get(`${API_CONFIG.getApiUrl()}/admin/dashboard`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setAdminStats({
-            totalUsers: res.data.totalUsers || 0,
-            totalTeachers: res.data.totalTeachers || 0,
-            totalParents: res.data.totalParents || 0,
-            totalHomeworks: res.data.totalHomeworks || 0,
-            totalSubmissions: res.data.totalSubmissions || 0,
-            systemHealth: res.data.systemHealth || 'Good'
-          });
-          setRecentActivity(res.data.recentActivity || []);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        toast.error('Failed to load admin dashboard data');
-        setIsLoading(false);
-    }
-    };
-    fetchAdminStats();
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Load all dashboard data in parallel
+      const [dashboardStats, quickActionsData, analyticsData] = await Promise.all([
+        AdminService.getDashboardStats(),
+        AdminService.getQuickActions().catch(err => {
+          console.warn('Quick actions failed:', err);
+          return { pendingSubmissions: 0, newEnrollments: 0, inactiveUsers: 0, overdueHomework: 0 };
+        }),
+        AdminService.getAnalytics().catch(err => {
+          console.warn('Analytics failed:', err);
+          return { enrollmentTrends: [], classDistribution: [], ageDistribution: [], homeworkStats: {} };
+        })
+      ]);
+      
+      setDashboardData(dashboardStats);
+      setQuickActions(quickActionsData);
+      setAnalytics(analyticsData);
+    } catch (err) {
+      console.error('❌ Failed to load admin dashboard:', err);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const adminName = auth?.user?.name || 'Admin';
 
-  const quickActions = [
+  const quickActionsList = [
     {
       id: 'users',
       title: 'Manage Users',
@@ -77,7 +62,7 @@ const PWAAdminDashboard = () => {
       icon: FaUsers,
       color: 'blue',
       path: '/admin-users',
-      badge: adminStats.totalUsers
+      badge: dashboardData?.totalUsers || 0
     },
     {
       id: 'teachers',
@@ -86,7 +71,7 @@ const PWAAdminDashboard = () => {
       icon: FaChalkboardTeacher,
       color: 'green',
       path: '/admin-teachers',
-      badge: adminStats.totalTeachers
+      badge: dashboardData?.totalTeachers || 0
     },
     {
       id: 'reports',
@@ -111,190 +96,406 @@ const PWAAdminDashboard = () => {
   const systemStats = [
     { 
       label: 'Total Users', 
-      value: adminStats.totalUsers, 
+      value: dashboardData?.totalUsers || 0, 
       icon: FaUsers, 
       color: 'blue',
-      trend: '+12 this month'
+      trend: 'Real database data'
     },
     { 
       label: 'Teachers', 
-      value: adminStats.totalTeachers, 
+      value: dashboardData?.totalTeachers || 0, 
       icon: FaChalkboardTeacher, 
       color: 'green',
-      trend: '+2 this month'
+      trend: 'Active educators'
     },
     { 
       label: 'Parents', 
-      value: adminStats.totalParents, 
+      value: dashboardData?.totalParents || 0, 
       icon: FaSchool, 
       color: 'indigo',
-      trend: '+10 this month'
+      trend: 'Registered families'
+    },
+    { 
+      label: 'Children', 
+      value: dashboardData?.totalChildren || 0, 
+      icon: FaUsers, 
+      color: 'purple',
+      trend: 'Enrolled students'
     },
     { 
       label: 'Homeworks', 
-      value: adminStats.totalHomeworks, 
+      value: dashboardData?.totalHomeworks || 0, 
       icon: FaBook, 
       color: 'yellow',
-      trend: '+5 this week'
+      trend: 'Active assignments'
     },
     { 
       label: 'Submissions', 
-      value: adminStats.totalSubmissions, 
+      value: dashboardData?.totalSubmissions || 0, 
       icon: FaClipboardList, 
       color: 'red',
-      trend: '+23 this week'
+      trend: 'Student submissions'
+    },
+    { 
+      label: 'Messages', 
+      value: dashboardData?.totalMessages || 0, 
+      icon: FaBell, 
+      color: 'orange',
+      trend: 'Communications'
     },
     { 
       label: 'System Health', 
-      value: adminStats.systemHealth, 
+      value: dashboardData?.systemHealth || 'Good', 
       icon: FaBell, 
       color: 'green',
-      trend: 'All systems operational'
+      trend: 'Live monitoring'
     }
   ];
 
-  return (
-    <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-white bg-opacity-20 rounded-full">
-            <FaUserShield className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold mb-1">Welcome, {adminName}!</h2>
-            <p className="text-sm text-purple-100">System Administration Dashboard</p>
-          </div>
+  const StatCard = ({ title, value, icon, color, subtitle }) => (
+    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4" style={{borderLeftColor: color}}>
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="text-xs sm:text-sm font-medium text-gray-600">{title}</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{value}</p>
+          {subtitle && <p className="text-xs sm:text-sm text-gray-500 mt-1">{subtitle}</p>}
         </div>
-        
-        {import.meta.env.DEV && (
-          <div className="mt-3 bg-white bg-opacity-20 rounded-lg p-2">
-            <p className="text-sm font-medium">🔧 Development Mode - Mock Data Active</p>
+        <div className="p-2 sm:p-3 rounded-full ml-2" style={{backgroundColor: `${color}20`}}>
+          <div style={{color}}>{icon}</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const QuickActionCard = ({ title, count, icon, color, onClick, urgent = false }) => (
+    <div 
+      className={`bg-white rounded-lg shadow-lg p-4 cursor-pointer hover:shadow-xl transition-shadow min-h-[80px] sm:min-h-[auto] ${
+        urgent ? 'border-l-4 border-red-500' : ''
+      }`}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="text-xs sm:text-sm font-medium text-gray-600">{title}</p>
+          <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${urgent ? 'text-red-600' : 'text-gray-900'}`}>
+            {count}
+          </p>
+        </div>
+        <div className={`p-2 rounded-full ml-2 ${urgent ? 'bg-red-100' : 'bg-gray-100'}`}>
+          <div style={{color: urgent ? '#DC2626' : color}}>{icon}</div>
+        </div>
+      </div>
+      {urgent && count > 0 && (
+        <div className="mt-2 text-xs text-red-600 font-medium">
+          <FaExclamationTriangle className="inline mr-1" />
+          Needs attention
+        </div>
+      )}
+    </div>
+  );
+
+  const TabButton = ({ id, label, icon, active, onClick }) => (
+    <button
+      onClick={() => onClick(id)}
+      className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base whitespace-nowrap ${
+        active 
+          ? 'bg-blue-500 text-white' 
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={loadDashboardData}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 px-3 py-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Mobile-First Header */}
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">School Administration</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage your preschool efficiently from anywhere</p>
+        </div>
+
+        {/* Mobile-First Tab Navigation */}
+        <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
+          <TabButton
+            id="overview"
+            label="Overview"
+            icon={<FaChartBar className="text-sm" />}
+            active={activeTab === 'overview'}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="users"
+            label="Users"
+            icon={<FaUsers className="text-sm" />}
+            active={activeTab === 'users'}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="children"
+            label="Children"
+            icon={<FaChild className="text-sm" />}
+            active={activeTab === 'children'}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="analytics"
+            label="Analytics"
+            icon={<FaClipboardList className="text-sm" />}
+            active={activeTab === 'analytics'}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="settings"
+            label="Settings"
+            icon={<FaCog className="text-sm" />}
+            active={activeTab === 'settings'}
+            onClick={setActiveTab}
+          />
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Mobile-First Key Statistics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Total Users"
+                value={dashboardData?.totalUsers || 0}
+                icon={<FaUsers size={20} />}
+                color="#3B82F6"
+                subtitle={`${dashboardData?.totalTeachers || 0} teachers, ${dashboardData?.totalParents || 0} parents`}
+              />
+              <StatCard
+                title="Children Enrolled"
+                value={dashboardData?.totalChildren || 0}
+                icon={<FaChild size={20} />}
+                color="#10B981"
+                subtitle="Active enrollments"
+              />
+              <StatCard
+                title="Homework Assignments"
+                value={dashboardData?.totalHomeworks || 0}
+                icon={<FaClipboardList size={20} />}
+                color="#F59E0B"
+                subtitle={`${dashboardData?.totalSubmissions || 0} submissions`}
+              />
+              <StatCard
+                title="System Health"
+                value={dashboardData?.systemHealth || 'Good'}
+                icon={<FaCheckCircle size={20} />}
+                color="#10B981"
+                subtitle="All systems operational"
+              />
+            </div>
+
+            {/* Mobile-First Quick Actions */}
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <QuickActionCard
+                  title="Pending Submissions"
+                  count={quickActions?.pendingSubmissions || 0}
+                  icon={<FaClipboardList size={18} />}
+                  color="#F59E0B"
+                  urgent={quickActions?.pendingSubmissions > 0}
+                  onClick={() => setActiveTab('homework')}
+                />
+                <QuickActionCard
+                  title="New Enrollments"
+                  count={quickActions?.newEnrollments || 0}
+                  icon={<FaBaby size={18} />}
+                  color="#10B981"
+                  onClick={() => setActiveTab('children')}
+                />
+                <QuickActionCard
+                  title="Inactive Users"
+                  count={quickActions?.inactiveUsers || 0}
+                  icon={<FaUsers size={18} />}
+                  color="#6B7280"
+                  urgent={quickActions?.inactiveUsers > 5}
+                  onClick={() => setActiveTab('users')}
+                />
+                <QuickActionCard
+                  title="Overdue Homework"
+                  count={quickActions?.overdueHomework || 0}
+                  icon={<FaExclamationTriangle size={18} />}
+                  color="#EF4444"
+                  urgent={quickActions?.overdueHomework > 0}
+                  onClick={() => setActiveTab('homework')}
+                />
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                {dashboardData?.recentActivity?.length > 0 ? (
+                  <div className="space-y-3">
+                    {dashboardData.recentActivity.map((activity, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-900">{activity.message}</p>
+                          <p className="text-xs text-gray-500">{activity.timestamp}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No recent activity</p>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Add Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => setActiveTab('users')}
+                className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+              >
+                <FaUserPlus size={20} />
+                <div className="text-left">
+                  <p className="font-medium">Add Teacher/Parent</p>
+                  <p className="text-sm opacity-90">Create new user account</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('children')}
+                className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+              >
+                <FaBaby size={20} />
+                <div className="text-left">
+                  <p className="font-medium">Enroll Child</p>
+                  <p className="text-sm opacity-90">Add new student</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className="bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+              >
+                <FaChartBar size={20} />
+                <div className="text-left">
+                  <p className="font-medium">View Reports</p>
+                  <p className="text-sm opacity-90">School analytics</p>
+                </div>
+              </button>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* System Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {systemStats.map((stat, index) => {
-          const IconComponent = stat.icon;
-          const colorClasses = {
-            blue: 'bg-blue-100 text-blue-600',
-            green: 'bg-green-100 text-green-600',
-            purple: 'bg-purple-100 text-purple-600',
-            indigo: 'bg-indigo-100 text-indigo-600',
-            yellow: 'bg-yellow-100 text-yellow-600',
-            red: 'bg-red-100 text-red-600',
-            orange: 'bg-orange-100 text-orange-600'
-          };
+        {activeTab === 'users' && (
+          <AdminUserManagement />
+        )}
 
-          return (
-            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className={`p-2 rounded-full ${colorClasses[stat.color]}`}>
-                  <IconComponent className="w-4 h-4" />
+        {activeTab === 'children' && (
+          <ChildrenManagement />
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">School Analytics</h2>
+              
+              {/* Class Distribution */}
+              {analytics?.classDistribution?.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3">Class Distribution</h3>
+                  <div className="space-y-2">
+                    {analytics.classDistribution.map((classData, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">{classData.className || 'Unknown Class'}</span>
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                          {classData.count} children
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                {isLoading && <FaSpinner className="animate-spin text-gray-400" />}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                <p className="text-xl font-bold text-gray-900">{stat.value}</p>
-                <p className="text-xs text-gray-500 mt-1">{stat.trend}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              )}
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Admin Actions</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action) => {
-            const IconComponent = action.icon;
-            const colorClasses = {
-              blue: 'bg-blue-50 border-blue-200 text-blue-700',
-              green: 'bg-green-50 border-green-200 text-green-700',
-              purple: 'bg-purple-50 border-purple-200 text-purple-700',
-              orange: 'bg-orange-50 border-orange-200 text-orange-700'
-            };
-            
-            return (
-              <Link
-                key={action.id}
-                to={action.path}
-                className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all min-h-[100px] ${colorClasses[action.color]} hover:shadow-md cursor-pointer`}
-                onClick={(e) => {
-                  if (import.meta.env.DEV && action.id !== 'teachers') {
-                    e.preventDefault();
-                    toast.info(`${action.title} feature coming soon!`);
-                  }
-                }}
-              >
-                <div className={`p-2 rounded-lg mb-2 bg-${action.color}-100`}>
-                  <IconComponent className="w-6 h-6" />
+              {/* Age Distribution */}
+              {analytics?.ageDistribution?.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3">Age Distribution</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {analytics.ageDistribution.map((ageData, index) => (
+                      <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
+                        <p className="text-2xl font-bold text-blue-600">{ageData.count}</p>
+                        <p className="text-sm text-gray-600">{ageData.age_group}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="font-medium text-sm">{action.title}</p>
-                  <p className="text-xs opacity-75">{action.description}</p>
-                  {action.badge && (
-                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full mt-1">
-                      {action.badge}
-                    </span>
-                  )}
+              )}
+
+              {/* Homework Stats */}
+              {analytics?.homeworkStats && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Homework Performance</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <p className="text-2xl font-bold text-green-600">
+                        {Math.round(analytics.homeworkStats.completion_rate || 0)}%
+                      </p>
+                      <p className="text-sm text-gray-600">Completion Rate</p>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">
+                        {analytics.homeworkStats.total_assignments || 0}
+                      </p>
+                      <p className="text-sm text-gray-600">Total Assignments</p>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <p className="text-2xl font-bold text-purple-600">
+                        {analytics.homeworkStats.total_submissions || 0}
+                      </p>
+                      <p className="text-sm text-gray-600">Submissions</p>
+                    </div>
+                  </div>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+              )}
+            </div>
+          </div>
+        )}
 
-      {/* System Overview */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">System Overview</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium text-green-700">System Status</span>
-            </div>
-            <span className="text-sm text-green-600 font-semibold">Online</span>
+        {activeTab === 'settings' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">System Settings</h2>
+            <p className="text-gray-600">System settings and configuration options coming soon...</p>
           </div>
-          
-          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-sm font-medium text-blue-700">Database</span>
-            </div>
-            <span className="text-sm text-blue-600 font-semibold">Connected</span>
-          </div>
-          
-          <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span className="text-sm font-medium text-purple-700">PWA Version</span>
-            </div>
-            <span className="text-sm text-purple-600 font-semibold">v1.0.0</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
-        <div className="space-y-3">
-          {recentActivity.length === 0 ? (
-            <div className="text-gray-400 text-sm">No recent activity available.</div>
-          ) : (
-            recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex items-center space-x-3 p-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <p className="text-sm text-gray-600">{activity.message}</p>
-                <span className="text-xs text-gray-400">{activity.timestamp}</span>
-          </div>
-            ))
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
