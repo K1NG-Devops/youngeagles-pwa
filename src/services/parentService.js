@@ -81,19 +81,19 @@ class ParentService {
   async getHomework(childId, parentId) {
     try {
       console.log('ParentService: Fetching real homework data for child:', childId);
-      
+
       // Use the existing API pattern with the homework endpoint
       const url = API_CONFIG.ENDPOINTS.HOMEWORK_FOR_PARENT
         .replace(':parentId', parentId)
         .replace(':childId', childId);
-      
+    
       const response = await api.get(url, {
         headers: {
           'X-Request-Source': 'pwa-parent-homework',
           'Cache-Control': 'no-cache'
         }
       });
-      
+
       console.log('✅ Real homework data fetched:', response.data);
       return {
         success: true,
@@ -153,6 +153,139 @@ class ParentService {
       return response.data;
     } catch (error) {
       console.error('Failed to send message:', error);
+      throw error;
+    }
+  }
+
+  // Get available contacts (teachers, admins)
+  async getAvailableContacts() {
+    try {
+      // The API endpoint for fetching all teachers
+      const response = await api.get('/api/teacher'); 
+      return response.data.teachers || [];
+    } catch (error) {
+      console.error('Failed to fetch available contacts:', error);
+      return []; // Return empty array on failure
+    }
+  }
+
+  async getConversations() {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.GET_CONVERSATIONS);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch conversations:', error);
+      throw error;
+    }
+  }
+
+  async getConversation(conversationId) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.GET_CONVERSATION.replace(':conversationId', conversationId);
+      const response = await api.get(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch conversation:', error);
+      throw error;
+    }
+  }
+
+  async createConversation(participants, initialMessage = null) {
+    try {
+      const response = await api.post(API_CONFIG.ENDPOINTS.CREATE_CONVERSATION, {
+        participants,
+        initialMessage
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
+      throw error;
+    }
+  }
+
+  async markMessageAsRead(messageId) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.MARK_MESSAGE_READ.replace(':messageId', messageId);
+      const response = await api.patch(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to mark message as read:', error);
+      throw error;
+    }
+  }
+
+  async uploadMessageAttachment(file, conversationId) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('conversationId', conversationId);
+      
+      const response = await api.post(API_CONFIG.ENDPOINTS.UPLOAD_MESSAGE_ATTACHMENT, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to upload attachment:', error);
+      throw error;
+    }
+  }
+
+  async getMessageHistory(conversationId, page = 1, limit = 50) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.GET_MESSAGE_HISTORY.replace(':conversationId', conversationId);
+      const response = await api.get(`${endpoint}?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch message history:', error);
+      throw error;
+    }
+  }
+
+  async deleteMessage(messageId) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.DELETE_MESSAGE.replace(':messageId', messageId);
+      const response = await api.delete(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      throw error;
+    }
+  }
+
+  async editMessage(messageId, newContent) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.EDIT_MESSAGE.replace(':messageId', messageId);
+      const response = await api.patch(endpoint, { content: newContent });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      throw error;
+    }
+  }
+
+  async searchMessages(query, conversationId = null) {
+    try {
+      const params = new URLSearchParams({ query });
+      if (conversationId) {
+        params.append('conversationId', conversationId);
+      }
+      
+      const response = await api.get(`${API_CONFIG.ENDPOINTS.SEARCH_MESSAGES}?${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to search messages:', error);
+      throw error;
+    }
+  }
+
+  async getUnreadCount() {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.GET_UNREAD_COUNT);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error);
       throw error;
     }
   }

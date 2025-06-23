@@ -3,8 +3,9 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import { FaHome, FaBook, FaBell, FaUser, FaChalkboardTeacher, FaExternalLinkAlt, FaCog, FaGlobe, FaComments } from 'react-icons/fa'
 import useAuth from '../hooks/useAuth'
 import usePWA from '../hooks/usePWA'
-import { toast } from 'react-toastify'
-import { useTheme } from '../hooks/useTheme.jsx'
+import { showNotification } from '../utils/notifications'
+import { useTheme } from '../hooks/useTheme'
+import useWebSocket from '../hooks/useWebSocket'
 
 // Import dashboard components
 import PWAParentDashboard from './PWA/PWAParentDashboard'
@@ -32,13 +33,16 @@ import AssignmentManagement from './PWA/AssignmentManagement'
 import TeacherStudentList from './PWA/TeacherStudentList'
 import TeacherReports from './PWA/TeacherReports'
 import ActivityBuilder from './PWA/ActivityBuilder'
+import AppSettings from './PWA/AppSettings'
+import UserDropdown from './UserDropdown'
 
 const PWALayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { logout } = useAuth()
   const { isOnline } = usePWA()
-  const { isDark } = useTheme()
+  const { isDark, toggleTheme } = useTheme()
+  const { isConnected, sendMessage, lastMessage } = useWebSocket()
   
   // Simple localStorage-based auth like the full website
   const accessToken = localStorage.getItem('accessToken')
@@ -62,6 +66,7 @@ const PWALayout = () => {
   const { openFullWebsite } = usePWA()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [isInitialized, setIsInitialized] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   // Helper functions to improve code readability
   const isPublicRoute = (path) => {
@@ -194,6 +199,29 @@ const PWALayout = () => {
     }
   }, [location.pathname, isInitialized, auth?.user])
 
+  // Handle WebSocket connection status
+  useEffect(() => {
+    if (auth?.user && isConnected) {
+      console.log('🔌 WebSocket connected for user:', auth.user.name || auth.user.email)
+      showNotification('Connected to real-time messaging', 'success')
+    } else if (auth?.user && !isConnected) {
+      console.log('🔌 WebSocket disconnected for user:', auth.user.name || auth.user.email)
+    }
+  }, [isConnected, auth?.user])
+
+  // Handle new WebSocket messages
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('📨 New real-time message received:', lastMessage)
+      // You can add custom logic here for different message types
+      if (lastMessage.type === 'homework_notification') {
+        showNotification(`New homework: ${lastMessage.title}`, 'info')
+      } else if (lastMessage.type === 'message') {
+        showNotification(`New message from ${lastMessage.sender}`, 'info')
+      }
+    }
+  }, [lastMessage])
+
   const handleLogout = async () => {
     try {
       await logout()
@@ -213,7 +241,7 @@ const PWALayout = () => {
       : (import.meta.env.VITE_MAIN_WEBSITE_URL || 'https://youngeagles.org.za')
     
     window.open(mainWebsiteUrl, '_blank')
-    toast.info('Opening main website in browser...')
+    showNotification('Opening main website in browser...', 'info')
   }
 
   // Navigation items based on user role
@@ -264,11 +292,22 @@ const PWALayout = () => {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>
   }
 
+  // Show settings if requested
+  if (showSettings) {
+    return (
+      <AppSettings
+        isDark={isDark}
+        onThemeChange={toggleTheme}
+        onClose={() => setShowSettings(false)}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} flex flex-col transition-colors duration-200`}>
       <TopNotificationManager />
-      {/* Mobile-First PWA Header */}
-      <header className={`${isDark ? 'bg-gray-800' : 'bg-blue-600'} text-white px-3 py-2 shadow-lg transition-colors duration-200`}>
+      {/* Mobile-First PWA Header - Fixed */}
+      <header className={`fixed top-0 left-0 right-0 z-40 ${isDark ? 'bg-gray-800' : 'bg-blue-600'} text-white px-3 py-2 shadow-lg transition-colors duration-200`}>
         <div className="flex justify-between items-center">
           {/* Logo and Title - Simplified for mobile */}
           <div className="flex items-center space-x-2">
@@ -282,6 +321,13 @@ const PWALayout = () => {
             <div className="flex items-center space-x-1 sm:space-x-2">
               <h1 className="text-sm sm:text-lg font-bold">Young Eagles</h1>
               <span className={`hidden sm:inline text-xs px-1.5 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-blue-500'} transition-colors duration-200`}>PWA</span>
+              {/* WebSocket Connection Indicator */}
+              {auth?.user && (
+                <div className={`flex items-center space-x-1 ${isConnected ? 'text-green-400' : 'text-red-400'}`} title={isConnected ? 'Connected to real-time messaging' : 'Disconnected from real-time messaging'}>
+                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'} ${isConnected ? 'animate-pulse' : ''}`}></div>
+                  <span className="text-xs hidden sm:inline">{isConnected ? 'Live' : 'Offline'}</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -296,33 +342,21 @@ const PWALayout = () => {
               <FaExternalLinkAlt className="text-sm" />
             </button>
             
-            {/* Mobile menu button / Profile */}
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg transition-colors duration-200 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-500'}`}
-              title="Profile & Logout"
-            >
-              <FaUser className="text-sm" />
-            </button>
+            {/* User Dropdown Menu */}
+            <UserDropdown
+              user={auth?.user}
+              onLogout={handleLogout}
+              onSettings={() => setShowSettings(true)}
+              onOpenWebsite={handleOpenWebsite}
+            />
           </div>
         </div>
         
-        {/* User info - Mobile optimized */}
-        {auth?.user && (
-          <div className="mt-2 text-xs sm:text-sm">
-            <span className={`${isDark ? 'text-gray-300' : 'text-blue-100'}`}>
-              Welcome, {auth.user.name || 'User'}
-            </span>
-            <span className={`mx-2 ${isDark ? 'text-gray-500' : 'text-blue-300'}`}>•</span>
-            <span className={`${isDark ? 'text-gray-400' : 'text-blue-200'} capitalize`}>
-              {auth.user.role || 'Student'}
-            </span>
-          </div>
-        )}
+
       </header>
 
-      {/* Main Content - Full Viewport Width, No Padding */}
-      <main className="flex-1 overflow-hidden">
+      {/* Main Content - Full Viewport Width, Account for Fixed Header */}
+      <main className="flex-1 overflow-y-auto pt-16 pb-16">
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -362,7 +396,7 @@ const PWALayout = () => {
 
       {/* Mobile-First Bottom Navigation - Theme Aware */}
       {auth?.user && navigationItems.length > 0 && (
-        <nav className={`fixed bottom-0 left-0 right-0 border-t shadow-lg transition-colors duration-200 ${
+        <nav className={`fixed bottom-0 left-0 right-0 border-t shadow-lg transition-colors duration-200 z-50 ${
           isDark 
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-white border-gray-200'
@@ -386,7 +420,7 @@ const PWALayout = () => {
                         : 'text-blue-600 bg-blue-50'
                       : isDark
                         ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700'
-                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                 >
                   <IconComponent className={`${isActive ? 'text-xl' : 'text-lg'} mb-1`} />

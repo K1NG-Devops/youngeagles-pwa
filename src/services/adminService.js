@@ -179,11 +179,17 @@ class AdminService {
   }
 
   // Children Management
-  async getChildren(page = 1, limit = 20, search = '') {
+  async getChildren(page = 1, limit = 500, search = '', getAllChildren = false) {
     try {
-      const response = await api.get('/admin/children', {
-        params: { page, limit, search }
-      });
+      const params = { page, limit, search };
+      
+      // If we want all children, use the 'all' parameter supported by the API
+      if (getAllChildren) {
+        params.all = 'true';
+      }
+      
+      const response = await api.get('/admin/children', { params });
+      console.log(`📊 Retrieved ${response.data?.data?.length || 0} children from API`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch children:', error);

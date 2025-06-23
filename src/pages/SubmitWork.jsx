@@ -304,7 +304,7 @@ const SubmitWork = () => {
       toast.error('Please select at least one file to submit');
       return;
     }
-    
+
     if (!selectedChild) {
       toast.error('Please select a child');
       return;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '../../config/api';
 import { api } from '../../services/httpClient';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../TopNotificationManager';
 import { 
   FaChild, FaPlus, FaEdit, FaTrash, FaPen, FaSpinner, FaUserPlus, FaList, 
   FaCheck, FaTimes, FaArrowLeft, FaUser, FaMedkit, FaPhone, FaUtensils, 

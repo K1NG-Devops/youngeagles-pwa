@@ -63,15 +63,15 @@ const TopNotificationManager = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none">
-      <div className="flex flex-col items-center pt-4 space-y-2">
+      <div className="flex flex-col items-center pt-16 space-y-2 max-h-screen overflow-y-auto">
         {notifications.map((notification) => (
           <div
             key={notification.id}
             className={`
               flex items-center space-x-3 px-6 py-3 rounded-lg shadow-lg
-              border-l-4 text-white font-medium max-w-sm mx-4
+              border-l-4 text-white font-medium max-w-md mx-4
               pointer-events-auto transform transition-all duration-300
-              animate-slideDown
+              animate-slideDown backdrop-blur-sm
               ${getNotificationColors(notification.type)}
             `}
             onClick={() => removeNotification(notification.id)}

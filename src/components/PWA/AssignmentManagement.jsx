@@ -14,7 +14,7 @@ import {
   FaFilter,
   FaSort
 } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../TopNotificationManager';
 import assignmentService from '../../services/assignmentService';
 import useAuth from '../../hooks/useAuth';
 

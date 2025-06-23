@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt, FaChartBar, FaMagic, FaRocket } from 'react-icons/fa';
+import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt, FaChartBar, FaMagic, FaRocket, FaGraduationCap, FaCalendarWeek } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../TopNotificationManager';
 import { API_CONFIG } from '../../config/api';
+import { useTheme } from '../../hooks/useTheme.jsx';
 import AdvancedHomeworkCreator from './AdvancedHomeworkCreator';
 import AdvancedProgressDashboard from './AdvancedProgressDashboard';
+import SkillProgressTracker from './SkillProgressTracker';
+import WeeklyReportDashboard from './WeeklyReportDashboard';
 
 const PWATeacherDashboard = () => {
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { isDark } = useTheme();
   const [teacherStats, setTeacherStats] = useState({
     totalHomeworks: 0,
     totalSubmissions: 0,
@@ -26,7 +30,6 @@ const PWATeacherDashboard = () => {
   const [teacherClass, setTeacherClass] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
   const [showAdvancedCreator, setShowAdvancedCreator] = useState(false);
-  const [isDark, setIsDark] = useState(false);
 
   const token = localStorage.getItem('accessToken');
   const teacherId = auth?.user?.id || localStorage.getItem('teacherId');
@@ -40,7 +43,7 @@ const PWATeacherDashboard = () => {
     try {
       // Fetch teacher class info and students
       const classRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/teacher/classes`,
+        `${API_CONFIG.getApiUrl()}/teacher/profile`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -53,9 +56,9 @@ const PWATeacherDashboard = () => {
         setTeacherClass(classData.teacher.className);
       }
       
-      // Fetch teacher stats from new endpoint
+      // Fetch teacher stats from homework endpoint
       const statsRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/teacher/stats`,
+        `${API_CONFIG.getApiUrl()}/homework/teacher/stats`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -73,10 +76,10 @@ const PWATeacherDashboard = () => {
         });
       }
       
-      // Fetch all submissions for teacher (keep existing endpoint as fallback)
+      // Fetch all submissions for teacher
       try {
         const submissionsRes = await axios.get(
-          `${API_CONFIG.getApiUrl()}/homeworks/teacher/all-submissions`,
+          `${API_CONFIG.getApiUrl()}/homework/teacher/submissions`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -93,9 +96,7 @@ const PWATeacherDashboard = () => {
       
     } catch (err) {
       console.error('Error fetching teacher data:', err);
-      if (typeof toast !== 'undefined') {
-        toast.error('Failed to load dashboard data');
-      }
+      showTopNotification('Failed to load dashboard data', 'error');
       
       // Fallback to empty state
       setTeacherStats({
@@ -138,6 +139,26 @@ const PWATeacherDashboard = () => {
       icon: FaChartBar,
       color: 'gradient',
       action: () => setActiveView('progress'),
+      badge: null,
+      isAdvanced: true
+    },
+    {
+      id: 'skill-tracker',
+      title: '🎯 Skill Tracker',
+      description: 'Monitor development',
+      icon: FaGraduationCap,
+      color: 'gradient',
+      action: () => setActiveView('skills'),
+      badge: null,
+      isAdvanced: true
+    },
+    {
+      id: 'weekly-reports',
+      title: '📋 Weekly Reports',
+      description: 'Generate insights',
+      icon: FaCalendarWeek,
+      color: 'gradient',
+      action: () => setActiveView('reports'),
       badge: null,
       isAdvanced: true
     },
@@ -193,7 +214,7 @@ const PWATeacherDashboard = () => {
       console.log('Saving advanced homework:', homeworkData);
       
       // For now, just show success and close modal
-      toast.success('Advanced homework created successfully!');
+      showTopNotification('Advanced homework created successfully!');
       setShowAdvancedCreator(false);
       
       // Refresh stats
@@ -201,21 +222,18 @@ const PWATeacherDashboard = () => {
       
     } catch (error) {
       console.error('Error saving homework:', error);
-      toast.error('Failed to create homework');
+      showTopNotification('Failed to create homework');
     } finally {
       setIsLoading(prev => ({ ...prev, stats: false }));
     }
   };
 
-  // Theme toggle
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
+
 
   // Show Advanced Homework Creator Modal
   if (showAdvancedCreator) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pb-6">
         <div className="max-w-6xl w-full max-h-screen overflow-y-auto">
           <AdvancedHomeworkCreator
             onSave={handleAdvancedHomeworkSave}
@@ -230,19 +248,17 @@ const PWATeacherDashboard = () => {
   // Show Advanced Progress Dashboard
   if (activeView === 'progress') {
     return (
-      <div className="min-h-screen">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className={`min-h-full ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-6`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
           <button
             onClick={() => setActiveView('dashboard')}
-            className="flex items-center px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-blue-400 hover:bg-gray-700' 
+                : 'text-blue-600 hover:bg-blue-50'
+            }`}
           >
             ← Back to Dashboard
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-          >
-            {isDark ? '☀️' : '🌙'}
           </button>
         </div>
         <AdvancedProgressDashboard isDark={isDark} />
@@ -250,8 +266,50 @@ const PWATeacherDashboard = () => {
     );
   }
 
+  // Show Skill Progress Tracker
+  if (activeView === 'skills') {
+    return (
+      <div className={`min-h-full ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-6`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-blue-400 hover:bg-gray-700' 
+                : 'text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+        <SkillProgressTracker isDark={isDark} />
+      </div>
+    );
+  }
+
+  // Show Weekly Reports Dashboard
+  if (activeView === 'reports') {
+    return (
+      <div className={`min-h-full ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-6`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-blue-400 hover:bg-gray-700' 
+                : 'text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+        <WeeklyReportDashboard isDark={isDark} />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
+    <div className={`p-4 space-y-4 max-w-full overflow-x-hidden pb-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-full`}>
       {/* Enhanced Welcome Section */}
       <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-4 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16" />
@@ -261,12 +319,7 @@ const PWATeacherDashboard = () => {
               <h2 className="text-xl font-bold mb-1">Welcome, {teacherName}! 🎓</h2>
               <p className="text-sm text-green-100">Advanced Teaching Dashboard - Empowering Every Student</p>
             </div>
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors"
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
+
           </div>
           {teacherClass && (
             <div className="mt-2 bg-white bg-opacity-20 rounded-lg p-2">
@@ -285,15 +338,15 @@ const PWATeacherDashboard = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Homeworks</p>
-              {isLoading.stats ? (
-                <FaSpinner className="animate-spin text-gray-400 text-lg" />
-              ) : (
-                <p className="text-2xl font-bold text-gray-900">{teacherStats.totalHomeworks}</p>
-              )}
+                          <div>
+                <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Homeworks</p>
+                {isLoading.stats ? (
+                  <FaSpinner className="animate-spin text-gray-400 text-lg" />
+                ) : (
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{teacherStats.totalHomeworks}</p>
+                )}
             </div>
             <div className="p-2 bg-blue-100 rounded-full">
               <FaBook className="w-5 h-5 text-blue-600" />
@@ -301,14 +354,14 @@ const PWATeacherDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Students</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Students</p>
               {isLoading.stats ? (
                 <FaSpinner className="animate-spin text-gray-400 text-lg" />
               ) : (
-                <p className="text-2xl font-bold text-gray-900">{teacherStats.totalStudents}</p>
+                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{teacherStats.totalStudents}</p>
               )}
             </div>
             <div className="p-2 bg-green-100 rounded-full">
@@ -317,14 +370,14 @@ const PWATeacherDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Submissions</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Submissions</p>
               {isLoading.stats ? (
                 <FaSpinner className="animate-spin text-gray-400 text-lg" />
               ) : (
-                <p className="text-2xl font-bold text-gray-900">{teacherStats.totalSubmissions}</p>
+                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{teacherStats.totalSubmissions}</p>
               )}
             </div>
             <div className="p-2 bg-purple-100 rounded-full">
@@ -333,14 +386,14 @@ const PWATeacherDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Rate</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Rate</p>
               {isLoading.stats ? (
                 <FaSpinner className="animate-spin text-gray-400 text-lg" />
               ) : (
-                <p className="text-2xl font-bold text-gray-900">{Math.round(teacherStats.submissionRate)}%</p>
+                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{Math.round(teacherStats.submissionRate)}%</p>
               )}
             </div>
             <div className="p-2 bg-yellow-100 rounded-full">
@@ -359,9 +412,9 @@ const PWATeacherDashboard = () => {
       </div>
 
       {/* Enhanced Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Quick Actions</h3>
           <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
             ✨ Enhanced Features
           </span>
@@ -371,10 +424,18 @@ const PWATeacherDashboard = () => {
           {quickActions.map((action) => {
             const IconComponent = action.icon;
             const colorClasses = {
-              blue: 'bg-blue-50 border-blue-200 text-blue-700',
-              green: 'bg-green-50 border-green-200 text-green-700',
-              purple: 'bg-purple-50 border-purple-200 text-purple-700',
-              orange: 'bg-orange-50 border-orange-200 text-orange-700',
+              blue: isDark 
+                ? 'bg-blue-900 border-blue-700 text-blue-300' 
+                : 'bg-blue-50 border-blue-200 text-blue-700',
+              green: isDark 
+                ? 'bg-green-900 border-green-700 text-green-300' 
+                : 'bg-green-50 border-green-200 text-green-700',
+              purple: isDark 
+                ? 'bg-purple-900 border-purple-700 text-purple-300' 
+                : 'bg-purple-50 border-purple-200 text-purple-700',
+              orange: isDark 
+                ? 'bg-orange-900 border-orange-700 text-orange-300' 
+                : 'bg-orange-50 border-orange-200 text-orange-700',
               gradient: 'bg-gradient-to-br from-purple-500 to-pink-500 text-white border-transparent'
             };
             
@@ -397,9 +458,19 @@ const PWATeacherDashboard = () => {
                   <div className="absolute top-0 right-0 w-16 h-16 bg-white bg-opacity-20 rounded-full -mr-8 -mt-8" />
                 )}
                 <div className={`${action.isAdvanced ? 'relative z-10' : ''} p-2 rounded-lg mb-2 ${
-                  action.isAdvanced ? 'bg-white bg-opacity-20' : `bg-${action.color}-100`
+                  action.isAdvanced 
+                    ? 'bg-white bg-opacity-30' 
+                    : isDark 
+                      ? `bg-${action.color}-800` 
+                      : `bg-${action.color}-100`
                 }`}>
-                  <IconComponent className="w-6 h-6" />
+                  <IconComponent className={`w-6 h-6 ${
+                    action.isAdvanced 
+                      ? 'text-purple-900' 
+                      : isDark 
+                        ? `text-${action.color}-200` 
+                        : `text-${action.color}-600`
+                  }`} />
                 </div>
                 <div className={`text-center ${action.isAdvanced ? 'relative z-10' : ''}`}>
                   <p className="font-medium text-sm">{action.title}</p>
@@ -424,12 +495,12 @@ const PWATeacherDashboard = () => {
       </div>
 
       {/* Recent Submissions - Collapsible */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border`}>
         <button
           onClick={() => toggleSection('submissions')}
           className="w-full p-4 flex items-center justify-between text-left focus:outline-none"
         >
-          <h3 className="text-lg font-semibold text-gray-900">Recent Submissions</h3>
+          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Recent Submissions</h3>
           {expandedSection === 'submissions' ? (
             <FaChevronUp className="text-gray-500" />
           ) : (
@@ -489,12 +560,12 @@ const PWATeacherDashboard = () => {
       </div>
 
       {/* Class Management - Collapsible */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border`}>
         <button
           onClick={() => toggleSection('class')}
           className="w-full p-4 flex items-center justify-between text-left focus:outline-none"
         >
-          <h3 className="text-lg font-semibold text-gray-900">Class Management</h3>
+          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Class Management</h3>
           {expandedSection === 'class' ? (
             <FaChevronUp className="text-gray-500" />
           ) : (

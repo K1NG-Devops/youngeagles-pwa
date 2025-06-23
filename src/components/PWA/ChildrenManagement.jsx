@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaBaby, FaPlus, FaEdit, FaTrash, FaSearch, FaEye, FaUserGraduate, FaCalendarAlt } from 'react-icons/fa';
 import adminService from '../../services/adminService';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../TopNotificationManager';
 
 const ChildrenManagement = ({ isDark = false }) => {
   const [children, setChildren] = useState([]);
@@ -36,8 +36,10 @@ const ChildrenManagement = ({ isDark = false }) => {
   const loadChildren = async () => {
     try {
       setLoading(true);
-      const response = await adminService.getChildren();
+      // Get ALL children using the getAllChildren parameter
+      const response = await adminService.getChildren(1, 500, '', true); // Use getAllChildren = true
       setChildren(response.data || []);
+      console.log(`✅ Loaded ${response.data?.length || 0} children total (showing ALL children from database)`);
       setIsFallbackMode(false);
     } catch (error) {
       console.error('Failed to load children:', error);

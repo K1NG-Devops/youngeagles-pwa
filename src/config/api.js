@@ -42,6 +42,11 @@ export const API_CONFIG = {
     // Teacher-specific
     TEACHER_DASHBOARD: '/teacher/dashboard',
     TEACHER_CLASSES: '/teacher/classes',
+    TEACHER_PROFILE: '/teacher/profile',
+    TEACHER_STATS: '/teacher/stats',
+    TEACHER_SUBMISSIONS: '/teacher/submissions',
+    TEACHER_ATTENDANCE: '/teacher/attendance',
+    GET_TEACHERS: '/teacher',
     
     // Admin-specific
     ADMIN_DASHBOARD: '/admin/dashboard',
@@ -50,10 +55,10 @@ export const API_CONFIG = {
     ADMIN_PARENTS: '/admin/parents',
     
     // Homework
-    HOMEWORK_LIST: '/homeworks/list',
+    HOMEWORK_LIST: '/homework/list',
     HOMEWORK_SUBMIT: '/homework/submit/:homeworkId',
     HOMEWORK_CREATE: '/homework/create',
-    HOMEWORK_DETAIL: '/homeworks/:id',
+    HOMEWORK_DETAIL: '/homework/:id',
     HOMEWORK_FOR_PARENT: '/homework/parent/:parentId/child/:childId',
     HOMEWORK_FOR_TEACHER: '/homework/teacher/:teacherId',
     HOMEWORK_SUBMISSIONS: '/homework/submissions/parent/:parentId',
@@ -77,9 +82,20 @@ export const API_CONFIG = {
     NOTIFICATIONS: '/notifications',
     MARK_READ: '/notifications/read',
     
-    // Messages
+    // Messages - Enhanced Endpoints
     MESSAGES: '/messages',
     SEND_MESSAGE: '/messages/send',
+    // NEW: Missing messaging endpoints
+    GET_CONVERSATIONS: '/messages/conversations',
+    GET_CONVERSATION: '/messages/conversations/:conversationId',
+    CREATE_CONVERSATION: '/messages/conversations/create',
+    MARK_MESSAGE_READ: '/messages/:messageId/read',
+    UPLOAD_MESSAGE_ATTACHMENT: '/messages/attachments/upload',
+    GET_MESSAGE_HISTORY: '/messages/conversations/:conversationId/history',
+    DELETE_MESSAGE: '/messages/:messageId',
+    EDIT_MESSAGE: '/messages/:messageId',
+    SEARCH_MESSAGES: '/messages/search',
+    GET_UNREAD_COUNT: '/messages/unread-count',
   },
   
   // Request timeouts

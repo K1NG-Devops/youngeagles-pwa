@@ -3,10 +3,11 @@ import { FaBell, FaCheck, FaTrash, FaEye, FaClock, FaExclamationTriangle, FaInfo
 import { showTopNotification } from '../components/TopNotificationManager';
 import useAuth from '../hooks/useAuth';
 import parentService from '../services/parentService';
-import FloatingBackButton from '../components/FloatingBackButton';
+import { useTheme } from '../hooks/useTheme';
 
 const Notifications = () => {
   const { auth } = useAuth();
+  const { isDark } = useTheme();
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all'); // all, unread, read
   const [isLoading, setIsLoading] = useState(true);
@@ -112,21 +113,28 @@ const Notifications = () => {
   };
 
   const getTypeColor = (type) => {
-    switch (type) {
-      case 'homework':
-      case 'assignment':
-        return 'bg-blue-100 text-blue-800';
-      case 'submission':
-        return 'bg-green-100 text-green-800';
-      case 'reminder':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'grade':
-        return 'bg-purple-100 text-purple-800';
-      case 'announcement':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    const lightColors = {
+      homework: 'bg-blue-100 text-blue-800',
+      assignment: 'bg-blue-100 text-blue-800',
+      submission: 'bg-green-100 text-green-800',
+      reminder: 'bg-yellow-100 text-yellow-800',
+      grade: 'bg-purple-100 text-purple-800',
+      announcement: 'bg-orange-100 text-orange-800',
+      default: 'bg-gray-100 text-gray-800'
+    };
+    
+    const darkColors = {
+      homework: 'bg-blue-900 text-blue-300',
+      assignment: 'bg-blue-900 text-blue-300',
+      submission: 'bg-green-900 text-green-300',
+      reminder: 'bg-yellow-900 text-yellow-300',
+      grade: 'bg-purple-900 text-purple-300',
+      announcement: 'bg-orange-900 text-orange-300',
+      default: 'bg-gray-700 text-gray-300'
+    };
+    
+    const colors = isDark ? darkColors : lightColors;
+    return colors[type] || colors.default;
   };
 
   const formatTimeAgo = (dateString) => {
@@ -145,8 +153,7 @@ const Notifications = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen w-full bg-gray-50">
-      <FloatingBackButton theme="primary" />
+    <div className={`min-h-screen w-full pt-4 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="p-4 space-y-4 pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
@@ -156,39 +163,39 @@ const Notifications = () => {
         </p>
       </div>
       {/* Filter and Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className={`flex flex-wrap items-center justify-between gap-2 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
         <div className="flex space-x-2">
-          <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>All</button>
-          <button onClick={() => setFilter('unread')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'unread' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Unread</button>
-          <button onClick={() => setFilter('read')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'read' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Read</button>
+          <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'all' ? 'bg-blue-600 text-white' : isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>All</button>
+          <button onClick={() => setFilter('unread')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'unread' ? 'bg-blue-600 text-white' : isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Unread</button>
+          <button onClick={() => setFilter('read')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'read' ? 'bg-blue-600 text-white' : isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Read</button>
         </div>
         <button onClick={markAllAsRead} disabled={isUpdating || unreadCount === 0} className="px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">Mark All as Read</button>
       </div>
       {/* Notifications List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <FaSpinner className="animate-spin text-gray-400 text-2xl" />
-            <span className="ml-2 text-gray-500">Loading notifications...</span>
+            <span className={`ml-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading notifications...</span>
           </div>
         ) : error ? (
           <div className="text-center py-8 text-red-500">{error}</div>
         ) : filteredNotifications.length > 0 ? (
-          <div className="divide-y divide-gray-100">
+          <div className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
             {filteredNotifications.map((notification) => (
-              <div key={notification.id} className={`p-4 hover:bg-gray-50 transition-colors ${notification.read ? '' : 'bg-blue-50/50'}`}>
+              <div key={notification.id} className={`p-4 transition-colors ${notification.read ? (isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50') : (isDark ? 'bg-blue-900/30 hover:bg-blue-900/40' : 'bg-blue-50/50 hover:bg-blue-50')}`}>
                 <div className="flex items-center space-x-3">
                       {getNotificationIcon(notification.type, notification.priority)}
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(notification.type)}`}>{notification.type}</span>
                         {!notification.read && (
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">New</span>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'}`}>New</span>
                         )}
                     </div>
-                    <h3 className="text-base font-semibold text-gray-900 mb-1">{notification.title}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
-                    <span className="text-xs text-gray-400">{formatTimeAgo(notification.date || notification.created_at)}</span>
+                    <h3 className={`text-base font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-1`}>{notification.title}</h3>
+                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>{notification.message}</p>
+                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{formatTimeAgo(notification.date || notification.created_at)}</span>
                   </div>
                   <div className="flex flex-col space-y-2 items-end">
                     {!notification.read && (
@@ -202,9 +209,9 @@ const Notifications = () => {
           </div>
         ) : (
           <div className="text-center py-8">
-            <FaBell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">No notifications</p>
-            <p className="text-gray-500">You're all caught up! No notifications to display.</p>
+            <FaBell className={`w-12 h-12 ${isDark ? 'text-gray-600' : 'text-gray-400'} mx-auto mb-3`} />
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>No notifications</p>
+            <p className={`${isDark ? 'text-gray-500' : 'text-gray-500'}`}>You're all caught up! No notifications to display.</p>
           </div>
         )}
       </div>

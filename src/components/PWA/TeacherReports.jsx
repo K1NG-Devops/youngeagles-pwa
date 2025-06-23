@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaFileAlt, FaDownload, FaCalendarAlt, FaChartBar, FaUsers, FaTasks, FaSpinner } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../TopNotificationManager';
 
 const TeacherReports = () => {
   const [reportType, setReportType] = useState('attendance');

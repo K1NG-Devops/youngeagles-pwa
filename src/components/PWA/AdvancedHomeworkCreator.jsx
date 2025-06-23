@@ -1,6 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { FaBook, FaGraduationCap, FaMicrophone, FaImage, FaPlay, FaStop, FaUpload, FaChevronLeft, FaChevronRight, FaCheck, FaPlus, FaTrash, FaTimes } from 'react-icons/fa';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { showTopNotification } from '../TopNotificationManager';
+
+// Import API config
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://youngeagles-api-server.up.railway.app';
 
 // Academic Framework for Preschool (3-6 years)
 const LEARNING_OBJECTIVES = {
@@ -64,12 +67,12 @@ const DIFFICULTY_LEVELS = [
   { level: 5, name: 'Mastery', description: 'Teaching others/complex application', color: 'red' }
 ];
 
-const AdvancedHomeworkCreator = ({ onSave, onCancel, initialData = null }) => {
-  const { isDark } = useTheme();
+const AdvancedHomeworkCreator = ({ onSave, onCancel, isDark, initialData = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [homework, setHomework] = useState({
     // Basic Information
@@ -155,6 +158,7 @@ const AdvancedHomeworkCreator = ({ onSave, onCancel, initialData = null }) => {
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
+      showTopNotification('Could not access microphone. Please check permissions.', 'error');
     }
   };
 
@@ -207,26 +211,109 @@ const AdvancedHomeworkCreator = ({ onSave, onCancel, initialData = null }) => {
 
   // Navigation functions
   const nextStep = () => {
-    if (currentStep < 4) setCurrentStep(currentStep + 1);
+    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSave = () => {
-    // Validate required fields
-    if (!homework.title.trim()) {
-      alert('Please enter a homework title');
-      return;
-    }
-    
-    if (homework.selectedSkills.length === 0 && homework.customObjectives.length === 0) {
-      alert('Please select at least one learning objective');
-      return;
-    }
+  // **NEW: Submit homework to backend API**
+  const handleSave = async () => {
+    try {
+      setIsSubmitting(true);
 
-    onSave(homework);
+      // Validate required fields
+      if (!homework.title || !homework.dueDate) {
+        showTopNotification('Please fill in title and due date', 'error');
+        return;
+      }
+
+      // Get teacher info from localStorage
+      const teacherId = localStorage.getItem('teacherId') || localStorage.getItem('userId');
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      
+      if (!teacherId || !token) {
+        showTopNotification('Authentication required. Please log in again.', 'error');
+        return;
+      }
+
+      // Get teacher's class from localStorage or API
+      const teacherClass = localStorage.getItem('teacherClass') || 'Default Class';
+
+      // Prepare form data for multipart upload
+      const formData = new FormData();
+      
+      // Add homework data
+      formData.append('title', homework.title);
+      formData.append('subject', homework.subject);
+      formData.append('estimatedTime', homework.estimatedTime.toString());
+      formData.append('difficultyLevel', homework.difficultyLevel.toString());
+      formData.append('selectedSkills', JSON.stringify(homework.selectedSkills));
+      formData.append('customObjectives', JSON.stringify(homework.customObjectives));
+      formData.append('description', homework.description);
+      formData.append('parentGuidance', homework.parentGuidance);
+      formData.append('childInstructions', homework.childInstructions);
+      formData.append('assessmentCriteria', JSON.stringify(homework.assessmentCriteria));
+      formData.append('dueDate', homework.dueDate);
+      formData.append('assignedClasses', JSON.stringify([teacherClass]));
+
+      // Add audio file if exists
+      if (homework.audioInstructions) {
+        formData.append('audioInstructions', homework.audioInstructions, 'instructions.wav');
+      }
+
+      // Add visual aids
+      homework.visualAids.forEach((aid, index) => {
+        if (aid.file) {
+          formData.append('visualAids', aid.file);
+        }
+      });
+
+      console.log('🚀 Submitting advanced homework:', {
+        title: homework.title,
+        subject: homework.subject,
+        skillsCount: homework.selectedSkills.length,
+        hasAudio: !!homework.audioInstructions,
+        visualAidsCount: homework.visualAids.length
+      });
+
+      // Submit to API
+      const response = await fetch(`${API_BASE_URL}/api/homework/advanced/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData, let browser set it with boundary
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        showTopNotification('🎉 Advanced homework created successfully!', 'success');
+        console.log('✅ Homework created:', result.homework);
+        
+        // Call the parent's onSave callback
+        if (onSave) {
+          onSave(result.homework);
+        }
+        
+        // Close the modal
+        if (onCancel) {
+          onCancel();
+        }
+      } else {
+        console.error('❌ API Error:', result);
+        showTopNotification(result.error || 'Failed to create homework', 'error');
+      }
+
+    } catch (error) {
+      console.error('❌ Network Error:', error);
+      showTopNotification('Network error. Please check your connection and try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Component for skill selection

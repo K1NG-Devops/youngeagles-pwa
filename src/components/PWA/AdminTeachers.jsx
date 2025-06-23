@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../TopNotificationManager';
 
 const CLASS_OPTIONS = [
   { value: 'Panda', label: 'Panda (4-6)' },

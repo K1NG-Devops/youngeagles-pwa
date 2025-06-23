@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import AdminService from '../../services/adminService';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaUser, FaEnvelope, FaPhone, FaUserTie, FaUserFriends, FaSpinner, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaUser, FaEnvelope, FaPhone, FaUserTie, FaUserFriends, FaSpinner, FaEye, FaEyeSlash, FaTimes } from 'react-icons/fa';
 import { useTheme } from '../../hooks/useTheme.jsx';
 
 const AdminUserManagement = () => {
@@ -11,7 +11,7 @@ const AdminUserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({});
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,71 +23,42 @@ const AdminUserManagement = () => {
     phone: '',
     role: 'parent',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    address: '',
+    city: '',
+    zipCode: '',
+    emergencyContact: '',
+    emergencyPhone: '',
+    qualification: '',
+    experience: '',
+    specialization: '',
+    dateOfBirth: '',
+    gender: ''
   });
 
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Optimized input handlers with useCallback to prevent focus loss
-  const handleNewUserChange = useCallback((field, value) => {
+  // Ultra-stable form handler - no error clearing to prevent re-renders
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
     setNewUser(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
+  };
+
+  // Simple toggle functions
+  const toggleShowPassword = () => setShowPassword(!showPassword);
+  const toggleShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
+  // Simple form close handler
+  const handleFormClose = () => {
+    if (isSubmitting) return;
     
-    // Clear field-specific errors when user starts typing (optimized)
-    setFormErrors(prev => {
-      if (prev[field]) {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      }
-      return prev;
-    });
-  }, []); // No dependencies to prevent recreation
-
-  // Create stable onChange handlers
-  const handleNameChange = useCallback((e) => handleNewUserChange('name', e.target.value), [handleNewUserChange]);
-  const handleEmailChange = useCallback((e) => handleNewUserChange('email', e.target.value), [handleNewUserChange]);
-  const handlePhoneChange = useCallback((e) => handleNewUserChange('phone', e.target.value), [handleNewUserChange]);
-  const handleRoleChange = useCallback((e) => handleNewUserChange('role', e.target.value), [handleNewUserChange]);
-  const handlePasswordChange = useCallback((e) => handleNewUserChange('password', e.target.value), [handleNewUserChange]);
-  const handleConfirmPasswordChange = useCallback((e) => handleNewUserChange('confirmPassword', e.target.value), [handleNewUserChange]);
-
-  const handleSelectedUserChange = useCallback((field) => (e) => {
-    const value = e.target.value;
-    setSelectedUser(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear field-specific errors when user starts typing (optimized)
-    if (formErrors[field]) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  }, [formErrors]);
-
-  const handleSearchChange = useCallback((e) => {
-    setSearchTerm(e.target.value);
-  }, []);
-
-  const toggleShowPassword = useCallback(() => {
-    setShowPassword(prev => !prev);
-  }, []);
-
-  const toggleShowConfirmPassword = useCallback(() => {
-    setShowConfirmPassword(prev => !prev);
-  }, []);
-
-  const handleModalClose = useCallback(() => {
-    if (isSubmitting) return; // Don't close if submitting
-    
-    setShowCreateModal(false);
+    setShowCreateForm(false);
     setShowEditModal(false);
     setFormErrors({});
     setSelectedUser(null);
@@ -97,9 +68,35 @@ const AdminUserManagement = () => {
       phone: '',
       role: 'parent',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      firstName: '',
+      lastName: '',
+      address: '',
+      city: '',
+      zipCode: '',
+      emergencyContact: '',
+      emergencyPhone: '',
+      qualification: '',
+      experience: '',
+      specialization: '',
+      dateOfBirth: '',
+      gender: ''
     });
-  }, [isSubmitting]);
+  };
+
+  // Simple search handler
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Edit user handler - ultra stable
+  const handleSelectedUserChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -181,22 +178,57 @@ const AdminUserManagement = () => {
 
     try {
       setIsSubmitting(true);
-      await AdminService.createUser({
+      
+      // Prepare user data including all fields
+      const userData = {
+        // Core required fields
         name: newUser.name,
         email: newUser.email,
         phone: newUser.phone,
         role: newUser.role,
-        password: newUser.password
-      });
+        password: newUser.password,
+        
+        // Additional profile fields
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        address: newUser.address,
+        city: newUser.city,
+        zipCode: newUser.zipCode,
+        emergencyContact: newUser.emergencyContact,
+        emergencyPhone: newUser.emergencyPhone,
+        dateOfBirth: newUser.dateOfBirth,
+        gender: newUser.gender,
+        
+        // Teacher-specific fields (only if role is teacher)
+        ...(newUser.role === 'teacher' && {
+          qualification: newUser.qualification,
+          experience: newUser.experience,
+          specialization: newUser.specialization
+        })
+      };
       
-      setShowCreateModal(false);
+      await AdminService.createUser(userData);
+      
+      setShowCreateForm(false);
       setNewUser({
         name: '',
         email: '',
         phone: '',
         role: 'parent',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        firstName: '',
+        lastName: '',
+        address: '',
+        city: '',
+        zipCode: '',
+        emergencyContact: '',
+        emergencyPhone: '',
+        qualification: '',
+        experience: '',
+        specialization: '',
+        dateOfBirth: '',
+        gender: ''
       });
       setFormErrors({});
       fetchUsers();
@@ -356,13 +388,15 @@ const AdminUserManagement = () => {
     );
   };
 
-  const InputField = React.memo(({ label, type = "text", value, onChange, error, required = false, autoFocus = false, ...props }) => (
+  // Simple input component - no memo to avoid re-render issues
+  const InputField = ({ label, type = "text", name, value, onChange, error, required = false, autoFocus = false, isDark, ...props }) => (
     <div>
       <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         type={type}
+        name={name}
         value={value || ''}
         onChange={onChange}
         autoFocus={autoFocus}
@@ -375,9 +409,9 @@ const AdminUserManagement = () => {
       />
       {error && <p className={`mt-1 text-sm ${isDark ? 'text-red-400' : 'text-red-600'}`}>{error}</p>}
     </div>
-  ));
+  );
 
-  const PasswordField = React.memo(({ label, value, onChange, error, showPassword, onToggleVisibility, required = false, showStrengthIndicator = false, ...props }) => (
+  const PasswordField = ({ label, name, value, onChange, error, showPassword, onToggleVisibility, required = false, showStrengthIndicator = false, isDark, ...props }) => (
     <div>
       <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
         {label} {required && <span className="text-red-500">*</span>}
@@ -385,9 +419,10 @@ const AdminUserManagement = () => {
       <div className="relative">
         <input
           type={showPassword ? 'text' : 'password'}
+          name={name}
           value={value || ''}
           onChange={onChange}
-          className={`block w-full rounded-lg px-3 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+          className={`block w-full rounded-lg border px-3 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
             isDark 
               ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${error ? 'border-red-400' : 'border-gray-600'}` 
               : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${error ? 'border-red-500' : 'border-gray-300'}`
@@ -405,17 +440,22 @@ const AdminUserManagement = () => {
       {showStrengthIndicator && <PasswordStrengthIndicator password={value} />}
       {error && <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-500'}`}>{error}</p>}
     </div>
-  ));
+  );
 
   return (
     <div className={`px-3 py-4 sm:p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-lg transition-colors duration-200`}>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
         <h2 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>User Management</h2>
         <button
-          onClick={() => setShowCreateModal(true)}
-          className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 sm:py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-base sm:text-sm"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-base sm:text-sm ${
+            showCreateForm 
+              ? 'bg-gray-500 hover:bg-gray-600 text-white'
+              : 'bg-blue-500 hover:bg-blue-600 text-white'
+          }`}
         >
-          <FaPlus /> Add User
+          {showCreateForm ? <FaTimes /> : <FaPlus />} 
+          {showCreateForm ? 'Cancel' : 'Add User'}
         </button>
       </div>
 
@@ -436,6 +476,440 @@ const AdminUserManagement = () => {
           />
         </div>
       </div>
+
+      {/* Inline Create User Form */}
+      {showCreateForm && (
+        <div className={`${isDark ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} rounded-lg border p-6 mb-6`}>
+          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>Add New User</h3>
+          <form onSubmit={handleCreateUser} className="space-y-6">
+            {/* Basic Information */}
+            <div>
+              <h4 className={`text-md font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-3`}>Basic Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={newUser.name || ''}
+                    onChange={handleInputChange}
+                    placeholder="Enter full name"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${formErrors.name ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'focus:border-blue-400'}` 
+                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${formErrors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`
+                    }`}
+                  />
+                  {formErrors.name && <p className={`mt-1 text-sm ${isDark ? 'text-red-400' : 'text-red-600'}`}>{formErrors.name}</p>}
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={newUser.email || ''}
+                    onChange={handleInputChange}
+                    placeholder="user@example.com"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${formErrors.email ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'focus:border-blue-400'}` 
+                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${formErrors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`
+                    }`}
+                  />
+                  {formErrors.email && <p className={`mt-1 text-sm ${isDark ? 'text-red-400' : 'text-red-600'}`}>{formErrors.email}</p>}
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={newUser.phone || ''}
+                    onChange={handleInputChange}
+                    placeholder="0123456789"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${formErrors.phone ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'focus:border-blue-400'}` 
+                        : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${formErrors.phone ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`
+                    }`}
+                  />
+                  {formErrors.phone && <p className={`mt-1 text-sm ${isDark ? 'text-red-400' : 'text-red-600'}`}>{formErrors.phone}</p>}
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="role"
+                    value={newUser.role}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      isDark 
+                        ? 'bg-gray-600 border-gray-500 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  >
+                    <option value="parent">Parent</option>
+                    <option value="teacher">Teacher</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Personal Details */}
+            <div>
+              <h4 className={`text-md font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-3`}>Personal Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={newUser.firstName || ''}
+                    onChange={handleInputChange}
+                    placeholder="First name"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={newUser.lastName || ''}
+                    onChange={handleInputChange}
+                    placeholder="Last name"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    value={newUser.dateOfBirth || ''}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={newUser.gender}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      isDark 
+                        ? 'bg-gray-600 border-gray-500 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  >
+                    <option value="">Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer_not_to_say">Prefer not to say</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Address Information */}
+            <div>
+              <h4 className={`text-md font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-3`}>Address Information</h4>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Street Address
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={newUser.address || ''}
+                    onChange={handleInputChange}
+                    placeholder="123 Main Street"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={newUser.city || ''}
+                      onChange={handleInputChange}
+                      placeholder="City name"
+                      className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Postal Code
+                    </label>
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={newUser.zipCode || ''}
+                      onChange={handleInputChange}
+                      placeholder="12345"
+                      className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div>
+              <h4 className={`text-md font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-3`}>Emergency Contact</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Emergency Contact Name
+                  </label>
+                  <input
+                    type="text"
+                    name="emergencyContact"
+                    value={newUser.emergencyContact || ''}
+                    onChange={handleInputChange}
+                    placeholder="Emergency contact full name"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Emergency Contact Phone
+                  </label>
+                  <input
+                    type="tel"
+                    name="emergencyPhone"
+                    value={newUser.emergencyPhone || ''}
+                    onChange={handleInputChange}
+                    placeholder="Emergency contact phone number"
+                    className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Teacher-Specific Fields */}
+            {newUser.role === 'teacher' && (
+              <div>
+                <h4 className={`text-md font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-3`}>Professional Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Qualification
+                    </label>
+                    <input
+                      type="text"
+                      name="qualification"
+                      value={newUser.qualification || ''}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Bachelor of Education"
+                      className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Years of Experience
+                    </label>
+                    <input
+                      type="number"
+                      name="experience"
+                      value={newUser.experience || ''}
+                      onChange={handleInputChange}
+                      placeholder="Years of teaching experience"
+                      min="0"
+                      className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Specialization
+                    </label>
+                    <input
+                      type="text"
+                      name="specialization"
+                      value={newUser.specialization || ''}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Early Childhood Development, Mathematics, Arts"
+                      className={`w-full px-3 py-3 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Password Section */}
+            <div>
+              <h4 className={`text-md font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-3`}>Account Security</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={newUser.password || ''}
+                      onChange={handleInputChange}
+                      placeholder="Minimum 8 characters with uppercase, lowercase, numbers, and special characters"
+                      className={`block w-full rounded-lg border px-3 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                        isDark 
+                          ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${formErrors.password ? 'border-red-400' : 'border-gray-600'}` 
+                          : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${formErrors.password ? 'border-red-500' : 'border-gray-300'}`
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowPassword}
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} focus:outline-none p-1`}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                  {newUser.password && <PasswordStrengthIndicator password={newUser.password} />}
+                  {formErrors.password && <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-500'}`}>{formErrors.password}</p>}
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={newUser.confirmPassword || ''}
+                      onChange={handleInputChange}
+                      placeholder="Re-enter password to confirm"
+                      className={`block w-full rounded-lg border px-3 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                        isDark 
+                          ? `bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${formErrors.confirmPassword ? 'border-red-400' : 'border-gray-600'}` 
+                          : `bg-white border-gray-300 text-gray-900 placeholder-gray-500 ${formErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowConfirmPassword}
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} focus:outline-none p-1`}
+                    >
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                  {formErrors.confirmPassword && <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-500'}`}>{formErrors.confirmPassword}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-300">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 text-base font-medium"
+              >
+                {isSubmitting ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Creating {newUser.role}...
+                  </>
+                ) : (
+                  <>
+                    <FaPlus />
+                    Create {newUser.role === 'teacher' ? 'Teacher' : 'Parent'}
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => setShowCreateForm(false)}
+                className={`w-full sm:w-auto py-3 px-6 rounded-lg transition-colors text-base font-medium ${
+                  isDark 
+                    ? 'bg-gray-600 hover:bg-gray-500 text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Mobile-First Users Display */}
       {loading ? (
@@ -629,139 +1103,7 @@ const AdminUserManagement = () => {
         </>
       )}
 
-      {/* Slide-in Panel for Create User - NO MORE FOCUS ISSUES! */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
-            onClick={handleModalClose}
-          />
-          
-          {/* Slide-in Panel */}
-          <div className={`absolute right-0 top-0 h-full w-full max-w-md ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl transform transition-transform`}>
-            <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className={`flex items-center justify-between p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Add New User</h3>
-                <button
-                  onClick={handleModalClose}
-                  disabled={isSubmitting}
-                  className={`${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
-                >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
 
-              {/* Form Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <form onSubmit={handleCreateUser} id="create-user-form">
-                  <div className="space-y-6">
-                    <InputField
-                      label="Name"
-                      value={newUser.name}
-                      onChange={handleNameChange}
-                      error={formErrors.name}
-                      required
-                      autoFocus
-                    />
-                    
-                    <InputField
-                      label="Email"
-                      type="email"
-                      value={newUser.email}
-                      onChange={handleEmailChange}
-                      error={formErrors.email}
-                      required
-                    />
-                    
-                    <InputField
-                      label="Phone"
-                      type="tel"
-                      value={newUser.phone}
-                      onChange={handlePhoneChange}
-                      error={formErrors.phone}
-                      placeholder="e.g., 0123456789"
-                    />
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Role <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={newUser.role}
-                        onChange={handleRoleChange}
-                        className="w-full px-3 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="parent">Parent</option>
-                        <option value="teacher">Teacher</option>
-                      </select>
-                    </div>
-                    
-                    <PasswordField
-                      label="Password"
-                      value={newUser.password}
-                      onChange={handlePasswordChange}
-                      error={formErrors.password}
-                      showPassword={showPassword}
-                      onToggleVisibility={() => setShowPassword(!showPassword)}
-                      required
-                      showStrengthIndicator={showPassword}
-                      placeholder="Minimum 8 characters, uppercase, lowercase, numbers, and special characters"
-                    />
-                    
-                    <PasswordField
-                      label="Confirm Password"
-                      value={newUser.confirmPassword}
-                      onChange={handleConfirmPasswordChange}
-                      error={formErrors.confirmPassword}
-                      showPassword={showConfirmPassword}
-                      onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
-                      required
-                      showStrengthIndicator={showConfirmPassword}
-                      placeholder="Re-enter password"
-                    />
-                  </div>
-                </form>
-              </div>
-
-              {/* Footer with Actions */}
-              <div className="border-t border-gray-200 p-6">
-                <div className="flex flex-col gap-3">
-                  <button
-                    type="submit"
-                    form="create-user-form"
-                    disabled={isSubmitting}
-                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-base font-medium"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <FaSpinner className="animate-spin" />
-                        Creating User...
-                      </>
-                    ) : (
-                      <>
-                        <FaPlus />
-                        Create User
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={handleModalClose}
-                    className="w-full bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 py-3 rounded-lg transition-colors text-base font-medium"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Slide-in Panel for Edit User */}
       {showEditModal && selectedUser && (
@@ -769,7 +1111,7 @@ const AdminUserManagement = () => {
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
-            onClick={handleModalClose}
+            onClick={handleFormClose}
           />
           
           {/* Slide-in Panel */}
@@ -779,7 +1121,7 @@ const AdminUserManagement = () => {
               <div className={`flex items-center justify-between p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                 <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Edit User</h3>
                 <button
-                  onClick={handleModalClose}
+                  onClick={handleFormClose}
                   disabled={isSubmitting}
                   className={`${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
                 >
@@ -793,52 +1135,56 @@ const AdminUserManagement = () => {
               <div className="flex-1 overflow-y-auto p-6">
                 <form onSubmit={handleUpdateUser} id="edit-user-form">
                   <div className="space-y-6">
-                    <InputField
-                      label="Name"
-                      value={selectedUser.name || ''}
-                      onChange={handleSelectedUserChange('name')}
-                      error={formErrors.name}
-                      required
-                      autoFocus
-                    />
-                    
-                    <InputField
-                      label="Email"
-                      type="email"
-                      value={selectedUser.email || ''}
-                      onChange={handleSelectedUserChange('email')}
-                      error={formErrors.email}
-                      required
-                    />
-                    
-                    <div>
+                  <InputField
+                    label="Name"
+                    name="name"
+                    value={selectedUser.name || ''}
+                    onChange={handleSelectedUserChange}
+                    error={formErrors.name}
+                    required
+                    autoFocus
+                    isDark={isDark}
+                  />
+                  
+                  <InputField
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={selectedUser.email || ''}
+                    onChange={handleSelectedUserChange}
+                    error={formErrors.email}
+                    required
+                    isDark={isDark}
+                  />
+                  
+                  <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Role
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedUser.role || ''}
+                      Role
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedUser.role || ''}
                         className="w-full px-3 py-3 text-base border border-gray-300 rounded-lg bg-gray-100"
-                        disabled
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Role cannot be changed</p>
-                    </div>
-                    
-                    <div>
+                      disabled
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Role cannot be changed</p>
+                  </div>
+                  
+                  <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Source
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedUser.source === 'staff_table' ? 'Staff (Teachers/Admins)' : 'Users (Parents)'}
+                      Source
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedUser.source === 'staff_table' ? 'Staff (Teachers/Admins)' : 'Users (Parents)'}
                         className="w-full px-3 py-3 text-base border border-gray-300 rounded-lg bg-gray-100"
-                        disabled
-                      />
-                    </div>
+                      disabled
+                    />
+                  </div>
                   </div>
                 </form>
-              </div>
-
+                </div>
+                
               {/* Footer with Actions */}
               <div className="border-t border-gray-200 p-6">
                 <div className="flex flex-col gap-3">
@@ -863,7 +1209,7 @@ const AdminUserManagement = () => {
                   <button
                     type="button"
                     disabled={isSubmitting}
-                    onClick={handleModalClose}
+                    onClick={handleFormClose}
                     className="w-full bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 py-3 rounded-lg transition-colors text-base font-medium"
                   >
                     Cancel

@@ -6,89 +6,91 @@ class TeacherService {
     this.apiUrl = API_CONFIG.BASE_URL;
   }
 
-  // Get authentication headers
-  getAuthHeaders() {
-    const token = localStorage.getItem('accessToken');
-    return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'X-Request-Source': 'pwa-teacher-service'
-    };
+  // Get all teachers
+  async getAllTeachers() {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.GET_TEACHERS);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch teachers:', error);
+      throw error;
+    }
+  }
+
+  // Get teacher profile
+  async getProfile() {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_PROFILE);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch teacher profile:', error);
+      throw error;
+    }
   }
 
   // Get teacher dashboard data
-  async getDashboardData(teacherId) {
+  async getDashboardData() {
     try {
-      console.log('TeacherService: Fetching real dashboard data for teacher:', teacherId);
-      
-      // Use existing API pattern for consistency
-      const response = await api.get(`/api/teacher/${teacherId}/dashboard`, {
-        headers: {
-          'X-Request-Source': 'pwa-teacher-dashboard'
-        }
-      });
-      
-      console.log('✅ Real teacher dashboard data fetched:', response.data);
-      return {
-        success: true,
-        data: response.data
-      };
+      const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_DASHBOARD);
+      return response.data;
     } catch (error) {
-      console.error('❌ Error fetching teacher dashboard data:', error);
-      // Return empty data structure instead of mock data
-      return {
-        success: false,
-        error: error.message,
-        data: {
-          teacherStats: {
-            totalHomeworks: 0,
-            totalSubmissions: 0,
-            totalStudents: 0,
-            submissionRate: 0
-          },
-          recentSubmissions: [],
-          teacherClass: '',
-          upcomingDeadlines: []
-        }
-      };
+      console.error('Failed to fetch dashboard data:', error);
+      throw error;
     }
   }
 
   // Get teacher classes
   async getClasses() {
-    const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_CLASSES);
-    return response.data;
-  }
-
-  // Get students in teacher's classes
-  async getStudents() {
-    const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_STUDENTS);
-    return response.data;
-  }
-
-  // Get homework assignments created by teacher
-  async getHomeworkAssignments(teacherId) {
     try {
-      console.log('TeacherService: Fetching real homework assignments for teacher:', teacherId);
-      const url = API_CONFIG.ENDPOINTS.HOMEWORK_FOR_TEACHER.replace(':teacherId', teacherId);
-      const response = await api.get(url, {
-        headers: {
-          'X-Request-Source': 'pwa-teacher-homework'
-        }
-      });
-      
-      console.log('✅ Real homework assignments fetched:', response.data);
-      return {
-        success: true,
-        data: response.data.homeworks || response.data || []
-      };
+      const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_CLASSES);
+      return response.data;
     } catch (error) {
-      console.error('❌ Error fetching homework assignments:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message,
-        data: []
-      };
+      console.error('Failed to fetch classes:', error);
+      throw error;
+    }
+  }
+
+  // Get teacher stats
+  async getStats() {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_STATS);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+      throw error;
+    }
+  }
+
+  // Get submissions for teacher's homework
+  async getSubmissions() {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_SUBMISSIONS);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch submissions:', error);
+      throw error;
+    }
+  }
+
+  // Get teacher's attendance records
+  async getAttendance() {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_ATTENDANCE);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch attendance:', error);
+      throw error;
+    }
+  }
+
+  // Update attendance
+  async updateAttendance(attendanceData) {
+    try {
+      const response = await api.post(API_CONFIG.ENDPOINTS.TEACHER_ATTENDANCE, attendanceData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update attendance:', error);
+      throw error;
     }
   }
 
@@ -103,37 +105,11 @@ class TeacherService {
     }
   }
 
-  // Get submissions for teacher's homework
-  async getSubmissions(teacherId) {
-    try {
-      console.log('TeacherService: Fetching real submissions for teacher:', teacherId);
-      
-      // Use existing API pattern for consistency
-      const response = await api.get(`/api/teacher/${teacherId}/submissions`, {
-        headers: {
-          'X-Request-Source': 'pwa-teacher-submissions'
-        }
-      });
-      
-      console.log('✅ Real submissions data fetched:', response.data);
-      return {
-        success: true,
-        data: response.data.submissions || response.data || []
-      };
-    } catch (error) {
-      console.error('❌ Error fetching submissions:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message,
-        data: []
-      };
-    }
-  }
-
   // Grade homework submission
   async gradeSubmission(submissionId, gradeData) {
     try {
-      const response = await api.post(`${API_CONFIG.ENDPOINTS.GRADE_SUBMISSION}/${submissionId}`, gradeData);
+      const url = API_CONFIG.ENDPOINTS.HOMEWORK_SUBMISSION_UPDATE.replace(':submissionId', submissionId);
+      const response = await api.post(url, gradeData);
       return response.data;
     } catch (error) {
       console.error('Failed to grade submission:', error);
@@ -154,17 +130,6 @@ class TeacherService {
       return response.data;
     } catch (error) {
       console.error('Failed to send message:', error);
-      throw error;
-    }
-  }
-
-  // Update attendance
-  async updateAttendance(attendanceData) {
-    try {
-      const response = await api.post('/teacher/attendance', attendanceData);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to update attendance:', error);
       throw error;
     }
   }

@@ -3,13 +3,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { FaBook, FaBell, FaUser, FaClipboardList, FaSpinner, FaChevronDown, FaChevronUp, FaUserPlus } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { showTopNotification } from '../TopNotificationManager';
 import { API_CONFIG } from '../../config/api';
+import { useTheme } from '../../hooks/useTheme.jsx';
 import parentService from '../../services/parentService';
 
 const PWAParentDashboard = () => {
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { isDark } = useTheme();
   const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(() => {
     return localStorage.getItem('selectedChild') || '';
@@ -325,7 +327,7 @@ const PWAParentDashboard = () => {
   }, [selectedChild, selectedChildData, fetchProgressReport, isLoading.homework]);
 
   return (
-    <div className="px-3 py-4 space-y-4 max-w-full overflow-x-hidden">
+    <div className={`px-3 py-4 space-y-4 max-w-full overflow-x-hidden pb-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
       {/* Mobile-First Welcome Section */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
         <h2 className="text-lg sm:text-xl font-bold mb-1">Welcome back, {userName}!</h2>
@@ -333,17 +335,21 @@ const PWAParentDashboard = () => {
       </div>
 
       {/* Child Selection - Mobile Optimized */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Select Child</h3>
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
+        <h3 className={`text-base sm:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>Select Child</h3>
         {isLoading.children ? (
-          <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+          <div className={`flex items-center space-x-2 p-3 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
             <FaSpinner className="animate-spin text-gray-400" />
-            <span className="text-sm text-gray-500">Loading children...</span>
+            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading children...</span>
           </div>
         ) : (
           <>
             <select
-              className="w-full p-4 text-base border border-gray-300 rounded-lg bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[48px] appearance-none"
+              className={`w-full p-4 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[48px] appearance-none ${
+                isDark 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-black'
+              }`}
               value={selectedChild}
               onChange={e => {
                 setSelectedChild(e.target.value);
@@ -367,17 +373,33 @@ const PWAParentDashboard = () => {
           const isHighlighted = action.highlight;
           const colorClasses = {
             blue: isHighlighted 
-              ? 'bg-gradient-to-br from-blue-100 to-blue-200 border-blue-300 text-blue-800 ring-2 ring-blue-300 ring-opacity-50' 
-              : 'bg-blue-50 border-blue-200 text-blue-700',
+              ? isDark
+                ? 'bg-gradient-to-br from-blue-900 to-blue-800 border-blue-600 text-blue-200 ring-2 ring-blue-600 ring-opacity-50' 
+                : 'bg-gradient-to-br from-blue-100 to-blue-200 border-blue-300 text-blue-800 ring-2 ring-blue-300 ring-opacity-50'
+              : isDark 
+                ? 'bg-blue-900 border-blue-700 text-blue-300' 
+                : 'bg-blue-50 border-blue-200 text-blue-700',
             green: isHighlighted 
-              ? 'bg-gradient-to-br from-green-100 to-green-200 border-green-300 text-green-800 ring-2 ring-green-300 ring-opacity-50' 
-              : 'bg-green-50 border-green-200 text-green-700',
+              ? isDark
+                ? 'bg-gradient-to-br from-green-900 to-green-800 border-green-600 text-green-200 ring-2 ring-green-600 ring-opacity-50' 
+                : 'bg-gradient-to-br from-green-100 to-green-200 border-green-300 text-green-800 ring-2 ring-green-300 ring-opacity-50'
+              : isDark 
+                ? 'bg-green-900 border-green-700 text-green-300' 
+                : 'bg-green-50 border-green-200 text-green-700',
             purple: isHighlighted 
-              ? 'bg-gradient-to-br from-purple-100 to-purple-200 border-purple-300 text-purple-800 ring-2 ring-purple-300 ring-opacity-50' 
-              : 'bg-purple-50 border-purple-200 text-purple-700',
+              ? isDark
+                ? 'bg-gradient-to-br from-purple-900 to-purple-800 border-purple-600 text-purple-200 ring-2 ring-purple-600 ring-opacity-50' 
+                : 'bg-gradient-to-br from-purple-100 to-purple-200 border-purple-300 text-purple-800 ring-2 ring-purple-300 ring-opacity-50'
+              : isDark 
+                ? 'bg-purple-900 border-purple-700 text-purple-300' 
+                : 'bg-purple-50 border-purple-200 text-purple-700',
             yellow: isHighlighted 
-              ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 border-yellow-300 text-yellow-800 ring-2 ring-yellow-300 ring-opacity-50' 
-              : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+              ? isDark
+                ? 'bg-gradient-to-br from-yellow-900 to-yellow-800 border-yellow-600 text-yellow-200 ring-2 ring-yellow-600 ring-opacity-50' 
+                : 'bg-gradient-to-br from-yellow-100 to-yellow-200 border-yellow-300 text-yellow-800 ring-2 ring-yellow-300 ring-opacity-50'
+              : isDark 
+                ? 'bg-yellow-900 border-yellow-700 text-yellow-300' 
+                : 'bg-yellow-50 border-yellow-200 text-yellow-700'
           };
           
           return (
@@ -387,7 +409,9 @@ const PWAParentDashboard = () => {
               onClick={action.onClick}
               className={`flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 transition-all min-h-[80px] sm:min-h-[100px] ${
                 action.disabled 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? isDark 
+                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed border-gray-700' 
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
                   : isHighlighted
                   ? `${colorClasses[action.color]} hover:shadow-lg cursor-pointer`
                   : `${colorClasses[action.color]} hover:shadow-md cursor-pointer`
@@ -421,30 +445,30 @@ const PWAParentDashboard = () => {
       </div>
 
       {/* Mobile-First Homework Progress */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Homework Progress</h3>
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border p-4`}>
+        <h3 className={`text-base sm:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>Homework Progress</h3>
         {isLoading.homework ? (
-          <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+          <div className={`flex items-center space-x-2 p-3 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
             <FaSpinner className="animate-spin text-gray-400" />
-            <span className="text-sm text-gray-500">Loading homework...</span>
+            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading homework...</span>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Total Assignments:</span>
-              <span className="font-bold text-lg text-blue-700">{homeworkProgress.total}</span>
+              <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Total Assignments:</span>
+              <span className="font-bold text-lg text-blue-600">{homeworkProgress.total}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Submitted:</span>
-              <span className="font-bold text-lg text-green-700">{homeworkProgress.submitted}</span>
+              <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Submitted:</span>
+              <span className="font-bold text-lg text-green-600">{homeworkProgress.submitted}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Completion:</span>
-              <span className="font-bold text-lg text-purple-700">{Math.round(homeworkProgress.percentage)}%</span>
+              <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Completion:</span>
+              <span className="font-bold text-lg text-purple-600">{Math.round(homeworkProgress.percentage)}%</span>
             </div>
             
             {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-3">
+            <div className={`w-full rounded-full h-2.5 mt-3 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
               <div 
                 className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-500"
                 style={{ width: `${homeworkProgress.percentage}%` }}
@@ -457,12 +481,12 @@ const PWAParentDashboard = () => {
       </div>
 
       {/* Progress Report - Collapsible */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-sm border`}>
         <button
           onClick={() => toggleSection('progress')}
           className="w-full p-4 flex items-center justify-between text-left focus:outline-none"
         >
-          <h3 className="text-lg font-semibold text-gray-900">Progress Report</h3>
+          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Progress Report</h3>
           {expandedSection === 'progress' ? (
             <FaChevronUp className="text-gray-500" />
           ) : (
