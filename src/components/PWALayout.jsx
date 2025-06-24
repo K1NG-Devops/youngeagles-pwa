@@ -35,6 +35,7 @@ import TeacherReports from './PWA/TeacherReports'
 import ActivityBuilder from './PWA/ActivityBuilder'
 import AppSettings from './PWA/AppSettings'
 import UserDropdown from './UserDropdown'
+import FirebaseDebugTester from './FirebaseDebugTester'
 
 const PWALayout = () => {
   const navigate = useNavigate()
@@ -390,6 +391,7 @@ const PWALayout = () => {
 
           <Route path="/register-2026" element={<Registration2026 />} />
           <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/firebase-debug" element={<FirebaseDebugTester />} />
           <Route path="/*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>

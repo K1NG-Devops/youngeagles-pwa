@@ -18,14 +18,14 @@ const GoogleSignIn = ({ className = '' }) => {
       const idToken = await firebaseUser.getIdToken();
       console.log('Got Firebase ID token');
       
-      // Send to your backend for session creation
+      // Send to your backend for session creation with correct payload format
       const response = await fetch('https://youngeagles-api-server.up.railway.app/api/auth/firebase-login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          idToken: idToken,
           email: firebaseUser.email,
           uid: firebaseUser.uid,
           displayName: firebaseUser.displayName

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_CONFIG, logApiCall } from '../config/api.js';
 import { toast } from 'react-toastify';
 
-// Create axios instance
+// Create axios instance with base URL only (no /api prefix)
 const httpClient = axios.create({
   baseURL: API_CONFIG.getApiUrl(),
   timeout: API_CONFIG.TIMEOUT.DEFAULT,
@@ -102,7 +102,7 @@ httpClient.interceptors.response.use(
               if (refreshToken) {
                 console.log('🔑 Calling refresh token endpoint');
                 const response = await axios.post(
-                  `${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`,
+                  `${API_CONFIG.getApiUrl()}/api/auth/refresh`,
                   { refreshToken },
                   { timeout: 5000 } // Add timeout to refresh request
                 );
@@ -231,32 +231,44 @@ httpClient.interceptors.response.use(
 export const api = {
   // GET request
   get: (url, config = {}) => {
-    return httpClient.get(url, config);
+    // Add /api prefix if not present
+    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+    return httpClient.get(apiUrl, config);
   },
 
   // POST request
   post: (url, data = {}, config = {}) => {
-    return httpClient.post(url, data, config);
+    // Add /api prefix if not present
+    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+    return httpClient.post(apiUrl, data, config);
   },
 
   // PUT request
   put: (url, data = {}, config = {}) => {
-    return httpClient.put(url, data, config);
+    // Add /api prefix if not present
+    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+    return httpClient.put(apiUrl, data, config);
   },
 
   // PATCH request
   patch: (url, data = {}, config = {}) => {
-    return httpClient.patch(url, data, config);
+    // Add /api prefix if not present
+    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+    return httpClient.patch(apiUrl, data, config);
   },
 
   // DELETE request
   delete: (url, config = {}) => {
-    return httpClient.delete(url, config);
+    // Add /api prefix if not present
+    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+    return httpClient.delete(apiUrl, config);
   },
 
   // File upload
   upload: (url, formData, onProgress = null) => {
-    return httpClient.post(url, formData, {
+    // Add /api prefix if not present
+    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+    return httpClient.post(apiUrl, formData, {
       timeout: API_CONFIG.TIMEOUT.UPLOAD,
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -269,7 +281,7 @@ export const api = {
 // Health check function
 export const healthCheck = async () => {
   try {
-    const response = await httpClient.get('/health');
+    const response = await httpClient.get('/api/health');
     return response.status === 200;
   } catch (error) {
     console.warn('🏥 Health check failed:', error.message);
@@ -281,7 +293,7 @@ export const healthCheck = async () => {
 export const testConnection = async () => {
   try {
     // Try production API first
-    const prodResponse = await axios.get(`${API_CONFIG.BASE_URL}/health`, { timeout: 5000 });
+    const prodResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/health`, { timeout: 5000 });
     if (prodResponse.status === 200) {
       return { success: true, url: API_CONFIG.BASE_URL, type: 'production' };
     }
@@ -291,7 +303,7 @@ export const testConnection = async () => {
 
   try {
     // Try local API
-    const localResponse = await axios.get(`${API_CONFIG.LOCAL_URL}/health`, { timeout: 3000 });
+    const localResponse = await axios.get(`${API_CONFIG.LOCAL_URL}/api/health`, { timeout: 3000 });
     if (localResponse.status === 200) {
       return { success: true, url: API_CONFIG.LOCAL_URL, type: 'local' };
     }

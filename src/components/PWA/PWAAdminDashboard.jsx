@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUsers, FaChalkboardTeacher, FaBook, FaBell, FaChartBar, FaCog, FaClipboardList, FaSpinner, FaUserShield, FaSchool, FaChild, FaBaby, FaExclamationTriangle, FaCheckCircle, FaPlus, FaUserPlus, FaSun, FaMoon, FaWifi, FaWifiSlash } from 'react-icons/fa';
+import { FaUsers, FaChalkboardTeacher, FaBook, FaBell, FaChartBar, FaCog, FaClipboardList, FaSpinner, FaUserShield, FaSchool, FaChild, FaBaby, FaExclamationTriangle, FaCheckCircle, FaPlus, FaUserPlus, FaSun, FaMoon, FaWifi, FaUnlink } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import useWebSocket from '../../hooks/useWebSocket';
 import { showTopNotification } from '../TopNotificationManager';
@@ -365,7 +365,7 @@ const PWAAdminDashboard = () => {
               }`}
               title={wsConnected ? 'Connected to real-time updates' : 'Disconnected from real-time updates'}
             >
-              {wsConnected ? <FaWifi size={14} /> : <FaWifiSlash size={14} />}
+              {wsConnected ? <FaWifi size={14} /> : <FaUnlink size={14} />}
               <span className="text-xs font-medium">
                 {wsConnected ? 'Live' : 'Offline'}
               </span>
@@ -570,7 +570,7 @@ const PWAAdminDashboard = () => {
                         </>
                       ) : (
                         <>
-                          <FaWifiSlash className="text-3xl mb-2 text-red-500" />
+                          <FaUnlink className="text-3xl mb-2 text-red-500" />
                           <p className="mb-1">No real-time connection</p>
                           <p className="text-xs">Check your internet connection</p>
                         </>
@@ -715,4 +715,38 @@ const PWAAdminDashboard = () => {
 
             {/* Recent Activity */}
             <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-6 rounded-lg transition-colors duration-200`}>
-              <h3 className={`
+              <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>Recent System Activity</h3>
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {liveNotifications.map((notification) => (
+                  <div key={notification.id} className={`flex items-center gap-3 p-3 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg transition-colors duration-200 animate-pulse`}>
+                    <div className={`w-2 h-2 rounded-full ${
+                      notification.type === 'info' ? 'bg-blue-500' :
+                      notification.type === 'warning' ? 'bg-yellow-500' :
+                      notification.type === 'error' ? 'bg-red-500' :
+                      'bg-purple-500'
+                    }`}></div>
+                    <div className="flex-1">
+                      <p className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>{notification.message}</p>
+                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{notification.timestamp}</p>
+                    </div>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      notification.type === 'info' ? (isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800') :
+                      notification.type === 'warning' ? (isDark ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800') :
+                      notification.type === 'error' ? (isDark ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-800') :
+                      (isDark ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800')
+                    }`}>
+                      {notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PWAAdminDashboard;

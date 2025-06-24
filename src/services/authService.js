@@ -72,14 +72,14 @@ class AuthService {
       let endpoint;
       switch (role) {
         case 'teacher':
-          endpoint = API_CONFIG.ENDPOINTS.TEACHER_LOGIN;
+          endpoint = '/auth/teacher-login';
           break;
         case 'admin':
-          endpoint = API_CONFIG.ENDPOINTS.ADMIN_LOGIN;
+          endpoint = '/auth/admin-login';
           break;
         case 'parent':
         default:
-          endpoint = API_CONFIG.ENDPOINTS.LOGIN;
+          endpoint = '/auth/login';
           break;
       }
 
@@ -95,7 +95,7 @@ class AuthService {
       return this.handleLoginSuccess(response.data);
     } catch (error) {
       console.error('🚨 Login failed:', error);
-      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed. Please check your credentials.';
       toast.error(errorMessage);
       throw new Error(errorMessage);
     }

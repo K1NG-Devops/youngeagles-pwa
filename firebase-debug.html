@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-item { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Connection Debug</h1>
+    <div id="results"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
+
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(testName, status, message, data = null) {
+            const div = document.createElement('div');
+            div.className = `test-item ${status}`;
+            div.innerHTML = `
+                <h3>${testName}</h3>
+                <p><strong>Status:</strong> ${status.toUpperCase()}</p>
+                <p><strong>Message:</strong> ${message}</p>
+                ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+            `;
+            resultsDiv.appendChild(div);
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABl23C2T_smbFQgTypZ0cfii3faawwoe8",
+            authDomain: "skydekstorage.firebaseapp.com",
+            projectId: "skydekstorage",
+            storageBucket: "skydekstorage.firebasestorage.app",
+            messagingSenderId: "482749285321",
+            appId: "1:482749285321:web:3864dec67deca22f885e18",
+            measurementId: "G-ZLBW552T6P"
+        };
+
+        // Test 1: Firebase SDK Loading
+        addResult('Firebase SDK Loading', 'loading', 'Testing Firebase SDK import...');
+        
+        try {
+            // Test 2: Firebase Initialization
+            addResult('Firebase Config Validation', 'loading', 'Initializing Firebase with config...');
+            const app = initializeApp(firebaseConfig);
+            addResult('Firebase Config Validation', 'success', 'Firebase app initialized successfully', { 
+                name: app.name, 
+                options: app.options 
+            });
+
+            // Test 3: Auth Service
+            addResult('Firebase Auth Service', 'loading', 'Getting Auth service...');
+            const auth = getAuth(app);
+            addResult('Firebase Auth Service', 'success', 'Auth service obtained', {
+                currentUser: auth.currentUser,
+                config: {
+                    apiKey: auth.config.apiKey.substring(0, 10) + '...',
+                    authDomain: auth.config.authDomain
+                }
+            });
+
+            // Test 4: Network Connectivity to Firebase
+            addResult('Firebase Network Test', 'loading', 'Testing anonymous sign-in...');
+            try {
+                const userCredential = await signInAnonymously(auth);
+                addResult('Firebase Network Test', 'success', 'Successfully connected to Firebase Auth', {
+                    uid: userCredential.user.uid,
+                    isAnonymous: userCredential.user.isAnonymous
+                });
+
+                // Sign out the anonymous user
+                await auth.signOut();
+                addResult('Cleanup', 'success', 'Anonymous user signed out');
+
+            } catch (authError) {
+                addResult('Firebase Network Test', 'error', `Firebase Auth connection failed: ${authError.message}`, {
+                    code: authError.code,
+                    message: authError.message,
+                    stack: authError.stack
+                });
+            }
+
+        } catch (initError) {
+            addResult('Firebase Config Validation', 'error', `Firebase initialization failed: ${initError.message}`, {
+                code: initError.code,
+                message: initError.message,
+                stack: initError.stack
+            });
+        }
+
+        // Test 5: Domain Check
+        addResult('Domain Authorization Check', 'loading', 'Checking current domain...');
+        const currentDomain = window.location.hostname;
+        const allowedDomains = [
+            'localhost', 
+            '127.0.0.1', 
+            'youngeagles-g4tu8n56q-k1ng-devops-projects.vercel.app',
+            'youngeagles-3984w2rnk-k1ng-devops-projects.vercel.app',
+            'skydekstorage.firebaseapp.com'
+        ];
+        
+        const isDomainAllowed = allowedDomains.some(domain => 
+            currentDomain === domain || currentDomain.endsWith('.vercel.app')
+        );
+
+        addResult('Domain Authorization Check', isDomainAllowed ? 'success' : 'error', 
+            `Current domain: ${currentDomain}`, {
+            currentDomain,
+            isDomainAllowed,
+            allowedDomains
+        });
+
+        // Test 6: Console Errors
+        const originalConsoleError = console.error;
+        const firebaseErrors = [];
+        console.error = function(...args) {
+            const message = args.join(' ');
+            if (message.toLowerCase().includes('firebase')) {
+                firebaseErrors.push({
+                    timestamp: new Date().toISOString(),
+                    message: message
+                });
+            }
+            originalConsoleError.apply(console, args);
+        };
+
+        setTimeout(() => {
+            if (firebaseErrors.length > 0) {
+                addResult('Console Error Check', 'error', 'Firebase-related errors detected', firebaseErrors);
+            } else {
+                addResult('Console Error Check', 'success', 'No Firebase-related console errors detected');
+            }
+        }, 3000);
+
+    </script>
+</body>
+</html> 

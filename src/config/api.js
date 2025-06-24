@@ -1,25 +1,46 @@
 // API Configuration
 export const API_CONFIG = {
-  // Base URLs
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://youngeagles-api-server.up.railway.app/api',
-  LOCAL_URL: import.meta.env.VITE_API_LOCAL_URL || 'http://localhost:3001/api',
+  // Base URLs - These should NOT include /api as it's added in httpClient
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://youngeagles-api-server.up.railway.app',
+  LOCAL_URL: import.meta.env.VITE_API_LOCAL_URL || 'http://localhost:3001',
   
+  // WebSocket Configuration
+  WEBSOCKET: {
+    URL: import.meta.env.VITE_API_WS_URL || 'wss://youngeagles-api-server.up.railway.app',
+    LOCAL_URL: 'ws://localhost:3001',
+    PATH: '/socket.io',
+    getUrl() {
+      const forceLocal = import.meta.env.VITE_FORCE_LOCAL_API === 'true';
+      if (API_CONFIG.isDevelopment || forceLocal) {
+        console.log('🔌 Using LOCAL WebSocket URL:', this.LOCAL_URL);
+        return this.LOCAL_URL;
+      }
+      console.log('🔌 Using PRODUCTION WebSocket URL:', this.URL);
+      return this.URL;
+    }
+  },
+
   // Environment detection
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,
   
   // Get the appropriate API URL based on environment
   getApiUrl() {
-    // Use local API during development for Phase 6 testing
     const forceLocal = import.meta.env.VITE_FORCE_LOCAL_API === 'true';
     if (this.isDevelopment || forceLocal) {
       console.log('🔧 Using LOCAL API for development:', this.LOCAL_URL);
       return this.LOCAL_URL;
     }
+    console.log('🔧 Using PRODUCTION API:', this.BASE_URL);
     return this.BASE_URL;
   },
   
-  // API Endpoints
+  // Get base URL for httpClient
+  getBaseApiUrl() {
+    return this.getApiUrl(); // No /api prefix
+  },
+  
+  // API Endpoints - These are relative paths that will be appended to the base URL
   ENDPOINTS: {
     // Authentication
     LOGIN: '/auth/login',
@@ -53,24 +74,26 @@ export const API_CONFIG = {
     ADMIN_USERS: '/admin/users',
     ADMIN_TEACHERS: '/admin/teachers',
     ADMIN_PARENTS: '/admin/parents',
+    ADMIN_ANALYTICS: '/admin/analytics',
+    ADMIN_QUICK_ACTIONS: '/admin/quick-actions',
     
     // Homework
     HOMEWORK_LIST: '/homework/list',
     HOMEWORK_SUBMIT: '/homework/submit/:homeworkId',
     HOMEWORK_CREATE: '/homework/create',
     HOMEWORK_DETAIL: '/homework/:id',
-    HOMEWORK_FOR_PARENT: '/homework/parent/:parentId/child/:childId',
-    HOMEWORK_FOR_TEACHER: '/homework/teacher/:teacherId',
-    HOMEWORK_SUBMISSIONS: '/homework/submissions/parent/:parentId',
-    HOMEWORK_SUBMISSION_UPDATE: '/homework/submissions/:submissionId',
-    HOMEWORK_SUBMISSION_DELETE: '/homework/submissions/:submissionId',
+    HOMEWORK_FOR_PARENT: '/parent/:parentId/child/:childId',
+    HOMEWORK_FOR_TEACHER: '/teacher/:teacherId',
+    HOMEWORK_SUBMISSIONS: '/submissions/parent/:parentId',
+    HOMEWORK_SUBMISSION_UPDATE: '/submissions/:submissionId',
+    HOMEWORK_SUBMISSION_DELETE: '/submissions/:submissionId',
     
     // Assignment Management (Phase 6)
     ASSIGNMENT_CREATE: '/homework/create',
     ASSIGNMENT_UPDATE: '/homework/:homeworkId',
     ASSIGNMENT_DELETE: '/homework/:homeworkId',
     ASSIGNMENT_SUBMISSIONS: '/homework/:homeworkId/submissions',
-    SUBMISSION_GRADE: '/homework/submissions/:submissionId/grade',
+    SUBMISSION_GRADE: '/submissions/:submissionId/grade',
     
     // Grades
     HOMEWORK_GRADES: '/homeworks/grades/child/:childId',
@@ -85,7 +108,6 @@ export const API_CONFIG = {
     // Messages - Enhanced Endpoints
     MESSAGES: '/messages',
     SEND_MESSAGE: '/messages/send',
-    // NEW: Missing messaging endpoints
     GET_CONVERSATIONS: '/messages/conversations',
     GET_CONVERSATION: '/messages/conversations/:conversationId',
     CREATE_CONVERSATION: '/messages/conversations/create',
@@ -114,9 +136,9 @@ export const API_CONFIG = {
   }
 };
 
-// Helper function to build full URL
+// Helper function to build full URL (for cases where you need the complete URL)
 export const buildUrl = (endpoint) => {
-  const baseUrl = API_CONFIG.getApiUrl();
+  const baseUrl = API_CONFIG.getBaseApiUrl();
   return `${baseUrl}${endpoint}`;
 };
 
