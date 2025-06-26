@@ -1,117 +1,139 @@
 import React, { useState, useEffect } from 'react';
-import { FaComments, FaPaperPlane, FaSpinner } from 'react-icons/fa';
-import parentService from '../services/parentService';
+import { FaComments } from 'react-icons/fa';
+import messagingService from '../services/messagingService';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
 
+// Import messaging components
+import ConversationList from './MessagingSystem/ConversationList';
+import MessageThread from './MessagingSystem/MessageThread';
+import ContactPicker from './MessagingSystem/ContactPicker';
+
 const MessagingCenter = () => {
-  const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [form, setForm] = useState({ subject: '', message: '' });
-  const [sending, setSending] = useState(false);
+  const [currentView, setCurrentView] = useState('conversations'); // 'conversations', 'thread', 'contacts'
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const res = await parentService.getMessages();
-        setMessages(Array.isArray(res) ? res : res.messages || []);
-      } catch (_err) {
-        setError('Failed to load messages');
-        toast.error('Failed to load messages');
-      } finally {
-        setIsLoading(false);
-      }
+    initializeMessaging();
+    setupEventListeners();
+    
+    return () => {
+      // Cleanup listeners
+      messagingService.off('unreadCountUpdated', handleUnreadCountUpdated);
     };
-    fetchMessages();
   }, []);
 
-  const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const initializeMessaging = async () => {
+    try {
+      // Initialize messaging service if not already done
+      if (!messagingService.isInitialized && user) {
+        await messagingService.initialize(user.id, user.role);
+      }
+      
+      // Load initial unread count
+      const unread = await messagingService.getUnreadCount();
+      setUnreadCount(unread.unreadCount || 0);
+      
+    } catch (error) {
+      console.error('Failed to initialize messaging:', error);
+    }
   };
 
-  const handleSend = async e => {
-    e.preventDefault();
-    if (!form.subject || !form.message) {
-      toast.error('Please fill in both subject and message');
-      return;
-    }
-    setSending(true);
-    try {
-      await parentService.sendMessage(form);
-      toast.success('Message sent!');
-      setForm({ subject: '', message: '' });
-      // Refresh messages
-      const res = await parentService.getMessages();
-      setMessages(Array.isArray(res) ? res : res.messages || []);
-    } catch (_err) {
-      toast.error('Failed to send message');
-    } finally {
-      setSending(false);
+  const setupEventListeners = () => {
+    messagingService.on('unreadCountUpdated', handleUnreadCountUpdated);
+  };
+
+  const handleUnreadCountUpdated = (data) => {
+    setUnreadCount(data.unreadCount || 0);
+  };
+
+  const handleConversationSelect = (conversation) => {
+    setSelectedConversation(conversation);
+    setCurrentView('thread');
+  };
+
+  const handleBackToConversations = () => {
+    setCurrentView('conversations');
+    setSelectedConversation(null);
+  };
+
+  const handleNewMessage = () => {
+    setCurrentView('contacts');
+  };
+
+  const handleBackFromContacts = () => {
+    setCurrentView('conversations');
+  };
+
+  const handleConversationCreated = (conversation) => {
+    // Navigate to the new conversation
+    setSelectedConversation(conversation);
+    setCurrentView('thread');
+    toast.success('Conversation started successfully!');
+  };
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'thread':
+        return (
+          <MessageThread
+            conversation={selectedConversation}
+            onBack={handleBackToConversations}
+          />
+        );
+      
+      case 'contacts':
+        return (
+          <ContactPicker
+            onBack={handleBackFromContacts}
+            onConversationCreated={handleConversationCreated}
+          />
+        );
+      
+      case 'conversations':
+      default:
+        return (
+          <ConversationList
+            onConversationSelect={handleConversationSelect}
+            onNewMessage={handleNewMessage}
+          />
+        );
     }
   };
 
   return (
-    <div className="p-4 space-y-4 max-w-full overflow-x-hidden pb-20">
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
-        <h1 className="text-xl font-bold mb-1">Messages</h1>
-        <p className="text-sm text-indigo-100">Chat with teachers and school admin</p>
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white shadow-lg">
+        <div className="flex items-center space-x-3">
+          <FaComments className="w-6 h-6" />
+          <div className="flex-1">
+            <h1 className="text-xl font-bold">
+              {currentView === 'thread' && selectedConversation ? 'Conversation' :
+               currentView === 'contacts' ? 'New Message' :
+               'Messages'}
+            </h1>
+            <p className="text-sm text-indigo-100">
+              {currentView === 'thread' ? 'Chat in real-time' :
+               currentView === 'contacts' ? 'Choose who to message' :
+               'Stay connected with your school community'}
+            </p>
+          </div>
+          {unreadCount > 0 && currentView === 'conversations' && (
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[24px] text-center">
+              {unreadCount}
+            </div>
+          )}
+        </div>
       </div>
-      {/* Send Message Form */}
-      <form onSubmit={handleSend} className="bg-white rounded-lg shadow p-4 space-y-3 border">
-        <h3 className="text-lg font-semibold mb-2">Send a Message</h3>
-        <input
-          name="subject"
-          value={form.subject}
-          onChange={handleChange}
-          placeholder="Subject"
-          className="w-full border rounded-lg px-3 py-2 mb-2"
-          required
-        />
-        <textarea
-          name="message"
-          value={form.message}
-          onChange={handleChange}
-          placeholder="Type your message..."
-          className="w-full border rounded-lg px-3 py-2 min-h-[80px]"
-          required
-        />
-        <button
-          type="submit"
-          disabled={sending}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-        >
-          {sending ? <FaSpinner className="animate-spin mr-2" /> : <FaPaperPlane className="mr-2" />}
-          <span>{sending ? 'Sending...' : 'Send Message'}</span>
-        </button>
-      </form>
-      {/* Messages List */}
-      <div className="bg-white rounded-lg shadow p-4 border">
-        <h3 className="text-lg font-semibold mb-4">Inbox</h3>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <FaSpinner className="animate-spin text-gray-400 text-2xl" />
-            <span className="ml-2 text-gray-500">Loading messages...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-8 text-red-500">{error}</div>
-        ) : messages.length === 0 ? (
-          <div className="text-gray-500 text-center">No messages yet.</div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map(msg => (
-              <div key={msg.id} className="p-3 rounded-lg border bg-gray-50">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-blue-700 text-sm">{msg.from || msg.fromRole || 'School'}</span>
-                  <span className="text-xs text-gray-400">{new Date(msg.date).toLocaleString()}</span>
-                </div>
-                <div className="font-medium text-gray-900 mb-1">{msg.subject}</div>
-                <div className="text-gray-700 text-sm whitespace-pre-line">{msg.message}</div>
-              </div>
-            ))}
-          </div>
-        )}
+
+      {/* Main Content */}
+      <div className="flex-1 p-4">
+        <div className="h-full">
+          {renderCurrentView()}
+        </div>
       </div>
     </div>
   );

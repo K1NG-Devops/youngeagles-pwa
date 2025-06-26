@@ -184,9 +184,8 @@ class ParentService {
   // Get available contacts (teachers, admins)
   async getAvailableContacts() {
     try {
-      // The API endpoint for fetching all teachers
-      const response = await api.get(API_CONFIG.ENDPOINTS.GET_TEACHERS); 
-      return response.data.teachers || [];
+      const response = await api.get(API_CONFIG.ENDPOINTS.GET_CONTACTS); 
+      return response.data.contacts || [];
     } catch (error) {
       console.error('Failed to fetch available contacts:', error);
       return []; // Return empty array on failure
@@ -196,7 +195,7 @@ class ParentService {
   async getConversations() {
     try {
       const response = await api.get(API_CONFIG.ENDPOINTS.GET_CONVERSATIONS);
-      return response.data;
+      return response.data.conversations || [];
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
       throw error;
@@ -214,11 +213,13 @@ class ParentService {
     }
   }
 
-  async createConversation(participants, initialMessage = null) {
+  async createConversation(recipientId, recipientType, subject, messageContent) {
     try {
       const response = await api.post(API_CONFIG.ENDPOINTS.CREATE_CONVERSATION, {
-        participants,
-        initialMessage
+        recipientId,
+        recipientType,
+        subject,
+        messageContent
       });
       return response.data;
     } catch (error) {
@@ -258,7 +259,7 @@ class ParentService {
 
   async getMessageHistory(conversationId, page = 1, limit = 50) {
     try {
-      const endpoint = API_CONFIG.ENDPOINTS.GET_MESSAGE_HISTORY.replace(':conversationId', conversationId);
+      const endpoint = API_CONFIG.ENDPOINTS.GET_CONVERSATION_MESSAGES.replace(':conversationId', conversationId);
       const response = await api.get(`${endpoint}?page=${page}&limit=${limit}`);
       return response.data;
     } catch (error) {
@@ -310,6 +311,21 @@ class ParentService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
+      throw error;
+    }
+  }
+
+  async sendMessageToConversation(conversationId, content, messageType = 'text', attachmentUrl = null) {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.SEND_CONVERSATION_MESSAGE.replace(':conversationId', conversationId);
+      const response = await api.post(endpoint, {
+        content,
+        messageType,
+        attachmentUrl
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to send message to conversation:', error);
       throw error;
     }
   }

@@ -176,11 +176,12 @@ class MessagingService {
           
         } else {
           // Fallback to REST API
-          const result = await parentService.sendMessage({
+          const result = await parentService.sendMessageToConversation(
             conversationId,
             content,
-            attachments
-          });
+            'text',
+            attachments.length > 0 ? attachments[0] : null
+          );
           
           // Replace temp message with server response
           const messageIndex = conversation.messages.findIndex(m => m.id === tempMessage.id);
@@ -189,7 +190,7 @@ class MessagingService {
               ...result,
               status: 'sent'
             };
-            this.messageCache.set(result.id, result);
+            this.messageCache.set(result.messageId || result.id, result);
           }
           
           this.emit('messageUpdated', { conversationId, message: result });

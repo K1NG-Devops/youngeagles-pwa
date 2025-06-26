@@ -117,19 +117,22 @@ export const API_CONFIG = {
     NOTIFICATIONS: '/api/notifications',
     MARK_READ: '/api/notifications/read',
     
-    // Messages - Enhanced Endpoints
+    // Messages - Enhanced Endpoints (Updated to match backend)
     MESSAGES: '/api/messages',
     SEND_MESSAGE: '/api/messages/send',
-    GET_CONVERSATIONS: '/api/messages/conversations',
-    GET_CONVERSATION: '/api/messages/conversations/:conversationId',
-    CREATE_CONVERSATION: '/api/messages/conversations/create',
-    MARK_MESSAGE_READ: '/api/messages/:messageId/read',
+    GET_CONVERSATIONS: '/api/messaging/conversations',
+    GET_CONVERSATION: '/api/messaging/conversations/:conversationId',
+    GET_CONVERSATION_MESSAGES: '/api/messaging/conversations/:conversationId/messages',
+    CREATE_CONVERSATION: '/api/messaging/conversations',
+    SEND_CONVERSATION_MESSAGE: '/api/messaging/conversations/:conversationId/messages',
+    GET_CONTACTS: '/api/messaging/contacts',
+    BROADCAST_MESSAGE: '/api/messaging/broadcast',
+    MARK_CONVERSATION_READ: '/api/messaging/conversations/:conversationId/read',
+    GET_UNREAD_COUNT: '/api/messaging/unread-count',
     UPLOAD_MESSAGE_ATTACHMENT: '/api/messages/attachments/upload',
-    GET_MESSAGE_HISTORY: '/api/messages/conversations/:conversationId/history',
     DELETE_MESSAGE: '/api/messages/:messageId',
     EDIT_MESSAGE: '/api/messages/:messageId',
     SEARCH_MESSAGES: '/api/messages/search',
-    GET_UNREAD_COUNT: '/api/messages/unread-count',
   },
   
   // Request timeouts
