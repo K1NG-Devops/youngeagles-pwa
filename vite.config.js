@@ -101,5 +101,18 @@ export default defineConfig({
   define: {
     // Ensure environment variables are available at build time
     __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
+  },
+  build: {
+    sourcemap: true, // Enable source maps for better debugging
+    rollupOptions: {
+      output: {
+        // Better chunk splitting for performance
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          utils: ['axios', 'react-toastify']
+        }
+      }
+    }
   }
 })
