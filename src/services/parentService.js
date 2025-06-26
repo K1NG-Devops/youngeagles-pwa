@@ -89,16 +89,46 @@ class ParentService {
       });
 
       console.log(`✅ SUCCESS! Homework fetched successfully:`, response.data);
+      
+      // Handle the response structure from the API
+      let homeworkData = [];
+      if (response.data) {
+        if (response.data.success && Array.isArray(response.data.homework)) {
+          // API returns: {success: true, homework: [...], child: {...}, total: n}
+          homeworkData = response.data.homework.map(hw => ({
+            ...hw,
+            submission: hw.status === 'submitted' ? { status: 'submitted' } : null
+          }));
+        } else if (Array.isArray(response.data.homework)) {
+          // Direct homework array format
+          homeworkData = response.data.homework.map(hw => ({
+            ...hw,
+            submission: hw.status === 'submitted' ? { status: 'submitted' } : null
+          }));
+        } else if (Array.isArray(response.data)) {
+          // Direct array format
+          homeworkData = response.data.map(hw => ({
+            ...hw,
+            submission: hw.status === 'submitted' ? { status: 'submitted' } : null
+          }));
+        }
+      }
+      
+      console.log(`ParentService: Processed homework data:`, homeworkData);
       return {
         success: true,
-        data: response.data.homework || [],
+        data: homeworkData
       };
     } catch (error) {
       console.error(`❌ Error fetching homework:`, error);
       return {
         success: false,
         error: error.response?.data?.message || error.message,
-        data: [],
+        data: {
+          homework: [],
+          total: 0,
+          child: null
+        }
       };
     }
   }
@@ -289,6 +319,6 @@ class ParentService {
 const parentService = new ParentService();
 
 // Export both the class and the singleton instance
-export { ParentService, parentService };
+export { ParentService };
 export default parentService;
 

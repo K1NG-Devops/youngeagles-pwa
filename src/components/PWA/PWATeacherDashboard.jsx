@@ -384,7 +384,7 @@ const PWATeacherDashboard = () => {
               {isLoading.stats ? (
                 <FaSpinner className="animate-spin text-gray-400 text-lg" />
               ) : (
-                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{teacherStats.totalSubmissions}</p>
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`} data-cy="total-submissions">{teacherStats.totalSubmissions}</p>
               )}
             </div>
             <div className="p-2 bg-purple-100 rounded-full">
@@ -516,7 +516,7 @@ const PWATeacherDashboard = () => {
         </button>
         
         {expandedSection === 'submissions' && (
-          <div className="px-4 pb-4 border-t border-gray-100">
+          <div className="px-4 pb-4 border-t border-gray-100" data-cy="recent-submissions">
             <div className="pt-4 space-y-3">
               {isLoading.submissions ? (
                 <div className="flex items-center justify-center py-8">

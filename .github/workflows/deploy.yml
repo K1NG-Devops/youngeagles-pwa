@@ -26,15 +26,16 @@ jobs:
     - name: Build project
       run: npm run build
       env:
-        VITE_API_BASE_URL: https://youngeagles-api-server.up.railway.app
-        VITE_API_LOCAL_URL: http://localhost:3001
-        VITE_FORCE_LOCAL_API: false
-        VITE_ENABLE_PUSH_NOTIFICATIONS: true
-        VITE_ENABLE_OFFLINE_MODE: true
-        VITE_ENABLE_ANALYTICS: false
-        VITE_DEBUG_MODE: false
-        VITE_MAIN_WEBSITE_URL: https://youngeagles.org.za
-        VITE_MAIN_WEBSITE_DEV_URL: http://localhost:5173
+        VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        VITE_API_LOCAL_URL: ${{ secrets.VITE_API_LOCAL_URL }}
+        VITE_API_WS_URL: ${{ secrets.VITE_API_WS_URL }}
+        VITE_FORCE_LOCAL_API: ${{ secrets.VITE_FORCE_LOCAL_API || 'false' }}
+        VITE_ENABLE_PUSH_NOTIFICATIONS: ${{ secrets.VITE_ENABLE_PUSH_NOTIFICATIONS || 'true' }}
+        VITE_ENABLE_OFFLINE_MODE: ${{ secrets.VITE_ENABLE_OFFLINE_MODE || 'true' }}
+        VITE_ENABLE_ANALYTICS: ${{ secrets.VITE_ENABLE_ANALYTICS || 'false' }}
+        VITE_DEBUG_MODE: ${{ secrets.VITE_DEBUG_MODE || 'false' }}
+        VITE_MAIN_WEBSITE_URL: ${{ secrets.VITE_MAIN_WEBSITE_URL }}
+        VITE_MAIN_WEBSITE_DEV_URL: ${{ secrets.VITE_MAIN_WEBSITE_DEV_URL }}
         
     - name: Deploy to Vercel
       uses: vercel/action@v1

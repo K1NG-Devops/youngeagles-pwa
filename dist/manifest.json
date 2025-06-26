@@ -2,7 +2,7 @@
   "name": "Young Eagles Home Care Centre",
   "short_name": "Young Eagles",
   "description": "Educational app connecting teachers, parents and students with homework, messaging and progress tracking",
-  "start_url": "/login?pwa=true",
+  "start_url": "/?pwa=true",
   "display": "standalone",
   "background_color": "#3B82F6",
   "theme_color": "#3B82F6",

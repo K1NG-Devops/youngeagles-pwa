@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaBook, FaBell, FaUser, FaClipboardList, FaSpinner, FaChevronDown, FaChevronUp, FaUserPlus } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
 import { showTopNotification } from '../TopNotificationManager';
@@ -19,6 +20,7 @@ const PWAParentDashboard = () => {
   const [homeworkProgress, setHomeworkProgress] = useState({
     total: 0,
     submitted: 0,
+    pending: 0,
     percentage: 0
   });
   const [isLoading, setIsLoading] = useState({
@@ -116,20 +118,21 @@ const PWAParentDashboard = () => {
       const result = await parentService.getHomework(selectedChild, parent_id);
       
       if (result.success) {
-        const hwList = result.data?.homework || [];
+        const hwList = Array.isArray(result.data) ? result.data : result.data?.homework || [];
         const total = hwList.length;
-        const submitted = hwList.filter(hw => hw.submission).length;
+        const submitted = hwList.filter(hw => hw.submission_at).length;
+        const pending = total - submitted;
         const percentage = total > 0 ? (submitted / total) * 100 : 0;
         
-        console.log('Dashboard: Setting homework progress', { total, submitted, percentage });
-        setHomeworkProgress({ total, submitted, percentage });
+        console.log('Dashboard: Setting homework progress', { total, submitted, pending, percentage });
+        setHomeworkProgress({ total, submitted, pending, percentage });
       } else {
         throw new Error(result.error || 'Failed to fetch homework');
       }
     } catch (err) {
       console.error('Error fetching homework for dashboard:', err);
       setErrors(prev => ({ ...prev, homework: 'Could not load homework progress.' }));
-      setHomeworkProgress({ total: 0, submitted: 0, percentage: 0 });
+      setHomeworkProgress({ total: 0, submitted: 0, pending: 0, percentage: 0 });
     } finally {
       setIsLoading(prev => ({ ...prev, homework: false }));
     }
@@ -183,8 +186,8 @@ const PWAParentDashboard = () => {
       path: '/submit-work',
       disabled: false,
       showBadgeWhenZero: false,
-      badge: homeworkProgress.total > homeworkProgress.submitted ? (homeworkProgress.total - homeworkProgress.submitted) : 0,
-      highlight: homeworkProgress.total > homeworkProgress.submitted
+      badge: homeworkProgress.pending,
+      highlight: homeworkProgress.pending > 0
     },
     {
       id: 'children',
@@ -427,18 +430,18 @@ const PWAParentDashboard = () => {
             <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading homework...</span>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3" data-cy="homework-progress">
             <div className="flex items-center justify-between">
               <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Total Assignments:</span>
-              <span className="font-bold text-lg text-blue-600">{homeworkProgress.total}</span>
+              <span className="font-bold text-lg text-blue-600" data-cy="homework-total-count">{homeworkProgress.total}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Submitted:</span>
-              <span className="font-bold text-lg text-green-600">{homeworkProgress.submitted}</span>
+              <span className="font-bold text-lg text-green-600" data-cy="submission-count">{homeworkProgress.submitted}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Completion:</span>
-              <span className="font-bold text-lg text-purple-600">{Math.round(homeworkProgress.percentage)}%</span>
+              <span className="font-bold text-lg text-purple-600" data-cy="progress-percentage">{Math.round(homeworkProgress.percentage)}%</span>
             </div>
             
             {/* Progress Bar */}
@@ -446,6 +449,7 @@ const PWAParentDashboard = () => {
               <div 
                 className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-500"
                 style={{ width: `${homeworkProgress.percentage}%` }}
+                data-cy="progress-bar"
               ></div>
             </div>
             

@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { api } from '../services/httpClient';
 import useAuth from '../hooks/useAuth';
 import { API_CONFIG } from '../config/api';
-import { parentService } from '../services/parentService';
+import parentService from '../services/parentService';
 import { formatDate } from '../utils/dateUtils';
 
 const SubmitWork = () => {
@@ -189,8 +189,8 @@ const SubmitWork = () => {
         
         const hwList = result.data || [];
         
-        // Correctly filter for pending assignments based on status
-        const pendingHomeworks = hwList.filter(hw => hw.status && hw.status.toLowerCase() === 'pending');
+        // Correctly filter for pending assignments based on submission_at
+        const pendingHomeworks = hwList.filter(hw => !hw.submission_at);
         
         setHomeworks(pendingHomeworks);
       } catch (err) {
@@ -359,7 +359,7 @@ const SubmitWork = () => {
       
       const apiResponse = res.data;
       const hwList = Array.isArray(apiResponse.data) ? apiResponse.data : apiResponse.homeworks || [];
-      const pendingHomeworks = hwList.filter(hw => !hw.submitted);
+      const pendingHomeworks = hwList.filter(hw => !hw.submission_at);
       setHomeworks(pendingHomeworks);
       
     } catch (err) {

@@ -12,6 +12,18 @@
     "autoAlias": true,
     "autoJobCancelation": true
   },
+  "env": {
+    "VITE_API_BASE_URL": "@vite_api_base_url",
+    "VITE_API_LOCAL_URL": "@vite_api_local_url",
+    "VITE_API_WS_URL": "@vite_api_ws_url",
+    "VITE_FORCE_LOCAL_API": "@vite_force_local_api",
+    "VITE_ENABLE_PUSH_NOTIFICATIONS": "@vite_enable_push_notifications",
+    "VITE_ENABLE_OFFLINE_MODE": "@vite_enable_offline_mode",
+    "VITE_ENABLE_ANALYTICS": "@vite_enable_analytics",
+    "VITE_DEBUG_MODE": "@vite_debug_mode",
+    "VITE_MAIN_WEBSITE_URL": "@vite_main_website_url",
+    "VITE_MAIN_WEBSITE_DEV_URL": "@vite_main_website_dev_url"
+  },
   "rewrites": [
     {
       "source": "/(.*)",
