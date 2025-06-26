@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FaArrowLeft, 
   FaPaperPlane, 
@@ -23,9 +24,11 @@ import parentService from '../../services/parentService';
 import { useTheme } from '../../hooks/useTheme';
 import { showNotification } from '../../utils/notifications';
 import useWebSocket from '../../hooks/useWebSocket';
+import { API_CONFIG } from '../../config/api';
 
 const WhatsAppMessaging = React.memo(() => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   
   // WebSocket Integration
   const {
@@ -400,8 +403,8 @@ const WhatsAppMessaging = React.memo(() => {
       
       console.log('📡 Sending message data:', messageData);
       
-      // Use the messages/send endpoint
-      const apiUrl = 'http://localhost:3001/messages/send';
+      // Use the messages/send endpoint with environment-aware API URL
+      const apiUrl = `${API_CONFIG.getApiUrl()}/messages/send`;
       console.log('🌐 Making API call to:', apiUrl);
       
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
@@ -499,8 +502,8 @@ const WhatsAppMessaging = React.memo(() => {
       setSelectedChat(null);
       setMessages([]);
     } else {
-      // Navigate back to dashboard
-      window.history.back();
+      // Navigate back to dashboard using React Router
+      navigate(-1);
     }
   };
 

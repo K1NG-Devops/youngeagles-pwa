@@ -51,9 +51,9 @@ export const API_CONFIG = {
   // API Endpoints - These are relative paths that will be appended to the base URL
   ENDPOINTS: {
     // Authentication
-    LOGIN: '/auth/login',
-    TEACHER_LOGIN: '/auth/teacher-login',
-    ADMIN_LOGIN: '/auth/admin-login',
+    LOGIN: '/api/auth/login',
+    TEACHER_LOGIN: '/api/auth/teacher/login',
+    ADMIN_LOGIN: '/api/auth/admin-login',
     REGISTER: '/api/auth/register',
     LOGOUT: '/api/auth/logout',
     REFRESH_TOKEN: '/api/auth/refresh-token',
