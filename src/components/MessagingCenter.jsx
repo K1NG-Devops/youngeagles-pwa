@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaComments } from 'react-icons/fa';
 import messagingService from '../services/messagingService';
-import { useAuth } from '../hooks/useAuth';
+import useAuth from '../hooks/useAuth';
 import { toast } from 'react-toastify';
 
 // Import messaging components

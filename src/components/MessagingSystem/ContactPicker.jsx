@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaSearch, FaUserCircle, FaSpinner, FaPaperPlane } from 'react-icons/fa';
 import parentService from '../../services/parentService';
 import messagingService from '../../services/messagingService';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 
 const ContactPicker = ({ onBack, onConversationCreated }) => {

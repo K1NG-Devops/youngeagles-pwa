@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaSearch, FaUserCircle, FaChevronRight } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 
 const ConversationList = ({ onConversationSelect, onNewMessage }) => {
   const [conversations, setConversations] = useState([]);

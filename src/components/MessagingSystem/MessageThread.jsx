@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaArrowLeft, FaPaperPlane, FaUserCircle, FaSpinner } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 
 const MessageThread = ({ conversation, onBack }) => {
   const [messages, setMessages] = useState([]);
