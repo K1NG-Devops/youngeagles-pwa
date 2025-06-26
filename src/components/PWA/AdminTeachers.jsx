@@ -169,7 +169,13 @@ const AdminTeachers = () => {
         
         // Immediately fetch fresh data to update the list
         console.log('🔄 Refreshing teachers list after update...');
-        await fetchTeachers();
+        // Add a small delay to ensure backend has processed the update
+        setTimeout(async () => {
+          await fetchTeachers();
+        }, 500);
+        setTimeout(async () => {
+          await fetchTeachers();
+        }, 500);
       } else {
         console.log('🆕 Creating teacher with data:', teacherData);
         const createResponse = await adminService.createUser(teacherData);

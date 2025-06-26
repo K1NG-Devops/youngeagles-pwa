@@ -728,21 +728,73 @@ const PWAAdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-6 rounded-lg transition-colors duration-200`}>
                 <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>Weekly Enrollment</h3>
-                <div className={`h-64 flex items-center justify-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  <div className="text-center">
-                    <FaChartBar className="text-4xl mb-2 mx-auto" />
-                    <p>Enrollment chart coming soon</p>
-                  </div>
+                <div className="h-64">
+                  {analytics?.weeklyEnrollment && analytics.weeklyEnrollment.length > 0 ? (
+                    <div className="space-y-3">
+                      {analytics.weeklyEnrollment.map((week, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {week.weekLabel || `Week ${index + 1}`}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className="bg-blue-500 h-3 rounded-full"
+                              style={{ width: `${Math.max(week.count * 10, 20)}px` }}
+                            />
+                            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {week.count}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={`h-full flex items-center justify-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <div className="text-center">
+                        <FaChartBar className="text-4xl mb-2 mx-auto" />
+                        <p>No enrollment data available</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
               <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-6 rounded-lg transition-colors duration-200`}>
-                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>Class Performance</h3>
-                <div className={`h-64 flex items-center justify-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  <div className="text-center">
-                    <FaChartBar className="text-4xl mb-2 mx-auto" />
-                    <p>Performance chart coming soon</p>
-                  </div>
+                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>Class Distribution</h3>
+                <div className="h-64">
+                  {analytics?.classDistribution && analytics.classDistribution.labels && analytics.classDistribution.labels.length > 0 ? (
+                    <div className="space-y-3">
+                      {analytics.classDistribution.labels.map((className, index) => {
+                        const count = analytics.classDistribution.data[index] || 0;
+                        const maxCount = Math.max(...analytics.classDistribution.data);
+                        const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                        
+                        return (
+                          <div key={index} className="flex items-center justify-between">
+                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {className}
+                            </span>
+                            <div className="flex items-center space-x-2">
+                              <div 
+                                className="bg-green-500 h-3 rounded-full"
+                                style={{ width: `${Math.max(percentage, 10)}px` }}
+                              />
+                              <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {count}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className={`h-full flex items-center justify-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <div className="text-center">
+                        <FaChartBar className="text-4xl mb-2 mx-auto" />
+                        <p>No class data available</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

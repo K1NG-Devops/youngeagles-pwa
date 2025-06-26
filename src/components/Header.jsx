@@ -8,6 +8,7 @@ import { toast } from 'react-toastify'
 // Import dashboard components
 import PWAParentDashboard from './PWA/PWAParentDashboard'
 import PWATeacherDashboard from './PWA/PWATeacherDashboard'
+import PWAAdminDashboard from './PWA/PWAAdminDashboard'
 import SubmitWork from '../pages/SubmitWork'
 import HomeworkList from '../pages/HomeworkList'
 import Notifications from '../pages/Notifications'
@@ -16,7 +17,7 @@ import Register from '../components/Register'
 import PasswordReset from '../components/PasswordReset'
 import TeacherLogin from '../components/TeacherLogin'
 import AuthTest from '../components/AuthTest'
-import MessagingCenter from './MessagingCenter'
+import WhatsAppMessaging from './MessagingSystem/WhatsAppMessaging'
 import PrivateRoutePWA from './PWA/PrivateRoutePWA'
 import AdminLogin from '../components/AdminLogin'
 import OfflineIndicator from './OfflineIndicator'
@@ -223,11 +224,11 @@ const PWALayout = ({ isOnline = true }) => {
             <Route path="/dashboard" element={<PWAParentDashboard />} />
             <Route path="/student/homework" element={<HomeworkList />} />
             <Route path="/submit-work" element={<SubmitWork />} />
-            <Route path="/messages" element={<MessagingCenter />} />
+            <Route path="/messages" element={<WhatsAppMessaging />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/teacher-dashboard" element={<PWATeacherDashboard />} />
             <Route path="/teacher/homework-list" element={<HomeworkList />} />
-            <Route path="/admin-dashboard" element={<div className="p-4">Admin Dashboard Coming Soon</div>} />
+            <Route path="/admin-dashboard" element={<PWAAdminDashboard />} />
           </Route>
 
           <Route path="/*" element={<Navigate to="/login" replace />} />
