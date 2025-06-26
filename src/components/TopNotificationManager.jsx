@@ -71,7 +71,7 @@ const TopNotificationManager = () => {
               flex items-center space-x-3 px-6 py-3 rounded-lg shadow-lg
               border-l-4 text-white font-medium max-w-md mx-4
               pointer-events-auto transform transition-all duration-300
-              animate-slideDown backdrop-blur-sm
+              animate-slide-in-down backdrop-blur-sm
               ${getNotificationColors(notification.type)}
             `}
             onClick={() => removeNotification(notification.id)}
@@ -95,22 +95,7 @@ const TopNotificationManager = () => {
         ))}
       </div>
       
-      <style jsx>{`
-        @keyframes slideDown {
-          from {
-            transform: translateY(-100px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        
-        .animate-slideDown {
-          animation: slideDown 0.3s ease-out;
-        }
-      `}</style>
+
     </div>
   );
 };

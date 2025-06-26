@@ -80,31 +80,25 @@ class ParentService {
   // Get homework list
   async getHomework(childId, parentId) {
     try {
-      console.log('ParentService: Fetching real homework data for child:', childId);
-
-      // Use the existing API pattern with the homework endpoint
-      const url = API_CONFIG.ENDPOINTS.HOMEWORK_FOR_PARENT
-        .replace(':parentId', parentId)
-        .replace(':childId', childId);
-    
-      const response = await api.get(url, {
+      console.log(`ParentService: Fetching homework for child ${childId} of parent ${parentId}`);
+      const response = await api.get(`/parent/${parentId}/child/${childId}/homework`, {
         headers: {
           'X-Request-Source': 'pwa-parent-homework',
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+        },
       });
 
-      console.log('✅ Real homework data fetched:', response.data);
+      console.log(`✅ SUCCESS! Homework fetched successfully:`, response.data);
       return {
         success: true,
-        data: response.data.data || response.data || []
+        data: response.data.homework || [],
       };
     } catch (error) {
-      console.error('❌ Error fetching homework:', error);
+      console.error(`❌ Error fetching homework:`, error);
       return {
         success: false,
         error: error.response?.data?.message || error.message,
-        data: []
+        data: [],
       };
     }
   }
@@ -161,7 +155,7 @@ class ParentService {
   async getAvailableContacts() {
     try {
       // The API endpoint for fetching all teachers
-      const response = await api.get('/api/teacher'); 
+      const response = await api.get(API_CONFIG.ENDPOINTS.GET_TEACHERS); 
       return response.data.teachers || [];
     } catch (error) {
       console.error('Failed to fetch available contacts:', error);

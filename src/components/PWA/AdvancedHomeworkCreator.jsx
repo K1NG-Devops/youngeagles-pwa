@@ -816,17 +816,17 @@ const AdvancedHomeworkCreator = ({ onSave, onCancel, isDark, initialData = null 
             
             <button
               onClick={onCancel}
-              className={`px-4 py-2 border rounded-lg transition-colors ${
+              className={`px-4 mb-20 py-2 border rounded-lg transition-colors ${
                 isDark 
-                  ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'border-red-600 text-red-400 hover:bg-red-900/30 hover:border-red-500' 
+                  : 'border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400'
               }`}
             >
               Cancel
             </button>
           </div>
           
-          <div className="flex space-x-3">
+          <div className="flex mb-20 space-x-3">
             {currentStep < 4 ? (
               <button
                 onClick={nextStep}

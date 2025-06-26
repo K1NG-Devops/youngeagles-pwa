@@ -1,58 +1,86 @@
 import { api } from './httpClient.js';
 import { API_CONFIG } from '../config/api.js';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 class AuthService {
   constructor() {
-    this.isAuthenticated = false;
-    this.user = null;
-    this.accessToken = null;
-    this.isInitialized = false;
+    // Private state
+    this._state = {
+      isAuthenticated: false,
+      user: null,
+      accessToken: null,
+      isInitialized: false
+    };
+    this.subscribers = [];
+
+    // Initialize immediately
+    this.init();
+  }
+
+  subscribe(callback) {
+    this.subscribers.push(callback);
+    // Return an unsubscribe function
+    return () => {
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
+    };
+  }
+
+  notifySubscribers() {
+    console.log(`📢 Notifying ${this.subscribers.length} subscribers of auth state change.`);
+    for (const callback of this.subscribers) {
+      callback(this._state);
+    }
   }
 
   // Initialize auth state from localStorage
   init() {
     // Prevent multiple initializations
-    if (this.isInitialized) {
+    if (this._state.isInitialized) {
+      console.log('🔄 AuthService already initialized');
       return;
     }
     
     const accessToken = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
+    const role = localStorage.getItem('role');
+    
+    console.log('🚀 AuthService.init() called');
     
     if (accessToken && user) {
       try {
-        this.accessToken = accessToken;
-        this.user = JSON.parse(user);
-        this.isAuthenticated = true;
+        const parsedUser = JSON.parse(user);
+        this._state = {
+          accessToken,
+          user: parsedUser,
+          isAuthenticated: true,
+          isInitialized: true
+        };
         
         console.log('🔓 AuthService initialized with stored auth data:', {
-          hasToken: !!accessToken,
-          userEmail: this.user?.email,
-          userRole: this.user?.role
-        });
-        
-        // Verify token silently - don't logout on failure
-        this.verifyToken().catch((error) => {
-          console.warn('🔐 Token verification failed during init:', error.message);
+          hasToken: true,
+          userEmail: parsedUser?.email,
+          userRole: parsedUser?.role
         });
       } catch (error) {
         console.error('❌ Error parsing stored user data:', error);
-        // Don't logout, just clear the invalid data
         this.clearAuthData();
       }
     } else {
-      console.log('🔒 No stored auth data found');
+      console.log('🔒 No stored auth data found during init');
+      this._state.isInitialized = true;
     }
-    
-    this.isInitialized = true;
+    this.notifySubscribers();
   }
 
   // Clear auth data without calling logout endpoint
   clearAuthData() {
-    this.isAuthenticated = false;
-    this.user = null;
-    this.accessToken = null;
+    this._state = {
+      isAuthenticated: false,
+      user: null,
+      accessToken: null,
+      isInitialized: true
+    };
 
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -61,6 +89,7 @@ class AuthService {
     localStorage.removeItem('parent_id');
     localStorage.removeItem('teacherId');
     localStorage.removeItem('adminId');
+    this.notifySubscribers();
   }
 
   // Login with email and password
@@ -68,19 +97,17 @@ class AuthService {
     try {
       console.log('🔐 Attempting login:', { email, role });
 
-      // Choose the correct endpoint based on role
+      // Route to appropriate endpoint based on role
       let endpoint;
       switch (role) {
-        case 'teacher':
-          endpoint = '/auth/teacher-login';
-          break;
         case 'admin':
-          endpoint = '/auth/admin-login';
+          endpoint = API_CONFIG.ENDPOINTS.ADMIN_LOGIN;
           break;
-        case 'parent':
+        case 'teacher':
+          endpoint = API_CONFIG.ENDPOINTS.TEACHER_LOGIN;
+          break;
         default:
-          endpoint = '/auth/login';
-          break;
+          endpoint = API_CONFIG.ENDPOINTS.LOGIN;
       }
 
       console.log('🌐 Using endpoint:', endpoint);
@@ -103,15 +130,28 @@ class AuthService {
 
   // Handle successful login
   handleLoginSuccess(data) {
-    const { accessToken, user, refreshToken } = data;
+    const { accessToken, token, user, refreshToken } = data;
     
-    // Store auth data
-    this.accessToken = accessToken;
-    this.user = user;
-    this.isAuthenticated = true;
+    // Handle both accessToken and token field names
+    const finalToken = accessToken || token;
+    
+    if (!finalToken) {
+      throw new Error('No access token received from server');
+    }
+
+    // Clear any existing auth data before setting new data
+    this.clearAuthData();
+    
+    // Update state with new auth data
+    this._state = {
+      accessToken: finalToken,
+      user,
+      isAuthenticated: true,
+      isInitialized: true
+    };
 
     // Save to localStorage
-    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('accessToken', finalToken);
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('role', user.role);
     
@@ -129,9 +169,11 @@ class AuthService {
     }
 
     console.log('✅ Login successful:', user.email, user.role);
+    console.log('🔑 Auth token set:', finalToken.substring(0, 20) + '...');
     toast.success(`Welcome back, ${user.name || user.email}!`);
 
-    return { accessToken, user, role: user.role };
+    this.notifySubscribers();
+    return { accessToken: finalToken, user, role: user.role };
   }
 
 
@@ -156,7 +198,7 @@ class AuthService {
   async logout(silent = false) {
     try {
       // Only call logout endpoint if we have valid auth
-      if (this.isAuthenticated && this.accessToken) {
+      if (this._state.isAuthenticated && this._state.accessToken) {
         await api.post(API_CONFIG.ENDPOINTS.LOGOUT);
       }
     } catch (error) {
@@ -175,7 +217,7 @@ class AuthService {
   // Verify token validity
   async verifyToken() {
     try {
-      if (!this.accessToken) {
+      if (!this._state.accessToken) {
         throw new Error('No accessToken available');
       }
 
@@ -217,7 +259,7 @@ class AuthService {
         localStorage.setItem('refreshToken', newRefreshToken);
       }
 
-      this.accessToken = accessToken;
+      this._state.accessToken = accessToken;
       console.log('🔄 Token refreshed successfully');
       
       return { accessToken, refreshToken: newRefreshToken };
@@ -253,55 +295,26 @@ class AuthService {
   // Get current auth state
   getAuthState() {
     return {
-      isAuthenticated: this.isAuthenticated,
-      user: this.user,
-      accessToken: this.accessToken,
-      role: this.user?.role || 'none'
+      isAuthenticated: this._state.isAuthenticated,
+      user: this._state.user,
+      accessToken: this._state.accessToken,
+      role: this._state.user?.role || 'none'
     };
   }
 
   // Get current user
   getCurrentUser() {
-    return this.user;
+    return this._state.user;
   }
 
   // Check if user is authenticated
   isLoggedIn() {
-    // Check local state first
-    if (this.isAuthenticated && this.accessToken && this.user) {
-      return true;
-    }
-    
-    // Fallback to localStorage check (for initialization scenarios)
-    const accessToken = localStorage.getItem('accessToken');
-    const user = localStorage.getItem('user');
-    
-    if (accessToken && user) {
-      try {
-        const parsedUser = JSON.parse(user);
-        // Update local state if we have valid stored data but local state is not set
-        if (!this.isAuthenticated) {
-          this.accessToken = accessToken;
-          this.user = parsedUser;
-          this.isAuthenticated = true;
-          console.log('🔄 AuthService: Restored auth state from localStorage');
-        }
-        return true;
-      } catch (error) {
-        console.error('❌ Error parsing stored user data:', error);
-        // Clear invalid data
-        localStorage.removeItem('user');
-        localStorage.removeItem('accessToken');
-        return false;
-      }
-    }
-    
-    return false;
+    return this._state.isAuthenticated && !!this._state.accessToken && !!this._state.user;
   }
 
   // Get user role
   getUserRole() {
-    return this.user?.role || localStorage.getItem('role');
+    return this._state.user?.role;
   }
 
   // Check if user has specific role
@@ -309,9 +322,9 @@ class AuthService {
     return this.getUserRole() === role;
   }
 
-  // Get auth accessToken
+  // Get auth token
   getToken() {
-    return this.accessToken || localStorage.getItem('accessToken');
+    return this._state.accessToken;
   }
 
   // Update user profile
@@ -320,8 +333,8 @@ class AuthService {
       const response = await api.put(API_CONFIG.ENDPOINTS.UPDATE_PROFILE, userData);
       
       // Update local user data
-      this.user = { ...this.user, ...response.data.user };
-      localStorage.setItem('user', JSON.stringify(this.user));
+      this._state.user = { ...this._state.user, ...response.data.user };
+      localStorage.setItem('user', JSON.stringify(this._state.user));
       
       toast.success('Profile updated successfully!');
       return response.data;
@@ -348,13 +361,51 @@ class AuthService {
       throw new Error(errorMessage);
     }
   }
+
+  // Teacher Login
+  async teacherLogin(credentials) {
+    try {
+      console.log('🔑 Attempting teacher login for:', credentials.email);
+      
+      const response = await api.post(API_CONFIG.ENDPOINTS.LOGIN, credentials);
+      
+      return this.handleLoginSuccess(response.data);
+    } catch (error) {
+      console.error('🚨 Teacher login failed:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Teacher login failed. Please check your credentials.';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
+
+  // Admin Login
+  async adminLogin(credentials) {
+    try {
+      console.log('🔑 Attempting admin login for:', credentials.email);
+      
+      const response = await api.post(API_CONFIG.ENDPOINTS.LOGIN, credentials);
+      
+      return this.handleLoginSuccess(response.data);
+    } catch (error) {
+      console.error('🚨 Admin login failed:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Admin login failed. Please check your credentials.';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
 }
 
-// Create singleton instance
-const authService = new AuthService();
+// Create singleton instance, attaching to window to prevent HMR issues
+const AUTH_SERVICE_INSTANCE_KEY = '__authServiceInstance';
 
-// Initialize on module load
-authService.init();
+if (!window[AUTH_SERVICE_INSTANCE_KEY]) {
+  console.log('✨ Creating new AuthService singleton instance.');
+  window[AUTH_SERVICE_INSTANCE_KEY] = new AuthService();
+} else {
+  console.log('♻️ Re-using existing AuthService singleton instance from window.');
+}
+
+const authService = window[AUTH_SERVICE_INSTANCE_KEY];
 
 export default authService;
 

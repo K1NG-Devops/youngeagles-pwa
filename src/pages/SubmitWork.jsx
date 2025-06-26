@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import { api } from '../services/httpClient';
 import useAuth from '../hooks/useAuth';
 import { API_CONFIG } from '../config/api';
+import { parentService } from '../services/parentService';
+import { formatDate } from '../utils/dateUtils';
 
 const SubmitWork = () => {
   const navigate = useNavigate();
@@ -90,7 +92,7 @@ const SubmitWork = () => {
       try {
         console.log(`SubmitWork: Fetching children for parent_id ${parent_id}`);
         const res = await api.get(
-          `${API_CONFIG.ENDPOINTS.CHILDREN}/${parent_id}`,
+          `${API_CONFIG.ENDPOINTS.CHILDREN}/${parent_id}/children`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -100,7 +102,8 @@ const SubmitWork = () => {
           }
         );
         
-        const childrenData = Array.isArray(res.data) ? res.data : res.data.children || [];
+        // Correctly parse the API response
+        const childrenData = res.data?.data || [];
         console.log(`SubmitWork: Fetched ${childrenData.length} children`);
         setChildren(childrenData);
         
@@ -177,25 +180,18 @@ const SubmitWork = () => {
       
       try {
         console.log(`SubmitWork: Fetching homeworks for child_id ${selectedChild}`);
-        // Replace placeholders in the endpoint URL
-        const homeworkUrl = API_CONFIG.ENDPOINTS.HOMEWORK_FOR_PARENT
-          .replace(':parentId', parent_id)
-          .replace(':childId', selectedChild);
-        const res = await api.get(
-          homeworkUrl,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'X-Request-Source': 'pwa-submit-work-homeworks'
-            },
-            timeout: 8000
-          }
-        );
         
-        const apiResponse = res.data;
-        const hwList = Array.isArray(apiResponse.data) ? apiResponse.data : apiResponse.homeworks || [];
-        // Filter only pending homeworks
-        const pendingHomeworks = hwList.filter(hw => !hw.submitted);
+        const result = await parentService.getHomework(selectedChild, parent_id);
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to fetch homework');
+        }
+        
+        const hwList = result.data || [];
+        
+        // Correctly filter for pending assignments based on status
+        const pendingHomeworks = hwList.filter(hw => hw.status && hw.status.toLowerCase() === 'pending');
+        
         setHomeworks(pendingHomeworks);
       } catch (err) {
         console.error('Error fetching homeworks:', err);
@@ -431,7 +427,7 @@ const SubmitWork = () => {
   });
   
   return (
-    <div className="p-4 space-y-6 max-w-full overflow-x-hidden pb-20 bg-gray-50 min-h-screen">
+    <div className="p-4 space-y-6 max-w-full overflow-x-hidden pb-20 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
         <div className="flex items-center space-x-3 mb-2">
@@ -443,32 +439,32 @@ const SubmitWork = () => {
       
       {/* Error Messages */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md shadow-sm">
+        <div className="bg-red-100 dark:bg-red-900 border-l-4 border-red-400 dark:border-red-600 p-4 rounded-md shadow-sm">
           <div className="flex">
             <div className="flex-shrink-0">
-              <FaExclamationTriangle className="h-5 w-5 text-red-400" />
+              <FaExclamationTriangle className="h-5 w-5 text-red-400 dark:text-red-500" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Child Selection */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
           <FaUser className="mr-2 text-blue-500" />
           Select Child
         </h3>
         {loading.children ? (
-          <div className="flex items-center space-x-2 p-4 border rounded-lg bg-gray-50">
+          <div className="flex items-center space-x-2 p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
             <FaSpinner className="animate-spin text-gray-400" />
-            <span className="text-sm text-gray-500">Loading children...</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Loading children...</span>
           </div>
         ) : (
           <select
-            className="w-full p-4 border border-gray-300 rounded-lg bg-white text-black text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             value={selectedChild}
             onChange={(e) => {
               setSelectedChild(e.target.value);
@@ -485,10 +481,10 @@ const SubmitWork = () => {
           </select>
         )}
         {selectedChildData && (
-          <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-center space-x-2">
               <FaCheckCircle className="text-blue-500" />
-              <span className="text-sm text-blue-700">
+              <span className="text-sm text-blue-700 dark:text-blue-300">
                 Selected: <span className="font-medium">{selectedChildData.name}</span> ({selectedChildData.className})
               </span>
             </div>
@@ -498,42 +494,42 @@ const SubmitWork = () => {
 
       {/* Homework Selection */}
       {selectedChild && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <FaBook className="mr-2 text-green-500" />
             Select Assignment
           </h3>
           {loading.homeworks ? (
-            <div className="flex items-center space-x-2 p-4 border rounded-lg bg-gray-50">
+            <div className="flex items-center space-x-2 p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
               <FaSpinner className="animate-spin text-gray-400" />
-              <span className="text-sm text-gray-500">Loading assignments...</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Loading assignments...</span>
             </div>
           ) : homeworks.length > 0 ? (
             <select
-              className="w-full p-4 border border-gray-300 rounded-lg bg-white text-black text-base focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+              className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white text-base focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
               value={selectedHomework}
               onChange={(e) => setSelectedHomework(e.target.value)}
             >
               <option value="">Select an assignment</option>
               {homeworks.map((homework) => (
                 <option key={homework.id} value={homework.id}>
-                  {homework.title} - Due: {new Date(homework.due_date).toLocaleDateString()}
+                  {homework.title} - Due: {formatDate(homework.dueDate)}
                 </option>
               ))}
             </select>
           ) : (
             <div className="text-center py-8">
               <FaCheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-              <p className="text-lg font-medium text-gray-700 mb-2">All caught up!</p>
-              <p className="text-sm text-gray-600">No pending assignments for this child</p>
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">All caught up!</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">No pending assignments for this child</p>
             </div>
           )}
           {selectedHomeworkData && (
-            <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <h4 className="text-sm font-medium text-yellow-800 mb-1">{selectedHomeworkData.title}</h4>
-              <p className="text-xs text-yellow-700 mb-2">Due: {new Date(selectedHomeworkData.due_date).toLocaleDateString()}</p>
+            <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-1">{selectedHomeworkData.title}</h4>
+              <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-2">Due: {formatDate(selectedHomeworkData.dueDate)}</p>
               {selectedHomeworkData.description && (
-                <p className="text-xs text-yellow-600 bg-white/50 p-2 rounded">{selectedHomeworkData.description}</p>
+                <p className="text-xs text-yellow-600 dark:text-yellow-500 bg-white/50 dark:bg-gray-900/30 p-2 rounded">{selectedHomeworkData.description}</p>
               )}
             </div>
           )}
@@ -542,8 +538,8 @@ const SubmitWork = () => {
 
       {/* File Upload */}
       {selectedHomework && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <FaUpload className="mr-2 text-purple-500" />
             Upload Files
           </h3>
@@ -553,19 +549,19 @@ const SubmitWork = () => {
             <label 
               className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${
                 isDragOver 
-                  ? 'border-blue-400 bg-blue-50' 
-                  : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                  ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/30' 
+                  : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <FaCloudUploadAlt className={`w-12 h-12 mb-4 transition-colors ${isDragOver ? 'text-blue-500' : 'text-gray-400'}`} />
-                <p className="mb-2 text-sm text-gray-500">
+                <FaCloudUploadAlt className={`w-12 h-12 mb-4 transition-colors ${isDragOver ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'}`} />
+                <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                   <span className="font-semibold">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG (MAX. 10MB each)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX, JPG, PNG (MAX. 10MB each)</p>
               </div>
               <input
                 type="file"
@@ -580,12 +576,12 @@ const SubmitWork = () => {
           {/* Selected Files with Enhanced UI and Preview */}
           {files.length > 0 && (
             <div className="space-y-3 mb-6">
-              <h4 className="text-sm font-medium text-gray-700 flex items-center">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
                 <FaFile className="mr-2" />
                 Selected Files ({files.length}):
               </h4>
               {files.map((file, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+                <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-sm transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3 flex-1">
                       {isImageFile(file) ? (
@@ -593,22 +589,22 @@ const SubmitWork = () => {
                           <img 
                             src={getFilePreview(file)} 
                             alt={file.name}
-                            className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                            className="w-16 h-16 object-cover rounded-lg border border-gray-300 dark:border-gray-500"
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                             <FaFileImage className="text-white opacity-0 hover:opacity-100 transition-opacity" />
                           </div>
                         </div>
                       ) : (
-                        <div className="w-16 h-16 bg-white rounded-lg border border-gray-300 flex items-center justify-center">
+                        <div className="w-16 h-16 bg-white dark:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-500 flex items-center justify-center">
                           {getFileIcon(file)}
                         </div>
                       )}
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 mb-1">{file.name}</p>
-                        <p className="text-xs text-gray-500 mb-2">{formatFileSize(file.size)}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">{file.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{formatFileSize(file.size)}</p>
                         {isImageFile(file) && (
-                          <div className="flex items-center space-x-2 text-xs text-green-600">
+                          <div className="flex items-center space-x-2 text-xs text-green-600 dark:text-green-400">
                             <FaCheckCircle className="w-3 h-3" />
                             <span>Image preview available</span>
                           </div>
@@ -617,7 +613,7 @@ const SubmitWork = () => {
                     </div>
                     <button
                       onClick={() => removeFile(index)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors ml-2"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-colors ml-2"
                       title="Remove file"
                     >
                       <FaTimes className="w-4 h-4" />
@@ -631,11 +627,11 @@ const SubmitWork = () => {
           {/* Upload Progress */}
           {isSubmitting && uploadProgress > 0 && (
             <div className="mb-6">
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-1">
                 <span>Uploading...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                   style={{width: `${uploadProgress}%`}}

@@ -1,57 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import authService from '../services/authService.js';
 
 const useAuth = () => {
-  const [auth, setAuth] = useState(() => {
-    // Initialize from authService
-    if (authService.isLoggedIn()) {
-      const initialAuth = {
-        accessToken: authService.getToken(),
-        user: authService.getCurrentUser(),
-        role: authService.getUserRole()
-      };
-      return initialAuth;
-    }
-    return null;
-  });
+  const [auth, setAuth] = useState(authService.getAuthState());
 
-  const login = async (emailOrUserData, password, role = 'parent') => {
-    try {
-      let result;
-      if (typeof emailOrUserData === 'string') {
-        // Called with email, password, role
-        result = await authService.login(emailOrUserData, password, role);
-      } else {
-        // Called with userData object (legacy support)
-        const userData = emailOrUserData;
-        result = authService.handleLoginSuccess(userData);
-      }
-      setAuth({
-        accessToken: result.accessToken || result.token,
-        user: result.user,
-        role: result.role
+  useEffect(() => {
+    // Subscribe to auth changes
+    const unsubscribe = authService.subscribe((newAuthState) => {
+      console.log('🔄 useAuth hook received auth state update:', {
+        isAuthenticated: newAuthState.isAuthenticated,
+        userEmail: newAuthState.user?.email,
       });
-      return result;
+      setAuth({
+        accessToken: newAuthState.accessToken,
+        user: newAuthState.user,
+        role: newAuthState.user?.role,
+      });
+    });
+
+    // Clean up subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  const login = useCallback(async (emailOrUserData, password, role = 'parent') => {
+    try {
+      return await authService.login(emailOrUserData, password, role);
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login failed in useAuth:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authService.logout();
-      setAuth(null);
     } catch (error) {
-      console.error('Logout failed:', error);
-      setAuth(null);
+      console.error('Logout failed in useAuth:', error);
+      // Still clear auth state on frontend even if API call fails
+      authService.clearAuthData();
     }
-  };
+  }, []);
+
+  const verifyAuth = useCallback(async () => {
+    console.log('🔎 Verifying auth token in useAuth...');
+    try {
+      await authService.verifyToken();
+      console.log('✅ Token verification successful in useAuth.');
+    } catch (error) {
+      console.error('Auth verification failed in useAuth, logging out:', error);
+      await logout();
+    }
+  }, [logout]);
 
   return {
     auth,
     login,
     logout,
+    verifyAuth,
     isAuthenticated: !!auth && !!auth.accessToken,
     isTeacher: auth?.role === 'teacher',
     isAdmin: auth?.role === 'admin',
@@ -59,10 +64,10 @@ const useAuth = () => {
     user: auth?.user,
     accessToken: auth?.accessToken,
     role: auth?.role,
-    getCurrentUser: () => authService.getCurrentUser(),
-    getAccessToken: () => authService.getToken(),
-    hasRole: (role) => authService.hasRole(role),
-    updateProfile: (userData) => authService.updateProfile(userData)
+    getCurrentUser: useCallback(() => authService.getCurrentUser(), []),
+    getAccessToken: useCallback(() => authService.getToken(), []),
+    hasRole: useCallback((role) => authService.hasRole(role), []),
+    updateProfile: useCallback((userData) => authService.updateProfile(userData), [])
   };
 };
 

@@ -13,14 +13,23 @@ class WebSocketService {
     this.role = null;
     this.reconnectTimer = null;
     this.lastConnectedTime = null;
+    this.isConnecting = false;
   }
 
   connect(userId, role) {
-    if (this.socket) {
-      console.log('🔄 Disconnecting existing socket before reconnecting...');
-      this.disconnect();
+    // Prevent multiple connection attempts
+    if (this.isConnecting) {
+      console.log('🔄 Already attempting to connect...');
+      return;
     }
 
+    // If already connected with same user, don't reconnect
+    if (this.isConnected && this.socket && this.userId === userId && this.role === role) {
+      console.log('✅ Already connected with correct user');
+      return;
+    }
+
+    this.isConnecting = true;
     this.userId = userId;
     this.role = role;
 
@@ -34,6 +43,21 @@ class WebSocketService {
         this.reconnectTimer = null;
       }
 
+      // Get current auth token
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.warn('⚠️ No access token available for WebSocket connection');
+        this.isConnecting = false;
+        return;
+      }
+
+      // Disconnect existing socket if any
+      if (this.socket) {
+        console.log('🔄 Disconnecting existing socket before reconnecting...');
+        this.socket.disconnect();
+        this.socket = null;
+      }
+
       this.socket = io(socketUrl, {
         path: API_CONFIG.WEBSOCKET.PATH,
         query: { userId, role },
@@ -44,21 +68,14 @@ class WebSocketService {
         timeout: 10000,
         forceNew: true,
         auth: {
-          token: localStorage.getItem('accessToken')
+          token: token
         }
-      });
-
-      console.log('🔧 Socket.IO config:', {
-        url: socketUrl,
-        path: API_CONFIG.WEBSOCKET.PATH,
-        userId,
-        role
       });
 
       this.setupEventListeners();
     } catch (error) {
       console.error('❌ Failed to initialize socket:', error);
-      showTopNotification('Failed to connect to messaging service', 'error');
+      this.isConnecting = false;
       this.scheduleReconnect();
     }
   }
@@ -72,42 +89,31 @@ class WebSocketService {
     this.socket.on('connect', () => {
       console.log('✅ Socket.IO connected with ID:', this.socket.id);
       this.isConnected = true;
+      this.isConnecting = false;
       this.reconnectAttempts = 0;
       this.lastConnectedTime = Date.now();
-      
-      // Join role-based room
-      if (this.role) {
-        this.socket.emit('join_role', this.role);
-      }
-      
-      showTopNotification('Connected to messaging service', 'success');
       this.notifyListeners('connected', { socketId: this.socket.id });
     });
 
     this.socket.on('disconnect', (reason) => {
       console.log('❌ Socket.IO disconnected. Reason:', reason);
       this.isConnected = false;
-      
-      // Only show notification if we were previously connected for more than 5 seconds
-      if (this.lastConnectedTime && (Date.now() - this.lastConnectedTime) > 5000) {
-        showTopNotification('Disconnected from messaging service', 'error');
-      }
-      
+      this.isConnecting = false;
       this.notifyListeners('disconnected', { reason });
-      this.scheduleReconnect();
+      
+      // Only reconnect if we have user info and it wasn't a manual disconnect
+      if (this.userId && this.role && reason !== 'io client disconnect') {
+        this.scheduleReconnect();
+      }
     });
 
     this.socket.on('connect_error', (error) => {
       console.log('❌ Socket.IO connection error:', error.message);
+      this.isConnecting = false;
       this.reconnectAttempts++;
       
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        showTopNotification('Failed to connect to messaging service. Please refresh the page.', 'error');
-      } else {
-        // Only show notification every other attempt to reduce spam
-        if (this.reconnectAttempts % 2 === 0) {
-          showTopNotification(`Connection error (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}). Retrying...`, 'warning');
-        }
+        this.notifyListeners('error', { error: 'Max reconnection attempts reached' });
       }
       
       this.notifyListeners('error', { error: error.message });
@@ -275,13 +281,14 @@ class WebSocketService {
 
   disconnect() {
     if (this.socket) {
+      console.log('🔌 Disconnecting WebSocket...');
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.isConnecting = false;
       this.userId = null;
       this.role = null;
       
-      // Clear any pending reconnect timer
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;

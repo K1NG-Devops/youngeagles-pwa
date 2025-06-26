@@ -4,11 +4,12 @@ import { FaUsers, FaChalkboardTeacher, FaBook, FaBell, FaChartBar, FaCog, FaClip
 import useAuth from '../../hooks/useAuth';
 import useWebSocket from '../../hooks/useWebSocket';
 import { showTopNotification } from '../TopNotificationManager';
-import axios from 'axios';
+import { api } from '../../services/httpClient';
 import { API_CONFIG } from '../../config/api';
 import AdminService from '../../services/adminService';
 import AdminUserManagement from './AdminUserManagement';
 import ChildrenManagement from './ChildrenManagement';
+import AdminTeachers from './AdminTeachers';
 import { useTheme } from '../../hooks/useTheme.jsx';
 
 const PWAAdminDashboard = () => {
@@ -398,10 +399,17 @@ const PWAAdminDashboard = () => {
             onClick={setActiveTab}
           />
           <TabButton
-            id="users"
-            label="Users"
-            icon={<FaUsers size={16} />}
-            active={activeTab === 'users'}
+            id="parents"
+            label="Parents"
+            icon={<FaSchool size={16} />}
+            active={activeTab === 'parents'}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="teachers"
+            label="Teachers"
+            icon={<FaChalkboardTeacher size={16} />}
+            active={activeTab === 'teachers'}
             onClick={setActiveTab}
           />
           <TabButton
@@ -505,7 +513,7 @@ const PWAAdminDashboard = () => {
                   icon={<FaUsers size={18} />}
                   color="#6B7280"
                   urgent={quickActions?.inactiveUsers > 5}
-                  onClick={() => setActiveTab('users')}
+                  onClick={() => setActiveTab('parents')}
                 />
                 <QuickActionCard
                   title="Overdue Homework"
@@ -584,16 +592,28 @@ const PWAAdminDashboard = () => {
             {/* Quick Add Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <button
-                data-testid="add-teacher-parent-btn"
+                data-testid="add-parent-btn"
                 onClick={() => {
-                  console.log('Add Teacher/Parent button clicked - switching to users tab');
-                  setActiveTab('users');
+                  console.log('Add Parent button clicked - switching to parents tab');
+                  setActiveTab('parents');
                 }}
                 className={`${isDark ? 'bg-blue-800 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} rounded-lg p-6 flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer`}
                 style={{ pointerEvents: 'auto', zIndex: 10 }}
               >
-                <FaUserPlus size={20} />
-                <span className="font-semibold">Add Teacher/Parent</span>
+                <FaSchool size={20} />
+                <span className="font-semibold">Add Parent</span>
+              </button>
+              <button
+                data-testid="add-teacher-btn"
+                onClick={() => {
+                  console.log('Add Teacher button clicked - switching to teachers tab');
+                  setActiveTab('teachers');
+                }}
+                className={`${isDark ? 'bg-green-800 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'} rounded-lg p-6 flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer`}
+                style={{ pointerEvents: 'auto', zIndex: 10 }}
+              >
+                <FaChalkboardTeacher size={20} />
+                <span className="font-semibold">Add Teacher</span>
               </button>
               <button
                 data-testid="enroll-child-btn"
@@ -601,30 +621,44 @@ const PWAAdminDashboard = () => {
                   console.log('Enroll Child button clicked - switching to children tab');
                   setActiveTab('children');
                 }}
-                className={`${isDark ? 'bg-green-800 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'} rounded-lg p-6 flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer`}
+                className={`${isDark ? 'bg-purple-800 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'} rounded-lg p-6 flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer`}
                 style={{ pointerEvents: 'auto', zIndex: 10 }}
               >
                 <FaPlus size={20} />
                 <span className="font-semibold">Enroll Child</span>
               </button>
-              <button
-                data-testid="view-reports-btn"
-                onClick={() => {
-                  console.log('View Reports button clicked - switching to analytics tab');
-                  setActiveTab('analytics');
-                }}
-                className={`${isDark ? 'bg-purple-800 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'} rounded-lg p-6 flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer`}
-                style={{ pointerEvents: 'auto', zIndex: 10 }}
-              >
-                <FaChartBar size={20} />
-                <span className="font-semibold">View Reports</span>
-              </button>
             </div>
           </div>
         )}
 
-        {activeTab === 'users' && (
-          <AdminUserManagement isDark={isDark} />
+        {activeTab === 'parents' && (
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-lg p-6 border transition-colors duration-200`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <FaSchool className="inline mr-2" />
+                Parent Management
+              </h2>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
+                {dashboardData?.totalParents || 0} Parents
+              </span>
+            </div>
+            <AdminUserManagement isDark={isDark} userType="parent" />
+          </div>
+        )}
+
+        {activeTab === 'teachers' && (
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-lg p-6 border transition-colors duration-200`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <FaChalkboardTeacher className="inline mr-2" />
+                Teacher Management
+              </h2>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'}`}>
+                {dashboardData?.totalTeachers || 0} Teachers
+              </span>
+            </div>
+            <AdminTeachers />
+          </div>
         )}
 
         {activeTab === 'children' && (

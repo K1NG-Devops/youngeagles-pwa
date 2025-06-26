@@ -8,12 +8,26 @@ class AdminService {
     return response.data;
   }
 
-  // Get all users (returns combined users from both users and staff tables)
-  async getUsers(page = 1, limit = 20, search = '') {
+  // Get all users, optionally filtered by role
+  async getUsers(page = 1, limit = 20, search = '', role = 'all') {
     try {
-      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_USERS, {
-        params: { page, limit, search }
-      });
+      const params = { page, limit, search, role };
+      // If the role is 'all', we don't need to send it as a parameter
+      if (role === 'all') {
+        delete params.role;
+      }
+      
+      // For teachers specifically, we need to make sure we get staff table data
+      if (role === 'teacher') {
+        params.includeStaff = true;
+      }
+      
+      console.log('🔍 AdminService.getUsers params:', params);
+      
+      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_USERS, { params });
+      
+      console.log('🔍 AdminService.getUsers raw response:', response.data);
+      
       return response.data.users || response.data; // Handle both formats
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -24,7 +38,6 @@ class AdminService {
   // Create new user
   async createUser(userData) {
     try {
-      console.log(`Creating ${userData.role} using unified endpoint`);
       const response = await api.post(API_CONFIG.ENDPOINTS.ADMIN_USERS, userData);
       return response.data;
     } catch (error) {
@@ -54,8 +67,7 @@ class AdminService {
   // Update user
   async updateUser(userId, userData) {
     try {
-      console.log(`Updating ${userData.role} using unified endpoint`);
-      const response = await api.put(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`, userData);
+      const response = await api.put(`/admin/users/${userId}`, userData);
       return response.data;
     } catch (error) {
       console.error('Failed to update user:', error);
@@ -84,8 +96,7 @@ class AdminService {
   // Delete user
   async deleteUser(userId, userSource) {
     try {
-      console.log(`Deleting user using unified endpoint`);
-      const response = await api.delete(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`, {
+      const response = await api.delete(`/admin/users/${userId}`, {
         data: { source: userSource }
       });
       return response.data;
@@ -110,8 +121,33 @@ class AdminService {
     }
   }
 
-  // Other methods remain the same...
-  
+
+  // Delete parent specifically (from users table)
+  async deleteParent(parentId) {
+    try {
+      const response = await api.delete(`/admin/parents/${parentId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete parent:', error);
+      console.error('Request details:', {
+        parentId: parentId,
+        statusCode: error.response?.status,
+        responseData: error.response?.data
+      });
+      
+      // Extract and throw a more specific error message
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.status === 404) {
+        throw new Error('Parent not found.');
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new Error('You do not have permission to delete this parent.');
+      } else {
+        throw new Error('Failed to delete parent. Please try again.');
+      }
+    }
+  }
+
   // Get system statistics
   async getSystemStats() {
     const response = await api.get('/admin/stats');
@@ -160,7 +196,7 @@ class AdminService {
 
   async getAnalytics() {
     try {
-      const response = await api.get('/admin/analytics');
+      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
@@ -170,7 +206,7 @@ class AdminService {
 
   async getQuickActions() {
     try {
-      const response = await api.get('/admin/quick-actions');
+      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_QUICK_ACTIONS);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch quick actions:', error);
@@ -235,6 +271,74 @@ class AdminService {
     } catch (error) {
       console.error('Failed to fetch system health:', error);
       throw error;
+    }
+  }
+
+  // Teacher-specific methods
+  async getTeachers(page = 1, limit = 20, search = '') {
+    try {
+      const response = await api.get('/admin/users', {
+        params: { page, limit, search, role: 'teacher', includeStaff: 'true' }
+      });
+      return response.data.data || response.data; // Handle both formats
+    } catch (error) {
+      console.error('Failed to fetch teachers:', error);
+      throw error;
+    }
+  }
+
+  async getTeacher(teacherId) {
+    try {
+      const response = await api.get(`/admin/teachers/${teacherId}`);
+      return response.data.teacher;
+    } catch (error) {
+      console.error('Failed to fetch teacher:', error);
+      throw error;
+    }
+  }
+
+  async updateTeacher(teacherId, teacherData) {
+    try {
+      console.log('Updating teacher with staff table fields:', teacherData);
+      const response = await api.put(`/admin/teachers/${teacherId}`, teacherData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update teacher:', error);
+      console.error('Request details:', {
+        teacherId: teacherId,
+        statusCode: error.response?.status,
+        responseData: error.response?.data
+      });
+      
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.status === 404) {
+        throw new Error('Teacher not found.');
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new Error('You do not have permission to update this teacher.');
+      } else {
+        throw new Error('Failed to update teacher. Please try again.');
+      }
+    }
+  }
+
+  async deleteTeacher(teacherId) {
+    try {
+      console.log('Deleting teacher from staff table');
+      const response = await api.delete(`/admin/teachers/${teacherId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete teacher:', error);
+      
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.status === 404) {
+        throw new Error('Teacher not found.');
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new Error('You do not have permission to delete this teacher.');
+      } else {
+        throw new Error('Failed to delete teacher. Please try again.');
+      }
     }
   }
 }

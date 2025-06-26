@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '../../config/api';
 import { api } from '../../services/httpClient';
 import { showTopNotification } from '../TopNotificationManager';
+import { useTheme } from '../../hooks/useTheme';
 import { 
   FaChild, FaPlus, FaEdit, FaTrash, FaPen, FaSpinner, FaUserPlus, FaList, 
   FaCheck, FaTimes, FaArrowLeft, FaUser, FaMedkit, FaPhone, FaUtensils, 
@@ -49,6 +50,7 @@ const formatDate = (dateString) => {
 
 const ChildManagement = () => {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   
   // State for tab management
   const [activeTab, setActiveTab] = useState('register');
@@ -157,7 +159,7 @@ const ChildManagement = () => {
       fetchChildren(parsedParentId);
     } else {
       console.warn('ChildManagement: No valid parent_id found');
-      toast.error('Parent ID not found. Please log in again.');
+      showTopNotification('Parent ID not found. Please log in again.', 'error');
       navigate('/login');
     }
   }, [navigate]);
@@ -168,7 +170,7 @@ const ChildManagement = () => {
     setLoading(prev => ({ ...prev, fetch: true }));
     
     try {
-      const endpoint = `${API_CONFIG.ENDPOINTS.CHILDREN}/${parentId}`;
+      const endpoint = `${API_CONFIG.ENDPOINTS.CHILDREN}/${parentId}/children`;
       console.log('ChildManagement: Calling API endpoint:', endpoint);
       
       const response = await api.get(endpoint);
@@ -219,16 +221,16 @@ const ChildManagement = () => {
         console.log('ChildManagement: API error status:', status);
         
         if (status === 401) {
-          toast.error('Your session has expired. Please log in again.');
+          showTopNotification('Your session has expired. Please log in again.', 'error');
           navigate('/login');
         } else if (status === 404) {
           console.log('ChildManagement: 404 - Setting empty children array');
           setChildren([]);
         } else {
-          toast.error('Failed to load children data.');
+          showTopNotification('Failed to load children data.', 'error');
         }
       } else {
-        toast.error('Network error. Please check your connection.');
+        showTopNotification('Network error. Please check your connection.', 'error');
       }
     } finally {
       setLoading(prev => ({ ...prev, fetch: false }));
@@ -379,8 +381,8 @@ const ChildManagement = () => {
       
       if (isEditing) {
         // Update existing child
-        response = await api.put(`${API_CONFIG.ENDPOINTS.CHILDREN}/${currentData.id}`, data);
-        toast.success('Child profile updated successfully!');
+        response = await api.put(`${API_CONFIG.ENDPOINTS.CHILDREN}/${parentId}/children/${currentData.id}`, data);
+        showTopNotification('Child profile updated successfully!', 'success');
         setResponseMessage('Child profile updated successfully!');
         
         // Reset editing state
@@ -390,7 +392,7 @@ const ChildManagement = () => {
       } else {
         // Create new child
         response = await api.post('/auth/register-child', data);
-        toast.success('Child profile created successfully!');
+        showTopNotification('Child profile created successfully!', 'success');
         setResponseMessage('Child profile created successfully!');
         
         // Reset form
@@ -423,19 +425,19 @@ const ChildManagement = () => {
         const { status, data } = error.response;
         
         if (status === 401) {
-          toast.error('Your session has expired. Please log in again.');
+          showTopNotification('Your session has expired. Please log in again.', 'error');
           navigate('/login');
         } else {
           const errorText = data.errors
             ? data.errors.map((e) => e.msg).join(', ')
             : data.message || `${isEditing ? 'Update' : 'Registration'} failed. Please try again.`;
           setResponseMessage(errorText);
-          toast.error(errorText);
+          showTopNotification(errorText, 'error');
         }
       } else {
         const errorMsg = 'Network error. Please check your connection.';
         setResponseMessage(errorMsg);
-        toast.error(errorMsg);
+        showTopNotification(errorMsg, 'error');
       }
     } finally {
       setLoading(prev => ({ ...prev, [loadingKey]: false }));
@@ -547,9 +549,9 @@ const ChildManagement = () => {
     const parentId = profileData.parent_id;
     
     try {
-      await api.delete(`${API_CONFIG.ENDPOINTS.CHILDREN}/${childId}`);
+      await api.delete(`${API_CONFIG.ENDPOINTS.CHILDREN}/${parentId}/children/${childId}`);
       
-      toast.success('Child profile deleted successfully!');
+      showTopNotification('Child profile deleted successfully!', 'success');
       
       // Refresh the children list
       fetchChildren(parentId);
@@ -560,14 +562,14 @@ const ChildManagement = () => {
         const { status, data } = error.response;
         
         if (status === 401) {
-          toast.error('Your session has expired. Please log in again.');
+          showTopNotification('Your session has expired. Please log in again.', 'error');
           navigate('/login');
         } else {
           const errorText = data.message || 'Delete failed. Please try again.';
-          toast.error(errorText);
+          showTopNotification(errorText, 'error');
         }
       } else {
-        toast.error('Network error. Please check your connection.');
+        showTopNotification('Network error. Please check your connection.', 'error');
       }
     } finally {
       setIsDeleting(false);
@@ -578,13 +580,17 @@ const ChildManagement = () => {
 
   // Render tab navigation
   const renderTabs = useCallback(() => (
-    <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
+    <div className={`flex border-b mb-6 overflow-x-auto ${
+      isDark ? 'border-gray-600' : 'border-gray-200'
+    }`}>
       <button
         onClick={() => setActiveTab('register')}
         className={`flex items-center px-4 py-2 border-b-2 font-medium text-sm whitespace-nowrap ${
           activeTab === 'register'
             ? 'border-blue-500 text-blue-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            : isDark 
+              ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
         }`}
       >
         <FaUserPlus className="mr-2" />
@@ -595,7 +601,9 @@ const ChildManagement = () => {
         className={`flex items-center px-4 py-2 border-b-2 font-medium text-sm whitespace-nowrap ${
           activeTab === 'manage'
             ? 'border-blue-500 text-blue-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            : isDark 
+              ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
         }`}
       >
         <FaList className="mr-2" />
@@ -618,11 +626,13 @@ const ChildManagement = () => {
         </button>
       )}
     </div>
-  ), [activeTab]);
+  ), [activeTab, isDark]);
 
   // Render profile section navigation
   const renderProfileSectionTabs = useCallback(() => (
-    <div className="flex border-b border-gray-100 mb-6 overflow-x-auto bg-gray-50 rounded-t-lg">
+    <div className={`flex border-b mb-6 overflow-x-auto rounded-t-lg ${
+      isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-100 bg-gray-50'
+    }`}>
       {[
         { key: 'basic', label: 'Basic Info', icon: FaUser },
         { key: 'medical', label: 'Medical', icon: FaMedkit },
@@ -637,8 +647,12 @@ const ChildManagement = () => {
           onClick={() => setActiveProfileSection(key)}
           className={`flex items-center px-3 py-2 border-b-2 font-medium text-xs whitespace-nowrap ${
             activeProfileSection === key
-              ? 'border-blue-500 text-blue-600 bg-white'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              ? isDark 
+                ? 'border-blue-400 text-blue-300 bg-gray-800'
+                : 'border-blue-500 text-blue-600 bg-white'
+              : isDark
+                ? 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
           }`}
         >
           <Icon className="mr-1 text-sm" />
@@ -646,57 +660,83 @@ const ChildManagement = () => {
         </button>
       ))}
     </div>
-  ), [activeProfileSection]);
+  ), [activeProfileSection, isDark]);
 
   // Render comprehensive profile form sections
   const renderBasicInfoSection = (data, isEdit = false) => (
     <div className="space-y-4">
-      <h4 className="text-lg font-semibold text-blue-700 flex items-center">
+      <h4 className={`text-lg font-semibold flex items-center ${
+        isDark ? 'text-blue-300' : 'text-blue-700'
+      }`}>
         <FaUser className="mr-2" />
         Basic Information
       </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-          <label className="block mb-1 font-semibold text-red-500">Full Name *</label>
+          <label className={`block mb-1 font-semibold ${
+            isDark ? 'text-red-400' : 'text-red-500'
+          }`}>Full Name *</label>
             <input
               type="text"
               name="name"
             value={data.name}
             onChange={handleProfileChange}
               required
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
             placeholder="Enter child's full name"
             />
           </div>
           <div>
-          <label className="block mb-1 font-semibold text-red-500">Date of Birth *</label>
+          <label className={`block mb-1 font-semibold ${
+            isDark ? 'text-red-400' : 'text-red-500'
+          }`}>Date of Birth *</label>
             <input
               type="date"
               name="dob"
             value={data.dob}
             onChange={handleProfileChange}
               required
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
             />
           </div>
           <div>
-            <label className="block mb-1 font-semibold">Age</label>
+            <label className={`block mb-1 font-semibold ${
+              isDark ? 'text-gray-300' : 'text-gray-700'
+            }`}>Age</label>
             <input
               type="number"
               name="age"
             value={data.age}
               readOnly
-              className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
+              className={`w-full p-2 border rounded-md ${
+                isDark 
+                  ? 'bg-gray-600 border-gray-600 text-gray-300' 
+                  : 'bg-gray-100 border-gray-300 text-gray-700'
+              }`}
             />
           </div>
           <div>
-          <label className="block mb-1 font-semibold text-red-500">Gender *</label>
+          <label className={`block mb-1 font-semibold ${
+            isDark ? 'text-red-400' : 'text-red-500'
+          }`}>Gender *</label>
             <select
               name="gender"
             value={data.gender}
             onChange={handleProfileChange}
               required
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
             >
               <option value="">Select Gender</option>
               <option value="male">Male</option>
@@ -705,23 +745,35 @@ const ChildManagement = () => {
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-semibold">Grade</label>
+            <label className={`block mb-1 font-semibold ${
+              isDark ? 'text-gray-300' : 'text-gray-700'
+            }`}>Grade</label>
             <input
               type="text"
               name="grade"
             value={data.grade}
               readOnly
-              className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
+              className={`w-full p-2 border rounded-md ${
+                isDark 
+                  ? 'bg-gray-600 border-gray-600 text-gray-300' 
+                  : 'bg-gray-100 border-gray-300 text-gray-700'
+              }`}
             />
           </div>
           <div>
-          <label className="block mb-1 font-semibold">Class</label>
+          <label className={`block mb-1 font-semibold ${
+            isDark ? 'text-gray-300' : 'text-gray-700'
+          }`}>Class</label>
             <input
               type="text"
               name="className"
             value={data.className}
               readOnly
-              className="w-full p-2 border border-gray-300 bg-gray-100 rounded-md"
+              className={`w-full p-2 border rounded-md ${
+                isDark 
+                  ? 'bg-gray-600 border-gray-600 text-gray-300' 
+                  : 'bg-gray-100 border-gray-300 text-gray-700'
+              }`}
             />
           </div>
         </div>
@@ -813,14 +865,22 @@ const ChildManagement = () => {
 
   const renderEmergencySection = (data) => (
     <div className="space-y-4">
-      <h4 className="text-lg font-semibold text-orange-600 flex items-center">
+      <h4 className={`text-lg font-semibold flex items-center ${
+        isDark ? 'text-orange-400' : 'text-orange-600'
+      }`}>
         <FaPhone className="mr-2" />
         Emergency Contacts
       </h4>
       {data.emergencyContacts.map((contact, index) => (
-        <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+        <div key={index} className={`border rounded-lg p-4 ${
+          isDark 
+            ? 'border-gray-600 bg-gray-700' 
+            : 'border-gray-200 bg-gray-50'
+        }`}>
           <div className="flex justify-between items-center mb-3">
-            <h5 className="font-semibold text-gray-700">
+            <h5 className={`font-semibold ${
+              isDark ? 'text-gray-200' : 'text-gray-700'
+            }`}>
               Contact #{index + 1} {contact.isPrimary && <span className="text-orange-500">(Primary)</span>}
             </h5>
             {data.emergencyContacts.length > 1 && (
@@ -835,21 +895,33 @@ const ChildManagement = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block mb-1 font-semibold">Name</label>
+              <label className={`block mb-1 font-semibold ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>Name</label>
               <input
                 type="text"
                 value={contact.name}
                 onChange={(e) => handleEmergencyContactChange(index, 'name', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  isDark 
+                    ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                }`}
                 placeholder="Full name"
               />
             </div>
             <div>
-              <label className="block mb-1 font-semibold">Relationship</label>
+              <label className={`block mb-1 font-semibold ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>Relationship</label>
               <select
                 value={contact.relationship}
                 onChange={(e) => handleEmergencyContactChange(index, 'relationship', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  isDark 
+                    ? 'bg-gray-600 border-gray-500 text-white' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
               >
                 <option value="">Select relationship</option>
                 <option value="parent">Parent</option>
@@ -863,28 +935,42 @@ const ChildManagement = () => {
               </select>
             </div>
             <div>
-              <label className="block mb-1 font-semibold">Phone Number</label>
+              <label className={`block mb-1 font-semibold ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>Phone Number</label>
               <input
                 type="tel"
                 value={contact.phone}
                 onChange={(e) => handleEmergencyContactChange(index, 'phone', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  isDark 
+                    ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                }`}
                 placeholder="Phone number"
               />
             </div>
             <div>
-              <label className="block mb-1 font-semibold">Email</label>
+              <label className={`block mb-1 font-semibold ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>Email</label>
               <input
                 type="email"
                 value={contact.email}
                 onChange={(e) => handleEmergencyContactChange(index, 'email', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  isDark 
+                    ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                }`}
                 placeholder="Email address"
               />
             </div>
           </div>
           <div className="mt-3">
-            <label className="flex items-center">
+            <label className={`flex items-center ${
+              isDark ? 'text-gray-300' : 'text-gray-700'
+            }`}>
               <input
                 type="checkbox"
                 checked={contact.isPrimary}
@@ -899,7 +985,11 @@ const ChildManagement = () => {
       <button
         type="button"
         onClick={addEmergencyContact}
-        className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition flex items-center justify-center"
+        className={`w-full py-2 px-4 rounded-md transition flex items-center justify-center ${
+          isDark 
+            ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' 
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        }`}
       >
         <FaPlus className="mr-2" />
         Add Another Emergency Contact
@@ -1190,10 +1280,14 @@ const ChildManagement = () => {
   // Render child registration form
   const renderRegisterForm = useCallback(() => (
     <>
-      <h3 className="text-2xl font-bold mb-4 text-blue-700">
+      <h3 className={`text-2xl font-bold mb-4 ${
+        isDark ? 'text-blue-300' : 'text-blue-700'
+      }`}>
         Create Comprehensive Child Profile
       </h3>
-      <p className="text-gray-600 mb-6">
+      <p className={`mb-6 ${
+        isDark ? 'text-gray-300' : 'text-gray-600'
+      }`}>
         Please fill out as much information as possible to help us provide the best care for your child. 
         Fields marked with * are required.
       </p>
@@ -1270,7 +1364,7 @@ const ChildManagement = () => {
         </div>
       )}
     </>
-  ), [profileData, handleProfileChange, handleProfileSubmit, loading.register, responseMessage, activeProfileSection, renderProfileSectionTabs]);
+  ), [profileData, handleProfileChange, handleProfileSubmit, loading.register, responseMessage, activeProfileSection, renderProfileSectionTabs, isDark]);
 
   // Render children list for management
   const renderChildrenList = () => (
@@ -1833,7 +1927,7 @@ const ChildManagement = () => {
             <button
               type="button"
               onClick={cancelEditing}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition flex items-center"
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition flex items-center"
             >
               <FaTimes className="mr-2" />
               Cancel
@@ -1884,10 +1978,18 @@ const ChildManagement = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-lg">
+    <div className={`min-h-screen p-4 md:p-6 ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-b from-blue-100 to-blue-50'
+    }`}>
+      <div className={`max-w-6xl mx-auto shadow-xl rounded-lg ${
+        isDark ? 'bg-gray-800' : 'bg-white'
+      }`}>
         <div className="p-6 md:p-8">
-        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
+        <h2 className={`text-3xl font-bold mb-6 text-center ${
+          isDark ? 'text-blue-300' : 'text-blue-700'
+        }`}>
             Child Profile Management
         </h2>
         
@@ -1898,10 +2000,16 @@ const ChildManagement = () => {
           {activeTab === 'view' && renderProfileView()}
         {activeTab === 'edit' && renderEditForm()}
         
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className={`mt-8 pt-6 border-t ${
+            isDark ? 'border-gray-600' : 'border-gray-200'
+          }`}>
           <Link
             to="/dashboard"
-              className="block text-center bg-gray-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-700 transition"
+              className={`block text-center font-semibold py-3 px-6 rounded-md transition ${
+                isDark 
+                  ? 'bg-gray-600 text-white hover:bg-gray-500' 
+                  : 'bg-gray-600 text-white hover:bg-gray-700'
+              }`}
           >
             Back to Dashboard
           </Link>

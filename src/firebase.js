@@ -29,12 +29,12 @@ try {
   auth = getAuth(app);
   console.log('✅ Firebase Auth service initialized');
 
-  // Add auth state change listener for debugging
+  // Add auth state change listener for debugging (non-interfering)
   auth.onAuthStateChanged((user) => {
     if (user) {
-      console.log('🔐 User signed in:', user.email || 'Anonymous');
+      console.log('🔐 Firebase user signed in:', user.email || 'Anonymous');
     } else {
-      console.log('🔓 User signed out');
+      console.log('🔓 Firebase user signed out (this does not affect PWA auth)');
     }
   });
 

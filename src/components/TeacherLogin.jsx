@@ -33,11 +33,13 @@ const TeacherLogin = () => {
       console.log('🚀 Making API call for teacher login');
       console.log('📡 Calling login function with role: teacher');
       
-      await login(formData.email, formData.password, 'teacher');
+      const result = await login(formData.email, formData.password, 'teacher');
       
       console.log('✅ Teacher login successful!');
       toast.success('Login successful!');
-      navigate('/teacher-dashboard');
+      
+      // PWALayout will handle navigation automatically
+      console.log('✅ Login successful - PWALayout will handle navigation');
     } catch (error) {
       console.error('❌ Teacher login error:', error);
       console.error('Error details:', {

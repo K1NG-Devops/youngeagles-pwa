@@ -24,7 +24,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { showNotification } from '../../utils/notifications';
 import useWebSocket from '../../hooks/useWebSocket';
 
-const WhatsAppMessaging = () => {
+const WhatsAppMessaging = React.memo(() => {
   const { isDark } = useTheme();
   
   // WebSocket Integration
@@ -116,7 +116,6 @@ const WhatsAppMessaging = () => {
 
   useEffect(() => {
     loadChats();
-    loadTeachers();
   }, []);
 
   // WebSocket Effects - Handle real-time messages
@@ -188,23 +187,97 @@ const WhatsAppMessaging = () => {
   const loadChats = async () => {
     setIsLoading(true);
     try {
-      // First, fetch available contacts (real teachers/admins)
-      const contacts = await parentService.getAvailableContacts();
+      let contacts = [];
+      let chatData = [];
       
-      // Then, fetch existing conversations
-      const response = await parentService.getMessages();
-      const chatData = Array.isArray(response) ? response : response.messages || [];
+      // Get current user to filter out self
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const currentUserId = currentUser.id;
+      const currentUserEmail = currentUser.email;
+      
+      console.log('👤 Current user in loadChats:', { id: currentUserId, email: currentUserEmail, name: currentUser.name });
+      
+      // Try to fetch available contacts with fallback
+      try {
+        console.log('📞 Attempting to load contacts...');
+        const allContacts = await parentService.getAvailableContacts();
+        
+        // Handle different response formats and filter out current user
+        let contactsArray = [];
+        if (Array.isArray(allContacts)) {
+          contactsArray = allContacts;
+        } else if (allContacts && Array.isArray(allContacts.teachers)) {
+          contactsArray = allContacts.teachers;
+        } else if (allContacts && Array.isArray(allContacts.data)) {
+          contactsArray = allContacts.data;
+        }
+        
+        // Filter out current user
+        contacts = contactsArray.filter(contact => {
+          const isCurrentUser = contact.id === currentUserId || 
+                               contact.email === currentUserEmail ||
+                               contact.name === currentUser.name;
+          if (isCurrentUser) {
+            console.log('🚫 Filtering out current user from chat list:', contact.name);
+          }
+          return !isCurrentUser;
+        });
+        
+        console.log('✅ Filtered contacts:', contacts.length, 'contacts after removing current user');
+        
+      } catch (contactError) {
+        console.warn('⚠️ Could not load contacts from API, using fallback:', contactError);
+        // Fallback to default teacher contacts (excluding current user)
+        const fallbackContacts = [
+          {
+            id: 1,
+            name: 'Ms. Sarah Johnson',
+            role: 'Grade R Teacher',
+            email: 'sarah@youngeagles.org.za'
+          },
+          {
+            id: 2,
+            name: 'Mr. David Wilson', 
+            role: 'Grade RR Teacher',
+            email: 'david@youngeagles.org.za'
+          },
+          {
+            id: 3,
+            name: 'School Administrator',
+            role: 'Administrator',
+            email: 'admin@youngeagles.org.za'
+          }
+        ];
+        
+        // Filter fallback contacts too
+        contacts = fallbackContacts.filter(contact => {
+          const isCurrentUser = contact.id === currentUserId || 
+                               contact.email === currentUserEmail ||
+                               contact.name === currentUser.name;
+          return !isCurrentUser;
+        });
+      }
+      
+      // Try to fetch existing conversations with fallback
+      try {
+        console.log('💬 Attempting to load messages...');
+        const response = await parentService.getMessages();
+        chatData = Array.isArray(response) ? response : response.messages || [];
+      } catch (messageError) {
+        console.warn('⚠️ Could not load messages from API:', messageError);
+        chatData = []; // Empty array fallback
+      }
       
       // Map contacts to the chat format, so they appear in the list
       const contactChats = contacts.map(contact => ({
         id: `teacher_${contact.id}`, // Create a unique ID for the potential chat
         name: contact.name,
         role: contact.role || 'Teacher',
-        avatar: `https://ui-avatars.com/api/?name=${contact.name.replace(' ', '+')}&background=random`,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(contact.name)}&background=128C7E&color=fff&size=50`,
         lastMessage: 'Click to start a conversation',
         lastMessageTime: new Date().toISOString(),
         unreadCount: 0,
-        isOnline: false, // This could be updated via WebSocket in the future
+        isOnline: false, // Real online status should come from WebSocket/server
         isPinned: false,
         messages: []
       }));
@@ -218,9 +291,31 @@ const WhatsAppMessaging = () => {
 
       setChats(uniqueChats.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)));
       
+      console.log('✅ Loaded chats successfully:', uniqueChats.length, 'chats');
+      
+      if (uniqueChats.length > 0) {
+        showNotification('Connected to messaging service', 'success');
+      }
+      
     } catch (error) {
-      console.error('Failed to load chats:', error);
-      showNotification('Could not load contacts', 'error');
+      console.error('❌ Failed to load chats:', error);
+      // Even if everything fails, provide a basic contact list
+      const fallbackChats = [
+        {
+          id: 'school_admin',
+          name: 'School Office',
+          role: 'Administration',
+          avatar: 'https://ui-avatars.com/api/?name=School+Office&background=128C7E&color=fff&size=50',
+          lastMessage: 'Contact us for any questions',
+          lastMessageTime: new Date().toISOString(),
+          unreadCount: 0,
+          isOnline: true,
+          isPinned: false,
+          messages: []
+        }
+      ];
+      setChats(fallbackChats);
+      showNotification('Limited messaging available - contact support if needed', 'warning');
     } finally {
       setIsLoading(false);
     }
@@ -240,7 +335,7 @@ const WhatsAppMessaging = () => {
           lastMessage: msg.message,
           lastMessageTime: msg.date,
           unreadCount: msg.read ? 0 : 1,
-          isOnline: Math.random() > 0.5,
+          isOnline: false, // Real online status should come from WebSocket/server
           isPinned: false,
           messages: []
         });
@@ -256,18 +351,19 @@ const WhatsAppMessaging = () => {
   };
 
   // Message Handling
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedChat) return;
+  const sendMessage = React.useCallback(async () => {
+    if (!newMessage.trim() || !selectedChat) {
+      console.log('❌ Cannot send message - missing message or chat:', {
+        message: newMessage.trim(),
+        selectedChat: selectedChat?.id
+      });
+      return;
+    }
     
     const messageText = newMessage.trim();
-    setNewMessage('');
+    console.log('📤 Sending message:', messageText, 'to:', selectedChat.name);
     
-    // Stop typing indicator
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
-      setTypingTimeout(null);
-    }
-    sendTyping(selectedChat.id);
+    setNewMessage('');
     
     const tempMessage = {
       id: `temp_${Date.now()}`,
@@ -278,47 +374,72 @@ const WhatsAppMessaging = () => {
       conversationId: selectedChat.id
     };
     
+    console.log('📝 Created temp message:', tempMessage);
+    
     // Add to local state immediately for instant feedback
-    setMessages(prev => [...prev, tempMessage]);
+    setMessages(prev => {
+      const newMessages = [...prev, tempMessage];
+      console.log('💬 Updated messages array:', newMessages.length, 'messages');
+      return newMessages;
+    });
     
     try {
-      // Use Socket.IO for real-time sending if connected
-      if (isConnected) {
-        const currentUser = JSON.parse(localStorage.getItem('user'));
-        const success = wsSendMessage({
-          conversationId: selectedChat.id,
-          message: messageText,
-          timestamp: new Date().toISOString(),
-          senderId: currentUser?.id 
-        });
+      console.log('🚀 Attempting to send via API...');
+      
+      // Always use REST API for now (simpler and more reliable)
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('👤 Current user sending message:', currentUser.email);
+      
+      const messageData = {
+        to: selectedChat.id,
+        message: messageText,
+        subject: 'Chat Message',
+        from: currentUser.id,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📡 Sending message data:', messageData);
+      
+      // Use the messages/send endpoint
+      const apiUrl = 'http://localhost:3001/messages/send';
+      console.log('🌐 Making API call to:', apiUrl);
+      
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      console.log('🔑 Using token for request:', token ? `Token present (${token.substring(0, 20)}...)` : 'No token found');
+      console.log('🔍 Checking localStorage:', {
+        accessToken: !!localStorage.getItem('accessToken'),
+        token: !!localStorage.getItem('token'),
+        user: !!localStorage.getItem('user'),
+        role: localStorage.getItem('role')
+      });
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(messageData)
+      });
+      
+      console.log('📡 API Response status:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Message sent successfully:', result);
         
-        if (success) {
-          // Update status to sent
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === tempMessage.id 
-                ? { ...msg, status: 'sent' }
-                : msg
-            )
-          );
-        } else {
-          throw new Error('Socket.IO send failed');
-        }
-      } else {
-        // Fallback to REST API
-        await parentService.sendMessage({
-          to: selectedChat.id,
-          message: messageText,
-          subject: 'Chat Message'
-        });
-        
+        // Update status to sent
         setMessages(prev => 
           prev.map(msg => 
             msg.id === tempMessage.id 
-              ? { ...msg, status: 'sent' }
+              ? { ...msg, status: 'sent', id: result.messageId || msg.id }
               : msg
           )
         );
+        
+        showNotification('Message sent!', 'success');
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       // Update chat list optimistically
@@ -334,10 +455,10 @@ const WhatsAppMessaging = () => {
       }));
       
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('❌ Failed to send message:', error);
       showNotification('Failed to send message', 'error');
       
-      // Remove failed message or mark as failed
+      // Mark message as failed
       setMessages(prev => 
         prev.map(msg => 
           msg.id === tempMessage.id 
@@ -346,37 +467,30 @@ const WhatsAppMessaging = () => {
         )
       );
     }
-  };
+  }, [newMessage, selectedChat]);
 
   // Handle typing indicators
-  const handleInputChange = (e) => {
+  const handleInputChange = React.useCallback((e) => {
     const value = e.target.value;
+    console.log('✏️ Input changed in callback:', value);
     setNewMessage(value);
     
-    // Send typing indicator
+    // Simplified typing indicator - remove problematic dependencies
     if (selectedChat && isConnected) {
-      sendTyping(selectedChat.id);
-      
-      // Clear existing timeout
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
+      try {
+        sendTyping(selectedChat.id);
+      } catch (error) {
+        console.warn('Failed to send typing indicator:', error);
       }
-      
-      // Set new timeout to stop typing indicator
-      const newTimeout = setTimeout(() => {
-        setIsTyping(false);
-      }, 2000);
-      
-      setTypingTimeout(newTimeout);
     }
-  };
+  }, [selectedChat?.id, isConnected, sendTyping]); // Added sendTyping to dependencies
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = React.useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
-  };
+  }, [sendMessage]);
 
   // Navigation
   const goBack = () => {
@@ -391,11 +505,14 @@ const WhatsAppMessaging = () => {
   };
 
   // Emoji handling
-  const addEmoji = (emoji) => {
+  const addEmoji = React.useCallback((emoji) => {
     setNewMessage(prev => prev + emoji);
     setShowEmojiPicker(false);
-    inputRef.current?.focus();
-  };
+    // Keep focus on input after adding emoji
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  }, []);
 
   // File upload
   const handleFileUpload = (e) => {
@@ -408,25 +525,98 @@ const WhatsAppMessaging = () => {
   // Load available teachers
   const loadTeachers = async () => {
     try {
-      // Mock teachers data
+      console.log('🔄 Loading available teachers from API...');
+      
+      // First try to load from API
+      const response = await parentService.getAvailableContacts();
+      console.log('📡 API Response:', response);
+      
+      // Handle different response formats
+      let contacts = [];
+      if (Array.isArray(response)) {
+        contacts = response;
+      } else if (response && Array.isArray(response.teachers)) {
+        contacts = response.teachers;
+      } else if (response && Array.isArray(response.data)) {
+        contacts = response.data;
+      } else {
+        console.warn('⚠️ Unexpected API response format:', response);
+        throw new Error('Invalid API response format');
+      }
+      
+      if (contacts && contacts.length > 0) {
+        console.log('✅ Loaded teachers from API:', contacts.length, contacts);
+        
+        // Get current user to filter out self
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const currentUserId = currentUser.id;
+        const currentUserEmail = currentUser.email;
+        
+        console.log('👤 Current user:', { id: currentUserId, email: currentUserEmail });
+        
+        // Transform API data to expected format and filter out current user
+        const teachers = contacts
+          .filter(contact => {
+            // Filter out current user by ID or email
+            const isCurrentUser = contact.id === currentUserId || 
+                                 contact.email === currentUserEmail ||
+                                 contact.name === currentUser.name;
+            if (isCurrentUser) {
+              console.log('🚫 Filtering out current user:', contact.name);
+            }
+            return !isCurrentUser;
+          })
+          .map(contact => ({
+            id: contact.id || `contact_${contact.name?.replace(/\s+/g, '_')}`,
+            name: contact.name,
+            role: contact.role || 'Teacher',
+            className: contact.className || '',
+            email: contact.email || '',
+            avatar: contact.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(contact.name)}&background=128C7E&color=fff&size=50`,
+            isOnline: false // Real online status should come from WebSocket/server
+          }));
+        
+        setAvailableTeachers(teachers);
+        console.log('🎯 Set available teachers:', teachers);
+        showNotification(`Loaded ${teachers.length} teachers successfully`, 'success');
+      } else {
+        throw new Error('No contacts returned from API');
+      }
+    } catch (error) {
+      console.error('❌ Failed to load teachers from API:', error);
+      console.log('📋 Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      console.log('🔄 Using fallback teachers data');
+      
+      // Fallback to default contacts
       setAvailableTeachers([
         {
-          id: 'teacher_1',
+          id: 'school_office',
+          name: 'School Office',
+          role: 'Administration',
+          avatar: 'https://ui-avatars.com/api/?name=School+Office&background=2196F3&color=fff&size=50',
+          isOnline: false
+        },
+        {
+          id: 'teacher_sarah',
           name: 'Ms. Sarah Johnson',
           role: 'Grade R Teacher',
           avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson&background=128C7E&color=fff&size=50',
-          isOnline: true
+          isOnline: false
         },
         {
-          id: 'teacher_2', 
+          id: 'teacher_david', 
           name: 'Mr. David Wilson',
           role: 'Grade RR Teacher',
           avatar: 'https://ui-avatars.com/api/?name=David+Wilson&background=25D366&color=fff&size=50',
-          isOnline: true
+          isOnline: false
         }
       ]);
-    } catch (error) {
-      console.error('Failed to load teachers:', error);
+      
+      showNotification('Using fallback contacts - check network connection', 'warning');
     }
   };
 
@@ -452,7 +642,15 @@ const WhatsAppMessaging = () => {
     }
   };
 
-  // New Chat Modal
+  // Load teachers when modal opens
+  React.useEffect(() => {
+    if (showNewChatModal && availableTeachers.length === 0) {
+      console.log('📱 Loading teachers for new chat modal...');
+      loadTeachers();
+    }
+  }, [showNewChatModal]);
+
+  // New Chat Modal - stable component to prevent focus loss
   const NewChatModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div 
@@ -478,33 +676,42 @@ const WhatsAppMessaging = () => {
             Select a teacher to start a conversation:
           </p>
           
-          <div className="space-y-3">
-            {availableTeachers.map((teacher) => (
-              <div
-                key={teacher.id}
-                onClick={() => startNewChat(teacher)}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                style={{ backgroundColor: currentTheme.chatBg }}
-              >
-                <img 
-                  src={teacher.avatar} 
-                  alt={teacher.name}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="ml-3">
-                  <h3 style={{ color: currentTheme.text }} className="font-medium">
-                    {teacher.name}
-                  </h3>
-                  <p style={{ color: currentTheme.textSecondary }} className="text-sm">
-                    {teacher.role}
-                  </p>
+          {availableTeachers.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <span style={{ color: currentTheme.textSecondary }} className="ml-3">
+                Loading teachers...
+              </span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {availableTeachers.map((teacher) => (
+                <div
+                  key={teacher.id}
+                  onClick={() => startNewChat(teacher)}
+                  className="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  style={{ backgroundColor: currentTheme.chatBg }}
+                >
+                  <img 
+                    src={teacher.avatar} 
+                    alt={teacher.name}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div className="ml-3">
+                    <h3 style={{ color: currentTheme.text }} className="font-medium">
+                      {teacher.name}
+                    </h3>
+                    <p style={{ color: currentTheme.textSecondary }} className="text-sm">
+                      {teacher.role}
+                    </p>
+                  </div>
+                  {teacher.isOnline && (
+                    <div className="ml-auto w-3 h-3 bg-green-500 rounded-full"></div>
+                  )}
                 </div>
-                {teacher.isOnline && (
-                  <div className="ml-auto w-3 h-3 bg-green-500 rounded-full"></div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -531,7 +738,7 @@ const WhatsAppMessaging = () => {
   };
 
   // Enhanced Chat List View (WhatsApp Business Style)
-  const ChatListView = () => (
+  const ChatListView = React.useCallback(() => (
     <div style={{ backgroundColor: currentTheme.background, minHeight: '100vh' }}>
       {/* Header - WhatsApp Business Style */}
       <div 
@@ -703,10 +910,10 @@ const WhatsAppMessaging = () => {
       {/* New Chat Modal */}
       {showNewChatModal && <NewChatModal />}
     </div>
-  );
+  ), [currentTheme, isLoading, chats, searchQuery, showNewChatModal]);
 
   // Enhanced Chat View (WhatsApp Business Style)
-  const ChatView = () => (
+  const ChatView = React.useCallback(() => (
     <div style={{ backgroundColor: currentTheme.chatBg, minHeight: '100vh' }} className="flex flex-col">
       {/* Chat Header - WhatsApp Business Style */}
       <div 
@@ -899,9 +1106,11 @@ const WhatsAppMessaging = () => {
           </div>
         )}
         
-        <div className="flex items-end space-x-3">
+        {/* Simple Input Container - NO FORM */}
+        <div key="input-container" className="flex items-center space-x-3">
           {/* Emoji Button */}
           <button
+            type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
           >
@@ -915,30 +1124,38 @@ const WhatsAppMessaging = () => {
                 backgroundColor: currentTheme.inputBg, 
                 border: `1px solid ${currentTheme.border}`
               }}
-              className="rounded-2xl flex items-end"
+              className="rounded-2xl flex items-center"
             >
-              {/* Text Input */}
-              <textarea
+              {/* Simple Input Field */}
+              <input
+                key="message-input"
                 ref={inputRef}
+                type="text"
                 value={newMessage}
-                onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-                placeholder={isConnected ? "Type a message" : "Connecting..."}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (newMessage.trim()) {
+                      sendMessage();
+                    }
+                  }
+                }}
+                placeholder={isConnected ? "Type a message..." : "Connecting..."}
                 disabled={!isConnected}
                 style={{ 
                   color: currentTheme.text,
                   backgroundColor: 'transparent'
                 }}
-                className={`flex-1 px-4 py-3 resize-none border-none outline-none max-h-20 ${!isConnected ? 'opacity-50' : ''}`}
-                rows={1}
-                onInput={(e) => {
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 80) + 'px';
-                }}
+                className="flex-1 px-4 py-3 border-none outline-none"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
               />
 
               {/* Attachment Button */}
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="p-2 mr-2 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
               >
@@ -947,35 +1164,28 @@ const WhatsAppMessaging = () => {
             </div>
           </div>
 
-          {/* Send/Voice Button */}
-          <div className="flex-shrink-0">
-            {newMessage.trim() ? (
-              <button
-                onClick={sendMessage}
-                disabled={!isConnected}
-                style={{ backgroundColor: currentTheme.accent }}
-                className={`p-3 rounded-full transition-all transform ${
-                  isConnected 
-                    ? 'hover:scale-105 shadow-lg' 
-                    : 'opacity-50 cursor-not-allowed'
-                }`}
-              >
-                <FaPaperPlane className="text-white" size={18} />
-              </button>
-            ) : (
-              <button
-                onMouseDown={() => setIsRecording(true)}
-                onMouseUp={() => setIsRecording(false)}
-                onMouseLeave={() => setIsRecording(false)}
-                style={{ 
-                  backgroundColor: isRecording ? '#ef4444' : currentTheme.accent 
-                }}
-                className="p-3 rounded-full transition-all transform hover:scale-105 shadow-lg"
-              >
-                <FaMicrophone className="text-white" size={18} />
-              </button>
-            )}
-          </div>
+          {/* Send Button */}
+          <button
+            type="button"
+            disabled={!newMessage.trim() || !isConnected}
+            onClick={() => {
+              console.log('🖱️ SEND BUTTON CLICKED');
+              if (!newMessage.trim()) {
+                console.log('❌ No message to send');
+                return;
+              }
+              console.log('✅ Send button - calling sendMessage');
+              sendMessage();
+            }}
+            style={{ backgroundColor: currentTheme.accent }}
+            className={`p-3 rounded-full transition-all transform ${
+              newMessage.trim() && isConnected
+                ? 'hover:scale-105 shadow-lg' 
+                : 'opacity-50 cursor-not-allowed'
+            }`}
+          >
+            <FaPaperPlane className="text-white" size={18} />
+          </button>
         </div>
 
         {/* Emoji Picker */}
@@ -1064,7 +1274,7 @@ const WhatsAppMessaging = () => {
         )}
       </div>
     </div>
-  );
+  ), [currentTheme, selectedChat?.id, isConnected, messages, newMessage, showEmojiPicker, isRecording, isDark]);
 
   // Render based on current view
   if (currentView === 'chat' && selectedChat) {
@@ -1072,6 +1282,6 @@ const WhatsAppMessaging = () => {
   }
 
   return <ChatListView />;
-};
+});
 
 export default WhatsAppMessaging; 

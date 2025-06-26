@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  // Base URLs - These should NOT include /api as it's added in httpClient
+  // Base URLs - These are now sanitized and should NOT have a trailing slash or /api
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://youngeagles-api-server.up.railway.app',
   LOCAL_URL: import.meta.env.VITE_API_LOCAL_URL || 'http://localhost:3001',
   
@@ -11,7 +11,8 @@ export const API_CONFIG = {
     PATH: '/socket.io',
     getUrl() {
       const forceLocal = import.meta.env.VITE_FORCE_LOCAL_API === 'true';
-      if (API_CONFIG.isDevelopment || forceLocal) {
+      const isLocalDev = API_CONFIG.isDevelopment || forceLocal || window.location.hostname === 'localhost';
+      if (isLocalDev) {
         console.log('🔌 Using LOCAL WebSocket URL:', this.LOCAL_URL);
         return this.LOCAL_URL;
       }
@@ -24,15 +25,22 @@ export const API_CONFIG = {
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,
   
-  // Get the appropriate API URL based on environment
+  // Get the appropriate API URL based on environment, with sanitization
   getApiUrl() {
     const forceLocal = import.meta.env.VITE_FORCE_LOCAL_API === 'true';
-    if (this.isDevelopment || forceLocal) {
-      console.log('🔧 Using LOCAL API for development:', this.LOCAL_URL);
-      return this.LOCAL_URL;
+    // FORCE LOCAL DEVELOPMENT FOR ADMIN TESTING
+    const isLocalDev = this.isDevelopment || forceLocal || window.location.hostname === 'localhost';
+    let url = isLocalDev ? this.LOCAL_URL : this.BASE_URL;
+    
+    // Sanitize the URL to remove any trailing slashes or /api path
+    url = url.replace(/\/api\/?$/, '').replace(/\/$/, '');
+    
+    if (isLocalDev) {
+      console.log('🔧 Using SANITIZED LOCAL API:', url);
+    } else {
+      console.log('🔧 Using SANITIZED PRODUCTION API:', url);
     }
-    console.log('🔧 Using PRODUCTION API:', this.BASE_URL);
-    return this.BASE_URL;
+    return url;
   },
   
   // Get base URL for httpClient
@@ -46,10 +54,10 @@ export const API_CONFIG = {
     LOGIN: '/auth/login',
     TEACHER_LOGIN: '/auth/teacher-login',
     ADMIN_LOGIN: '/auth/admin-login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    REFRESH_TOKEN: '/auth/refresh',
-    VERIFY_TOKEN: '/auth/verify',
+    REGISTER: '/api/auth/register',
+    LOGOUT: '/api/auth/logout',
+    REFRESH_TOKEN: '/api/auth/refresh-token',
+    VERIFY_TOKEN: '/api/auth/verify',
     
     // User Management
     USER_PROFILE: '/user/profile',
@@ -57,7 +65,7 @@ export const API_CONFIG = {
     
     // Parent-specific
     PARENT_DASHBOARD: '/parent/dashboard',
-    CHILDREN: '/children',
+    CHILDREN: '/auth/parents',
     REGISTER_CHILD: '/auth/register-child',
     
     // Teacher-specific

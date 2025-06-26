@@ -47,6 +47,16 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('appSettings', JSON.stringify(settings));
   };
 
+  // Effect to apply the dark class to the root element
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [isDark]);
+
   const value = {
     isDark,
     toggleTheme,

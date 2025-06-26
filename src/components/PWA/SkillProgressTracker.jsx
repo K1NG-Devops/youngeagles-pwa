@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaUser, FaStar, FaChartBar, FaEdit, FaSave, FaTimes, FaPlus, FaEye, FaSpinner, FaGraduationCap, FaBook, FaLightbulb } from 'react-icons/fa';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { showTopNotification } from '../TopNotificationManager';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://youngeagles-api-server.up.railway.app';
+import { toast } from 'react-toastify';
+import { api } from '../../services/httpClient';
 
 const MASTERY_LEVELS = {
   emerging: { name: 'Emerging', color: '#EF4444', level: 1 },
@@ -27,13 +27,13 @@ const SkillProgressTracker = ({ isDark = false }) => {
   const [skillProgress, setSkillProgress] = useState(null);
   const [editingSkill, setEditingSkill] = useState(null);
   const [loading, setLoading] = useState({
-    students: true,
+    students: false,
     skills: false,
     updating: false
   });
 
+  const token = localStorage.getItem('accessToken');
   const teacherId = localStorage.getItem('teacherId') || localStorage.getItem('userId');
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
   const teacherClass = localStorage.getItem('teacherClass');
 
   useEffect(() => {
@@ -50,24 +50,17 @@ const SkillProgressTracker = ({ isDark = false }) => {
     try {
       setLoading(prev => ({ ...prev, students: true }));
       
-      // For now, we'll fetch from children table filtered by teacher's class
-      const response = await fetch(`${API_BASE_URL}/api/teacher/students`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Use proper API service for fetching students
+      const response = await api.get('/teacher/students');
 
-      if (response.ok) {
-        const result = await response.json();
+      if (response.data) {
+        const result = response.data;
         setStudents(result.students || []);
         
         // Auto-select first student
         if (result.students?.length > 0) {
           setSelectedStudent(result.students[0]);
         }
-      } else {
-        toast.error('Failed to load students');
       }
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -83,22 +76,11 @@ const SkillProgressTracker = ({ isDark = false }) => {
     try {
       setLoading(prev => ({ ...prev, skills: true }));
       
-      const response = await fetch(
-        `${API_BASE_URL}/api/homework/skills/progress/${selectedStudent.id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await api.get(`/homework/skills/progress/${selectedStudent.id}`);
 
-      if (response.ok) {
-        const result = await response.json();
+      if (response.data) {
+        const result = response.data;
         setSkillProgress(result);
-      } else {
-        console.error('Failed to fetch skill progress');
-        toast.error('Failed to load skill progress');
       }
     } catch (error) {
       console.error('Error fetching skill progress:', error);
@@ -112,30 +94,21 @@ const SkillProgressTracker = ({ isDark = false }) => {
     try {
       setLoading(prev => ({ ...prev, updating: true }));
       
-      const response = await fetch(`${API_BASE_URL}/api/homework/skills/progress`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          studentId: selectedStudent.id,
-          skillId,
-          ...updates
-        })
+      const response = await api.post('/homework/skills/progress', {
+        studentId: selectedStudent.id,
+        skillId,
+        ...updates
       });
 
-      if (response.ok) {
+      if (response.data) {
         toast.success('Skill progress updated successfully!');
         await fetchSkillProgress(); // Refresh data
         setEditingSkill(null);
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to update skill progress');
       }
     } catch (error) {
       console.error('Error updating skill progress:', error);
-      toast.error('Error updating skill progress');
+      const errorMessage = error.response?.data?.error || 'Failed to update skill progress';
+      toast.error(errorMessage);
     } finally {
       setLoading(prev => ({ ...prev, updating: false }));
     }
@@ -167,7 +140,7 @@ const SkillProgressTracker = ({ isDark = false }) => {
     });
     
     skillProgress.allProgress.forEach(skill => {
-      if (distribution.hasOwnProperty(skill.mastery_status)) {
+      if (Object.prototype.hasOwnProperty.call(distribution, skill.mastery_status)) {
         distribution[skill.mastery_status]++;
       }
     });

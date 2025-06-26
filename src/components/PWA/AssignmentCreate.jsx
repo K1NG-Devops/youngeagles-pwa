@@ -43,19 +43,42 @@ const AssignmentCreate = () => {
     try {
       setLoadingChildren(true);
       const teacherId = auth?.user?.id || localStorage.getItem('teacherId') || 2;
+      console.log('🎯 AssignmentCreate: Loading children for teacher ID:', teacherId);
+      
       const children = await assignmentService.getAvailableChildren(teacherId);
+      console.log('🎯 AssignmentCreate: Received children data:', children);
+      
       setAvailableChildren(children);
+      
+      // Show success message for database connectivity
+      if (children.length > 0) {
+        console.log('✅ Successfully loaded students from database');
+        showTopNotification(`✅ Loaded ${children.length} students from your class!`, 'success');
+      } else {
+        console.log('⚠️ No students found in teacher\'s class');
+        showTopNotification('ℹ️ No students found in your assigned class', 'info');
+      }
       
       // Auto-set the class name based on teacher's class
       if (children.length > 0) {
+        const className = children[0].className;
+        console.log('🎯 AssignmentCreate: Setting class name to:', className);
         setFormData(prev => ({
           ...prev,
-          class_name: children[0].className
+          class_name: className
         }));
+      } else {
+        console.log('⚠️ AssignmentCreate: No children found for teacher');
       }
     } catch (error) {
-      console.error('Error loading children:', error);
-      toast.error('Failed to load available children');
+      console.error('❌ AssignmentCreate: Error loading children:', error);
+      
+      // Show specific error message to help with troubleshooting
+      if (error.message.includes('Unable to load students')) {
+        showTopNotification(error.message, 'error');
+      } else {
+        showTopNotification('❌ Failed to connect to student database. Please check your connection.', 'error');
+      }
     } finally {
       setLoadingChildren(false);
     }
@@ -150,7 +173,7 @@ const AssignmentCreate = () => {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error('Please fix the form errors');
+      showTopNotification('Please fix the form errors', 'error');
       return;
     }
 
@@ -160,7 +183,10 @@ const AssignmentCreate = () => {
       const result = await assignmentService.createAssignment(formData);
       
       if (result.success) {
-        toast.success(`Assignment "${formData.title}" created successfully for ${formData.child_ids.length} children!`);
+        showTopNotification(
+          `🎉 Assignment "${formData.title}" created successfully for ${formData.child_ids.length} student${formData.child_ids.length === 1 ? '' : 's'}!`,
+          'success'
+        );
         
         // Reset form
         setFormData({
@@ -172,16 +198,17 @@ const AssignmentCreate = () => {
         });
         setDefaultDueDate();
         
-        // Navigate back to teacher dashboard
+        // Navigate back to teacher dashboard with a delay to show the success message
+        console.log('🏠 Navigating back to teacher dashboard in 2 seconds...');
         setTimeout(() => {
           navigate('/teacher-dashboard');
-        }, 1500);
+        }, 2000);
       } else {
-        toast.error('Failed to create assignment');
+        showTopNotification('❌ Failed to create assignment', 'error');
       }
     } catch (error) {
       console.error('Error creating assignment:', error);
-      toast.error(error.message || 'Failed to create assignment');
+      showTopNotification(error.message || 'Failed to create assignment', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -238,7 +265,7 @@ const AssignmentCreate = () => {
                   value={formData.title}
                   onChange={handleInputChange}
                   placeholder="e.g., Math Homework - Addition Practice"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 bg-white placeholder-gray-500 ${
                     errors.title ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -261,7 +288,7 @@ const AssignmentCreate = () => {
                   onChange={handleInputChange}
                   rows={3}
                   placeholder="Provide detailed instructions for the assignment..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
 
@@ -294,7 +321,7 @@ const AssignmentCreate = () => {
                   name="due_date"
                   value={formData.due_date}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 bg-white ${
                     errors.due_date ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />

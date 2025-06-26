@@ -134,21 +134,21 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 relative safe-area-inset">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-blue-900 flex items-center justify-center p-4 relative safe-area-inset">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <img
             src="/yehc_logo.png"
             alt="Young Eagles"
-            className="h-4 w-4 mx-auto mb-4 rounded-full object-cover shadow-lg"
+            className="h-16 w-16 mx-auto mb-4 rounded-full object-cover shadow-lg"
           />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Parent Registration</h1>
-          <p className="text-gray-600">Create your parent account</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Parent Registration</h1>
+          <p className="text-gray-600 dark:text-gray-300">Create your parent account</p>
         </div>
 
         {/* Main Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             {[
               { name: 'name', label: 'Full Name' },
@@ -160,7 +160,7 @@ const Register = () => {
               { name: 'confirmPassword', label: 'Confirm Password', type: 'password' },
             ].map(({ name, label, type = 'text' }) => (
               <div key={name} className="relative">
-                <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
                 <div className="relative">
                   {name === 'name' && <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
                   {name === 'email' && <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
@@ -173,7 +173,7 @@ const Register = () => {
                     onChange={handleChange}
                     required={name !== 'workAddress'}
                     autoComplete={name === 'password' || name === 'confirmPassword' ? 'new-password' : name}
-                    className={`w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors[name] ? 'border-red-500' : ''}`}
+                    className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 ${fieldErrors[name] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                     placeholder={name === "workAddress" ? "If applicable" : name === "phone" ? "e.g., 123-456-7890" : undefined}
                     pattern={name === 'phone' ? "[0-9\\s\\-+().]{10,15}" : undefined}
                   />
@@ -184,8 +184,8 @@ const Register = () => {
               </div>
             ))}
 
-            <p className="text-sm text-center text-gray-600">
-              By registering, you agree to our <a href="/terms" className="text-blue-600 hover:text-blue-500">Terms</a> and <a href="/privacy" className="text-blue-600 hover:text-blue-500">Privacy</a>.
+            <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+              By registering, you agree to our <a href="/terms" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">Terms</a> and <a href="/privacy" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">Privacy</a>.
             </p>
 
             <button
@@ -207,16 +207,16 @@ const Register = () => {
               </div>
             )}
             {errors && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm text-center">{errors}</p>
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-red-600 dark:text-red-300 text-sm text-center">{errors}</p>
               </div>
             )}
 
             {/* Footer Links */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+                <Link to="/login" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
                   Sign in here
                 </Link>
               </p>
@@ -225,9 +225,9 @@ const Register = () => {
         </div>
 
         {/* Role Navigation */}
-        <div className="mt-6 bg-white rounded-xl shadow-lg p-4">
+        <div className="mt-6 bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg p-4">
           <div className="flex justify-center space-x-4 text-sm">
-            <Link to="/home" className="text-blue-600 hover:text-blue-500 font-medium">
+            <Link to="/home" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
               Back to Home
             </Link>
           </div>

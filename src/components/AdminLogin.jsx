@@ -19,9 +19,11 @@ const AdminLogin = () => {
     }
     setIsLoading(true);
     try {
-      await login(formData.email, formData.password, 'admin');
+      const result = await login(formData.email, formData.password, 'admin');
       toast.success('Login successful!');
-      navigate('/admin-dashboard');
+      
+      // PWALayout will handle navigation automatically
+      console.log('✅ Login successful - PWALayout will handle navigation');
     } catch (error) {
       toast.error(error.message || 'Login failed. Please try again.');
     } finally {

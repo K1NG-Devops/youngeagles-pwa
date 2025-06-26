@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt, FaChartBar, FaMagic, FaRocket, FaGraduationCap, FaCalendarWeek } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
-import axios from 'axios';
+import { api } from '../../services/httpClient';
 import { showTopNotification } from '../TopNotificationManager';
 import { API_CONFIG } from '../../config/api';
 import { useTheme } from '../../hooks/useTheme.jsx';
@@ -31,25 +31,46 @@ const PWATeacherDashboard = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [showAdvancedCreator, setShowAdvancedCreator] = useState(false);
 
-  const token = localStorage.getItem('accessToken');
-  const teacherId = auth?.user?.id || localStorage.getItem('teacherId');
+  // Debug auth state (moved to avoid re-render triggers)
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const teacherId = auth?.user?.id || localStorage.getItem('teacherId');
+    
+    console.log('🎓 PWATeacherDashboard - Auth state:', {
+      hasAuth: !!auth,
+      hasUser: !!auth?.user,
+      userId: auth?.user?.id,
+      userEmail: auth?.user?.email,
+      userRole: auth?.user?.role,
+      hasToken: !!token,
+      teacherId: teacherId
+    });
+  }, [auth]);
 
   // Fetch teacher stats and submissions
   const fetchTeacherData = useCallback(async () => {
-    if (!token || !teacherId) return;
+    const token = localStorage.getItem('accessToken');
+    const teacherId = auth?.user?.id || localStorage.getItem('teacherId');
+    
+    console.log('🔍 fetchTeacherData called with:', {
+      hasToken: !!token,
+      tokenLength: token?.length,
+      teacherId,
+      authUserId: auth?.user?.id,
+      authUserEmail: auth?.user?.email
+    });
+    
+    if (!token || !teacherId) {
+      console.log('❌ Skipping fetchTeacherData - missing token or teacherId');
+      return;
+    }
     
     setIsLoading(prev => ({ ...prev, stats: true, submissions: true }));
     
     try {
       // Fetch teacher class info and students
-      const classRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/teacher/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      console.log('📡 Making API call to /teacher/profile with token:', token?.substring(0, 10) + '...');
+      const classRes = await api.get('/teacher/profile');
       
       const classData = classRes.data;
       if (classData.success && classData.teacher) {
@@ -57,14 +78,7 @@ const PWATeacherDashboard = () => {
       }
       
       // Fetch teacher stats from homework endpoint
-      const statsRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/homework/teacher/stats`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const statsRes = await api.get('/homework/teacher/stats');
       
       if (statsRes.data.success && statsRes.data.stats) {
         const stats = statsRes.data.stats;
@@ -78,14 +92,7 @@ const PWATeacherDashboard = () => {
       
       // Fetch all submissions for teacher
       try {
-        const submissionsRes = await axios.get(
-          `${API_CONFIG.getApiUrl()}/homework/teacher/submissions`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const submissionsRes = await api.get('/homework/teacher/submissions');
         
         const submissions = submissionsRes.data.submissions || [];
         setRecentSubmissions(submissions.slice(0, 5)); // Show latest 5 submissions
@@ -109,7 +116,7 @@ const PWATeacherDashboard = () => {
     } finally {
       setIsLoading(prev => ({ ...prev, stats: false, submissions: false }));
     }
-  }, [token, teacherId]);
+  }, [auth?.user?.id]);
 
   useEffect(() => {
     fetchTeacherData();
@@ -330,7 +337,7 @@ const PWATeacherDashboard = () => {
             </div>
           )}
           <div className="mt-3 flex items-center text-xs text-green-100">
-            <span className="bg-white bg-opacity-20 px-2 py-1 rounded-full mr-2">NEW</span>
+            <span className="bg-blue-600 text-white px-2 py-1 rounded-full mr-2 font-semibold">NEW</span>
             Advanced AI-powered teaching tools available!
           </div>
         </div>
@@ -482,7 +489,7 @@ const PWATeacherDashboard = () => {
                   )}
                   {action.isAdvanced && (
                     <div className="mt-2">
-                      <span className="text-xs bg-white bg-opacity-30 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full font-semibold">
                         NEW
                       </span>
                     </div>

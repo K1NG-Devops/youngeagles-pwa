@@ -237,25 +237,37 @@ class AssignmentService {
     const operation = 'Get Available Children';
     
     try {
-      console.log(`🔍 Fetching children for teacher ${teacherId} from backend...`);
+      console.log(`🔍 Fetching children for teacher ${teacherId} from backend API...`);
       
+      // Use the correct backend endpoint: /auth/children
       const response = await axios.get(
-        buildUrl(`/teacher/${teacherId}/children`),
+        buildUrl('/auth/children'),
         { headers: this.getAuthHeaders() }
       );
       
-      const children = response.data || response;
-      console.log(`✅ Found ${children.length} children in teacher's class`);
-      return children;
-    } catch (error) {
-      console.error('Error getting available children:', error);
-      this.handleError(error, operation);
+      const data = response.data;
+      console.log('🎯 Raw API response:', data);
       
-      // Fallback to mock data if backend fails
-      return [
-        { id: 1, name: 'Emma Johnson', age: 5, className: 'Panda Class' },
-        { id: 3, name: 'Sophia Davis', age: 6, className: 'Panda Class' }
-      ];
+      // The backend returns { children: [...] }
+      const children = data.children || [];
+      console.log(`✅ Found ${children.length} children in teacher's class from database`);
+      
+      // Transform the data to ensure consistent format
+      const transformedChildren = children.map(child => ({
+        id: child.id,
+        name: child.name,
+        age: child.age,
+        className: child.className || child.class_name || 'Unknown Class'
+      }));
+      
+      console.log('🎯 Transformed children data:', transformedChildren);
+      return transformedChildren;
+    } catch (error) {
+      console.error('❌ Failed to fetch children from database:', error.response?.status || error.message);
+      console.error('❌ Full error details:', error);
+      
+      // For production, we should show an error instead of fallback data
+      throw new Error(`Unable to load students: ${error.response?.data?.message || error.message}`);
     }
   }
 
@@ -280,10 +292,10 @@ class AssignmentService {
       console.log(`✅ Teacher ${teacherId} is assigned to: ${className}`);
       return className;
     } catch (error) {
-      console.error('Error getting teacher class:', error);
-      this.handleError(error, operation);
+      console.error('⚠️ API failed for getting teacher class:', error.response?.status || error.message);
       
-      // Fallback to default class
+      // Don't throw error, just return fallback class
+      console.log('🔄 Using fallback class: Panda Class');
       return 'Panda Class';
     }
   }

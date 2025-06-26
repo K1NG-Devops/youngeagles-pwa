@@ -2,9 +2,9 @@ import axios from 'axios';
 import { API_CONFIG, logApiCall } from '../config/api.js';
 import { toast } from 'react-toastify';
 
-// Create axios instance with base URL only (no /api prefix)
+// Create axios instance with dynamic base URL based on environment
 const httpClient = axios.create({
-  baseURL: API_CONFIG.getApiUrl(),
+  baseURL: API_CONFIG.getApiUrl(), // Use dynamic URL from config
   timeout: API_CONFIG.TIMEOUT.DEFAULT,
   headers: {
     'Content-Type': 'application/json',
@@ -18,6 +18,9 @@ httpClient.interceptors.request.use(
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(`🔒 Adding auth token to ${config.url}: ${token.substring(0, 20)}...`);
+    } else {
+      console.warn(`⚠️ No auth token available for request to: ${config.url}`);
     }
 
     // Add default headers if not already set
@@ -56,13 +59,13 @@ httpClient.interceptors.response.use(
       const { status, data } = error.response;
       
       switch (status) {
-        case 401:
+        case 401: {
           // Unauthorized - Token expired or invalid
           console.warn('🔐 Authentication failed:', originalRequest.url);
           
           // List of endpoints that should not trigger redirect even if they return 401
           const noRedirectEndpoints = [
-            '/auth/verify',
+            // '/auth/verify', // Let verification failures trigger a logout
             '/homework',
             '/parent/children',
             '/reports/parent'
@@ -102,7 +105,7 @@ httpClient.interceptors.response.use(
               if (refreshToken) {
                 console.log('🔑 Calling refresh token endpoint');
                 const response = await axios.post(
-                  `${API_CONFIG.getApiUrl()}/api/auth/refresh`,
+                  `${API_CONFIG.getApiUrl()}/auth/refresh`,
                   { refreshToken },
                   { timeout: 5000 } // Add timeout to refresh request
                 );
@@ -166,12 +169,14 @@ httpClient.interceptors.response.use(
             if (parentId) localStorage.setItem('parent_id', parentId);
           }
           break;
+        }
 
-        case 403:
+        case 403: {
           // Forbidden - Insufficient permissions
           console.warn('🚫 Access forbidden');
           toast.error('You do not have permission to access this resource.');
           break;
+        }
 
         case 404:
           // Not found
@@ -231,44 +236,32 @@ httpClient.interceptors.response.use(
 export const api = {
   // GET request
   get: (url, config = {}) => {
-    // Add /api prefix if not present
-    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
-    return httpClient.get(apiUrl, config);
+    return httpClient.get(url, config);
   },
 
   // POST request
   post: (url, data = {}, config = {}) => {
-    // Add /api prefix if not present
-    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
-    return httpClient.post(apiUrl, data, config);
+    return httpClient.post(url, data, config);
   },
 
   // PUT request
   put: (url, data = {}, config = {}) => {
-    // Add /api prefix if not present
-    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
-    return httpClient.put(apiUrl, data, config);
+    return httpClient.put(url, data, config);
   },
 
   // PATCH request
   patch: (url, data = {}, config = {}) => {
-    // Add /api prefix if not present
-    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
-    return httpClient.patch(apiUrl, data, config);
+    return httpClient.patch(url, data, config);
   },
 
   // DELETE request
   delete: (url, config = {}) => {
-    // Add /api prefix if not present
-    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
-    return httpClient.delete(apiUrl, config);
+    return httpClient.delete(url, config);
   },
 
   // File upload
   upload: (url, formData, onProgress = null) => {
-    // Add /api prefix if not present
-    const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
-    return httpClient.post(apiUrl, formData, {
+    return httpClient.post(url, formData, {
       timeout: API_CONFIG.TIMEOUT.UPLOAD,
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -281,7 +274,7 @@ export const api = {
 // Health check function
 export const healthCheck = async () => {
   try {
-    const response = await httpClient.get('/api/health');
+    const response = await httpClient.get('/health');
     return response.status === 200;
   } catch (error) {
     console.warn('🏥 Health check failed:', error.message);
@@ -293,7 +286,7 @@ export const healthCheck = async () => {
 export const testConnection = async () => {
   try {
     // Try production API first
-    const prodResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/health`, { timeout: 5000 });
+    const prodResponse = await axios.get(`${API_CONFIG.BASE_URL}/health`, { timeout: 5000 });
     if (prodResponse.status === 200) {
       return { success: true, url: API_CONFIG.BASE_URL, type: 'production' };
     }
@@ -303,7 +296,7 @@ export const testConnection = async () => {
 
   try {
     // Try local API
-    const localResponse = await axios.get(`${API_CONFIG.LOCAL_URL}/api/health`, { timeout: 3000 });
+    const localResponse = await axios.get(`${API_CONFIG.LOCAL_URL}/health`, { timeout: 3000 });
     if (localResponse.status === 200) {
       return { success: true, url: API_CONFIG.LOCAL_URL, type: 'local' };
     }

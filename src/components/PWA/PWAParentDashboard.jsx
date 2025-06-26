@@ -46,7 +46,7 @@ const PWAParentDashboard = () => {
     
     try {
       const res = await axios.get(
-        `${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.CHILDREN}/${parent_id}`,
+        `${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.CHILDREN}/${parent_id}/children`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -104,7 +104,7 @@ const PWAParentDashboard = () => {
   // Fetch homework data for progress tracking
   const fetchHomeworkData = useCallback(async () => {
     if (!parent_id || !token || !selectedChild) {
-      console.warn('Missing parent_id, token, or selectedChild for fetching homework');
+      console.warn('Dashboard: Missing data for homework fetch', { parent_id, token, selectedChild });
       return;
     }
     
@@ -112,50 +112,24 @@ const PWAParentDashboard = () => {
     setErrors(prev => ({ ...prev, homework: null }));
     
     try {
+      // Unify data fetching to use the correct, centralized service
       const result = await parentService.getHomework(selectedChild, parent_id);
       
-      if (!result.success) {
+      if (result.success) {
+        const hwList = result.data?.homework || [];
+        const total = hwList.length;
+        const submitted = hwList.filter(hw => hw.submission).length;
+        const percentage = total > 0 ? (submitted / total) * 100 : 0;
+        
+        console.log('Dashboard: Setting homework progress', { total, submitted, percentage });
+        setHomeworkProgress({ total, submitted, percentage });
+      } else {
         throw new Error(result.error || 'Failed to fetch homework');
       }
-      
-      // The API returns: { success: true, data: [...], total: 2, completed: 1 }
-      // result.data contains the full API response
-      const apiResponse = result.data;
-      const hwList = Array.isArray(apiResponse.data) ? apiResponse.data : apiResponse.homeworks || [];
-      
-      // Use the calculated values from API if available, otherwise calculate manually
-      const total = apiResponse.total || hwList.length;
-      const submitted = apiResponse.completed || hwList.filter(hw => hw.submitted).length;
-      const percentage = total > 0 ? (submitted / total) * 100 : 0;
-      
-      setHomeworkProgress({
-        total,
-        submitted,
-        percentage
-      });
-      
-      setErrors(prev => ({ ...prev, homework: null }));
     } catch (err) {
-      console.error('Error fetching homework:', err);
-      const errorMessage = err.message || 'Unable to load homework data';
-      
-      if (err.response?.status === 404) {
-        setErrors(prev => ({ ...prev, homework: null }));
-        setHomeworkProgress({
-          total: 0,
-          submitted: 0,
-          percentage: 0
-        });
-      } else if (err.response?.status === 400 && errorMessage.includes('Child ID must be specified')) {
-        setErrors(prev => ({ ...prev, homework: 'Please select a child first' }));
-      } else {
-        setErrors(prev => ({ ...prev, homework: errorMessage }));
-      setHomeworkProgress({
-        total: 0,
-        submitted: 0,
-        percentage: 0
-      });
-      }
+      console.error('Error fetching homework for dashboard:', err);
+      setErrors(prev => ({ ...prev, homework: 'Could not load homework progress.' }));
+      setHomeworkProgress({ total: 0, submitted: 0, percentage: 0 });
     } finally {
       setIsLoading(prev => ({ ...prev, homework: false }));
     }
@@ -255,7 +229,7 @@ const PWAParentDashboard = () => {
     try {
       // Fetch detailed progress report
       const reportRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/public/parent/reports?child_id=${selectedChild}`,
+        `${API_CONFIG.getApiUrl()}/parent/reports?child_id=${selectedChild}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -327,7 +301,7 @@ const PWAParentDashboard = () => {
   }, [selectedChild, selectedChildData, fetchProgressReport, isLoading.homework]);
 
   return (
-    <div className={`px-3 py-4 space-y-4 max-w-full overflow-x-hidden pb-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+    <div className={`px-3 pt-6 pb-20 space-y-4 max-w-full overflow-x-hidden ${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
       {/* Mobile-First Welcome Section */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
         <h2 className="text-lg sm:text-xl font-bold mb-1">Welcome back, {userName}!</h2>
@@ -475,7 +449,13 @@ const PWAParentDashboard = () => {
               ></div>
             </div>
             
-            {errors.homework && <div className="text-red-500 text-sm mt-2">{errors.homework}</div>}
+            {errors.homework && (
+              <div className={`text-center mt-3 p-2 border rounded-lg ${isDark ? 'bg-red-900/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                <p className="text-sm">
+                  Homework data is currently unavailable.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -495,42 +475,43 @@ const PWAParentDashboard = () => {
         </button>
         
         {expandedSection === 'progress' && (
-          <div className="px-4 pb-4 border-t border-gray-100">
+          <div className={`px-4 pb-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
             <div className="pt-4">
               {isLoadingReport ? (
                 <div className="flex items-center justify-center py-8">
-                  <FaSpinner className="animate-spin text-gray-400 text-2xl" />
-                  <span className="ml-2 text-gray-500">Loading progress report...</span>
+                  <FaSpinner className={`animate-spin text-2xl ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
+                  <span className={`ml-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading progress report...</span>
                 </div>
               ) : progressReport ? (
                 <>
                   {reportError && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                      <p className="text-sm text-yellow-700">{reportError}</p>
+                    <div className={`border-l-4 border-yellow-500 p-3 mb-4 rounded-md ${isDark ? 'bg-yellow-900/30 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>
+                      <p className="text-sm font-medium">Report Update</p>
+                      <p className="text-xs">{reportError}</p>
                     </div>
                   )}
                   
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <div className="text-xs text-blue-600 font-medium">Total Homework</div>
-                      <div className="text-lg font-bold text-blue-700">{progressReport.totalHomework}</div>
+                    <div className={`p-3 rounded-lg ${isDark ? 'bg-blue-900/50 border border-blue-800' : 'bg-blue-50'}`}>
+                      <div className={`text-xs font-medium ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Total Homework</div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>{progressReport.totalHomework}</div>
                     </div>
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="text-xs text-green-600 font-medium">Submitted</div>
-                      <div className="text-lg font-bold text-green-700">{progressReport.submitted}</div>
+                    <div className={`p-3 rounded-lg ${isDark ? 'bg-green-900/50 border border-green-800' : 'bg-green-50'}`}>
+                      <div className={`text-xs font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Submitted</div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-green-300' : 'text-green-700'}`}>{progressReport.submitted}</div>
                     </div>
-                    <div className="p-3 bg-purple-50 rounded-lg">
-                      <div className="text-xs text-purple-600 font-medium">Graded</div>
-                      <div className="text-lg font-bold text-purple-700">{progressReport.graded}</div>
+                    <div className={`p-3 rounded-lg ${isDark ? 'bg-purple-900/50 border border-purple-800' : 'bg-purple-50'}`}>
+                      <div className={`text-xs font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Graded</div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{progressReport.graded}</div>
                     </div>
-                    <div className="p-3 bg-yellow-50 rounded-lg">
-                      <div className="text-xs text-yellow-600 font-medium">Avg. Grade</div>
-                      <div className="text-lg font-bold text-yellow-700">{progressReport.avgGrade}</div>
+                    <div className={`p-3 rounded-lg ${isDark ? 'bg-yellow-900/50 border border-yellow-800' : 'bg-yellow-50'}`}>
+                      <div className={`text-xs font-medium ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>Avg. Grade</div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-yellow-300' : 'text-yellow-700'}`}>{progressReport.avgGrade}</div>
                     </div>
-                    <div className="p-3 bg-indigo-50 rounded-lg col-span-2">
-                      <div className="text-xs text-indigo-600 font-medium">Submission Rate</div>
-                      <div className="text-lg font-bold text-indigo-700">{Math.round(progressReport.submissionRate)}%</div>
-                      <div className="w-full bg-indigo-200 rounded-full h-2 mt-2">
+                    <div className={`p-3 rounded-lg col-span-2 ${isDark ? 'bg-indigo-900/50 border border-indigo-800' : 'bg-indigo-50'}`}>
+                      <div className={`text-xs font-medium ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Submission Rate</div>
+                      <div className={`text-lg font-bold ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>{Math.round(progressReport.submissionRate)}%</div>
+                      <div className={`w-full rounded-full h-2 mt-2 ${isDark ? 'bg-indigo-800' : 'bg-indigo-200'}`}>
                         <div 
                           className="bg-indigo-600 h-2 rounded-full transition-all duration-500" 
                           style={{width: `${progressReport.submissionRate}%`}}
@@ -541,14 +522,14 @@ const PWAParentDashboard = () => {
                   
                   {progressReport.recentGrades.length > 0 && (
                     <div>
-                      <div className="text-sm font-medium text-gray-700 mb-2">Recent Grades</div>
+                      <div className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Recent Grades</div>
                       <div className="space-y-2">
                         {progressReport.recentGrades.map((grade, i) => (
-                          <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-gray-900">{grade.title}</span>
+                          <div key={i} className={`flex items-center justify-between p-2 rounded-lg ${isDark ? 'bg-gray-700 border border-gray-600' : 'bg-gray-50'}`}>
+                            <span className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>{grade.title}</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm font-semibold text-gray-700">{grade.grade}</span>
-                              <span className="text-xs text-gray-500">{grade.date}</span>
+                              <span className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{grade.grade}</span>
+                              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{grade.date}</span>
                             </div>
                           </div>
                         ))}
@@ -558,19 +539,19 @@ const PWAParentDashboard = () => {
                 </>
               ) : selectedChildData ? (
                 <div className="text-center py-8">
-                  <FaUser className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-600">No progress data available for {selectedChildData.name}</p>
+                  <FaClipboardList className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Progress report for {selectedChildData.name} is not available at this time.</p>
                   <button 
                     onClick={fetchProgressReport}
-                    className="mt-2 px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="mt-3 px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Retry
                   </button>
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <FaUser className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-600">Please select a child to view progress report</p>
+                  <FaUser className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Please select a child to view their progress report.</p>
                 </div>
               )}
             </div>
@@ -578,18 +559,18 @@ const PWAParentDashboard = () => {
         )}
       </div>
 
-      {/* Quick File Upload Widget */}
-      {selectedChild && homeworkProgress.total > homeworkProgress.submitted && (
-        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl shadow-sm border-2 border-orange-200 p-4">
+      {/* Quick Upload / Overdue Warning Widget */}
+      {homeworkProgress.pending > 0 && (
+        <div className={`rounded-xl shadow-sm border-2 p-4 ${isDark ? 'bg-gradient-to-r from-orange-900/40 to-yellow-900/40 border-orange-700' : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <FaClipboardList className="w-5 h-5 text-orange-600" />
+              <div className={`p-2 rounded-lg ${isDark ? 'bg-orange-800' : 'bg-orange-100'}`}>
+                <FaClipboardList className={`w-5 h-5 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-orange-800">Pending Assignments</h3>
-                <p className="text-xs text-orange-600">
-                  {homeworkProgress.total - homeworkProgress.submitted} assignment(s) waiting for submission
+                <h3 className={`text-sm font-semibold ${isDark ? 'text-orange-300' : 'text-orange-800'}`}>Pending Assignments</h3>
+                <p className={`text-xs ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                  {homeworkProgress.pending} assignment(s) waiting for submission
                 </p>
               </div>
             </div>
