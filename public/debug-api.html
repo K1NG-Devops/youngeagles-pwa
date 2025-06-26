@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Young Eagles API Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+        .credentials { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin: 10px 0; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; width: 250px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Young Eagles API Debug Tool</h1>
+        <p>This tool helps debug API connectivity issues between the frontend and backend.</p>
+        
+        <div class="test-section info">
+            <h3>📋 Current Configuration</h3>
+            <div id="config-info">Loading...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🏥 Health Check Test</h3>
+            <button onclick="testHealthCheck()">Test Health Check</button>
+            <div id="health-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Admin Login Test</h3>
+            <div class="credentials">
+                <strong>⚠️ Testing Credentials:</strong><br>
+                Email: <input type="email" id="email" value="admin@youngeagles.org.za"><br>
+                Password: <input type="password" id="password" value="#Admin@2012">
+            </div>
+            <button onclick="testAdminLogin()">Test Admin Login</button>
+            <div id="login-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>⏱️ Timeout Tests</h3>
+            <button onclick="testTimeouts()">Test Different Timeouts</button>
+            <div id="timeout-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Network Information</h3>
+            <button onclick="getNetworkInfo()">Get Network Info</button>
+            <div id="network-info"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📜 Debug Log</h3>
+            <button onclick="clearLog()">Clear Log</button>
+            <div id="debug-log" class="log">Ready to run tests...\n</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://youngeagles-api-server.up.railway.app';
+        let logDiv = document.getElementById('debug-log');
+        let testToken = null;
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function setResult(elementId, content, className = '') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.className = className;
+        }
+
+        function clearLog() {
+            logDiv.textContent = 'Log cleared...\n';
+        }
+
+        // Initialize page
+        function initPage() {
+            const config = {
+                'API Base URL': API_BASE,
+                'Current Origin': window.location.origin,
+                'User Agent': navigator.userAgent,
+                'Connection': navigator.connection ? 
+                    `${navigator.connection.effectiveType} (${navigator.connection.downlink}Mbps)` : 
+                    'Unknown',
+                'Online': navigator.onLine ? 'Yes' : 'No'
+            };
+            
+            let configHtml = '';
+            for (const [key, value] of Object.entries(config)) {
+                configHtml += `<strong>${key}:</strong> ${value}<br>`;
+            }
+            setResult('config-info', configHtml);
+            
+            log('Debug tool initialized');
+            log(`Testing against: ${API_BASE}`);
+        }
+
+        async function testHealthCheck() {
+            log('🏥 Testing health check...');
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin
+                    }
+                });
+                
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+                
+                log(`✅ Health check successful (${duration}ms)`);
+                log(`Status: ${response.status}, Data: ${JSON.stringify(data)}`);
+                
+                setResult('health-result', 
+                    `✅ <strong>Success!</strong><br>
+                     Status: ${response.status}<br>
+                     Response Time: ${duration}ms<br>
+                     Server Status: ${data.status}<br>
+                     Database: ${data.database}<br>
+                     Environment: ${data.environment}`, 
+                    'success'
+                );
+            } catch (error) {
+                log(`❌ Health check failed: ${error.message}`);
+                setResult('health-result', `❌ <strong>Failed:</strong> ${error.message}`, 'error');
+            }
+        }
+
+        async function testAdminLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log(`🔐 Testing admin login for: ${email}`);
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}/api/auth/admin-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+                
+                if (response.ok) {
+                    testToken = data.accessToken;
+                    log(`✅ Admin login successful (${duration}ms)`);
+                    log(`User: ${data.user.name} (${data.user.role})`);
+                    log(`Token received: ${data.accessToken.substring(0, 20)}...`);
+                    
+                    setResult('login-result', 
+                        `✅ <strong>Success!</strong><br>
+                         Status: ${response.status}<br>
+                         Response Time: ${duration}ms<br>
+                         User: ${data.user.name}<br>
+                         Role: ${data.user.role}<br>
+                         Token: ${data.accessToken.substring(0, 30)}...`, 
+                        'success'
+                    );
+                    
+                    // Test token verification
+                    setTimeout(testTokenVerification, 500);
+                } else {
+                    log(`❌ Login failed: ${data.message}`);
+                    setResult('login-result', `❌ <strong>Failed:</strong> ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Login request failed: ${error.message}`);
+                setResult('login-result', `❌ <strong>Network Error:</strong> ${error.message}`, 'error');
+            }
+        }
+
+        async function testTokenVerification() {
+            if (!testToken) {
+                log('⚠️ No token available for verification test');
+                return;
+            }
+            
+            log('🔍 Testing token verification...');
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/verify`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${testToken}`,
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin
+                    }
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    log(`✅ Token verification successful`);
+                    log(`Verified user: ${data.user.email}`);
+                } else {
+                    log(`❌ Token verification failed: ${data.message}`);
+                }
+            } catch (error) {
+                log(`❌ Token verification error: ${error.message}`);
+            }
+        }
+
+        async function testTimeouts() {
+            log('⏱️ Testing different timeout configurations...');
+            const timeouts = [2000, 5000, 10000, 30000];
+            
+            setResult('timeout-result', '⏱️ Testing timeouts...', 'info');
+            
+            for (const timeout of timeouts) {
+                try {
+                    log(`Testing ${timeout/1000}s timeout...`);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), timeout);
+                    
+                    const startTime = Date.now();
+                    const response = await fetch(`${API_BASE}/api/health`, {
+                        signal: controller.signal,
+                        headers: { 'Origin': window.location.origin }
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    const duration = Date.now() - startTime;
+                    
+                    if (response.ok) {
+                        log(`✅ Success with ${timeout/1000}s timeout (${duration}ms)`);
+                        setResult('timeout-result', 
+                            `✅ All timeouts work! Shortest successful: ${timeout/1000}s (${duration}ms)`, 
+                            'success'
+                        );
+                        break;
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        log(`❌ Timeout at ${timeout/1000}s`);
+                    } else {
+                        log(`❌ Error at ${timeout/1000}s: ${error.message}`);
+                        setResult('timeout-result', `❌ Network error: ${error.message}`, 'error');
+                        break;
+                    }
+                }
+            }
+        }
+
+        function getNetworkInfo() {
+            log('📊 Gathering network information...');
+            
+            const info = {
+                'Online Status': navigator.onLine,
+                'User Agent': navigator.userAgent,
+                'Language': navigator.language,
+                'Platform': navigator.platform,
+                'Cookie Enabled': navigator.cookieEnabled,
+                'Java Enabled': navigator.javaEnabled(),
+                'Current URL': window.location.href,
+                'Referrer': document.referrer || 'Direct access',
+                'Screen Resolution': `${screen.width}x${screen.height}`,
+                'Viewport': `${window.innerWidth}x${window.innerHeight}`,
+            };
+            
+            if (navigator.connection) {
+                info['Connection Type'] = navigator.connection.effectiveType;
+                info['Downlink Speed'] = `${navigator.connection.downlink}Mbps`;
+                info['RTT'] = `${navigator.connection.rtt}ms`;
+                info['Save Data'] = navigator.connection.saveData;
+            }
+            
+            let infoHtml = '';
+            for (const [key, value] of Object.entries(info)) {
+                infoHtml += `<strong>${key}:</strong> ${value}<br>`;
+                log(`${key}: ${value}`);
+            }
+            
+            setResult('network-info', infoHtml, 'info');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', initPage);
+    </script>
+</body>
+</html>
