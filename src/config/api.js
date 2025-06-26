@@ -134,9 +134,9 @@ export const API_CONFIG = {
   
   // Request timeouts
   TIMEOUT: {
-    DEFAULT: 10000, // 10 seconds
-    UPLOAD: 30000,  // 30 seconds for file uploads
-    AUTH: 5000,     // 5 seconds for auth requests
+    DEFAULT: 30000, // 30 seconds
+    UPLOAD: 60000,  // 60 seconds for file uploads
+    AUTH: 30000,    // 30 seconds for auth requests
   },
   
   // Feature flags
