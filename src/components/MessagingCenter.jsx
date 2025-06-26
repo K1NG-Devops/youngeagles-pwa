@@ -17,7 +17,7 @@ const MessagingCenter = () => {
       try {
         const res = await parentService.getMessages();
         setMessages(Array.isArray(res) ? res : res.messages || []);
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load messages');
         toast.error('Failed to load messages');
       } finally {
@@ -45,7 +45,7 @@ const MessagingCenter = () => {
       // Refresh messages
       const res = await parentService.getMessages();
       setMessages(Array.isArray(res) ? res : res.messages || []);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to send message');
     } finally {
       setSending(false);

@@ -13,7 +13,8 @@
     "serve": "vite build && vite preview",
     "pwa:build": "vite build --mode production",
     "test:auth": "node testAuth.js",
-    "test:auth-standalone": "node testAuthStandalone.js"
+    "test:auth-standalone": "node testAuthStandalone.js",
+    "prepare": "husky"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.10",
@@ -43,6 +44,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
     "vite": "^6.3.5"
   }
 }

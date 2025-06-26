@@ -54,7 +54,7 @@ const GoogleSignIn = ({ className = '' }) => {
           } else {
             toast.error(jsonError.message || 'Authentication failed');
           }
-        } catch (e) {
+        } catch (_e) {
           // If response is not JSON (like HTML error page)
           console.error('Non-JSON error response:', errorData);
           toast.error('Server error. Please try again later.');
