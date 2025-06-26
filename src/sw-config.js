@@ -4,10 +4,10 @@
 export const SW_CONFIG = {
   // API endpoints to cache
   API_ROUTES: {
-    // Production API
-    PRODUCTION: 'https://youngeagles-api-server.up.railway.app/api',
-    // Only cache localhost in development
-    LOCAL: import.meta.env.DEV ? 'http://localhost:3001/api' : null
+    // Production API - No /api suffix since endpoints include it
+    PRODUCTION: 'https://youngeagles-api-server.up.railway.app',
+    // Only cache localhost in development - No /api suffix
+    LOCAL: import.meta.env.DEV ? 'http://localhost:3001' : null
   },
   
   // Cache strategies

@@ -32,12 +32,16 @@ export const API_CONFIG = {
     const isLocalDev = this.isDevelopment || forceLocal || window.location.hostname === 'localhost';
     let url = isLocalDev ? this.LOCAL_URL : this.BASE_URL;
     
-    // Sanitize the URL to remove any trailing slashes or /api path
+    // More aggressive sanitization to remove any trailing slashes or /api path
     url = url.replace(/\/api\/?$/, '').replace(/\/$/, '');
     
+    // Extra debugging to see what URLs we're getting
     if (isLocalDev) {
+      console.log('🔧 RAW LOCAL URL:', isLocalDev ? this.LOCAL_URL : this.BASE_URL);
       console.log('🔧 Using SANITIZED LOCAL API:', url);
     } else {
+      console.log('🔧 RAW PRODUCTION URL:', this.BASE_URL);
+      console.log('🔧 VITE_API_BASE_URL env var:', import.meta.env.VITE_API_BASE_URL);
       console.log('🔧 Using SANITIZED PRODUCTION API:', url);
     }
     return url;
@@ -52,7 +56,7 @@ export const API_CONFIG = {
   ENDPOINTS: {
     // Authentication
     LOGIN: '/api/auth/login',
-    TEACHER_LOGIN: '/api/auth/teacher/login',
+    TEACHER_LOGIN: '/api/auth/teacher-login',
     ADMIN_LOGIN: '/api/auth/admin-login',
     REGISTER: '/api/auth/register',
     LOGOUT: '/api/auth/logout',
@@ -60,72 +64,72 @@ export const API_CONFIG = {
     VERIFY_TOKEN: '/api/auth/verify',
     
     // User Management
-    USER_PROFILE: '/user/profile',
-    UPDATE_PROFILE: '/user/profile',
+    USER_PROFILE: '/api/user/profile',
+    UPDATE_PROFILE: '/api/user/profile',
     
     // Parent-specific
-    PARENT_DASHBOARD: '/parent/dashboard',
-    CHILDREN: '/auth/parents',
-    REGISTER_CHILD: '/auth/register-child',
+    PARENT_DASHBOARD: '/api/parent/dashboard',
+    CHILDREN: '/api/auth/parents',
+    REGISTER_CHILD: '/api/auth/register-child',
     
     // Teacher-specific
-    TEACHER_DASHBOARD: '/teacher/dashboard',
-    TEACHER_CLASSES: '/teacher/classes',
-    TEACHER_PROFILE: '/teacher/profile',
-    TEACHER_STATS: '/teacher/stats',
-    TEACHER_SUBMISSIONS: '/teacher/submissions',
-    TEACHER_ATTENDANCE: '/teacher/attendance',
-    GET_TEACHERS: '/teacher',
+    TEACHER_DASHBOARD: '/api/teacher/dashboard',
+    TEACHER_CLASSES: '/api/teacher/classes',
+    TEACHER_PROFILE: '/api/teacher/profile',
+    TEACHER_STATS: '/api/teacher/stats',
+    TEACHER_SUBMISSIONS: '/api/teacher/submissions',
+    TEACHER_ATTENDANCE: '/api/teacher/attendance',
+    GET_TEACHERS: '/api/teacher',
     
     // Admin-specific
-    ADMIN_DASHBOARD: '/admin/dashboard',
-    ADMIN_USERS: '/admin/users',
-    ADMIN_TEACHERS: '/admin/teachers',
-    ADMIN_PARENTS: '/admin/parents',
-    ADMIN_ANALYTICS: '/admin/analytics',
-    ADMIN_QUICK_ACTIONS: '/admin/quick-actions',
+    ADMIN_DASHBOARD: '/api/admin/dashboard',
+    ADMIN_USERS: '/api/admin/users',
+    ADMIN_TEACHERS: '/api/admin/teachers',
+    ADMIN_PARENTS: '/api/admin/parents',
+    ADMIN_ANALYTICS: '/api/admin/analytics',
+    ADMIN_QUICK_ACTIONS: '/api/admin/quick-actions',
     
     // Homework
-    HOMEWORK_LIST: '/homework/list',
-    HOMEWORK_SUBMIT: '/homework/submit/:homeworkId',
-    HOMEWORK_CREATE: '/homework/create',
-    HOMEWORK_DETAIL: '/homework/:id',
-    HOMEWORK_FOR_PARENT: '/parent/:parentId/child/:childId',
-    HOMEWORK_FOR_TEACHER: '/teacher/:teacherId',
-    HOMEWORK_SUBMISSIONS: '/submissions/parent/:parentId',
-    HOMEWORK_SUBMISSION_UPDATE: '/submissions/:submissionId',
-    HOMEWORK_SUBMISSION_DELETE: '/submissions/:submissionId',
+    HOMEWORK_LIST: '/api/homework/list',
+    HOMEWORK_SUBMIT: '/api/homework/submit/:homeworkId',
+    HOMEWORK_CREATE: '/api/homework/create',
+    HOMEWORK_DETAIL: '/api/homework/:id',
+    HOMEWORK_FOR_PARENT: '/api/parent/:parentId/child/:childId/homework',
+    HOMEWORK_FOR_TEACHER: '/api/homework/teacher/:teacherId',
+    HOMEWORK_SUBMISSIONS: '/api/submissions/parent/:parentId',
+    HOMEWORK_SUBMISSION_UPDATE: '/api/submissions/:submissionId',
+    HOMEWORK_SUBMISSION_DELETE: '/api/submissions/:submissionId',
     
     // Assignment Management (Phase 6)
-    ASSIGNMENT_CREATE: '/homework/create',
-    ASSIGNMENT_UPDATE: '/homework/:homeworkId',
-    ASSIGNMENT_DELETE: '/homework/:homeworkId',
-    ASSIGNMENT_SUBMISSIONS: '/homework/:homeworkId/submissions',
-    SUBMISSION_GRADE: '/submissions/:submissionId/grade',
+    ASSIGNMENT_CREATE: '/api/homework/create',
+    ASSIGNMENT_UPDATE: '/api/homework/:homeworkId',
+    ASSIGNMENT_DELETE: '/api/homework/:homeworkId',
+    ASSIGNMENT_SUBMISSIONS: '/api/homework/:homeworkId/submissions',
+    SUBMISSION_GRADE: '/api/submissions/:submissionId/grade',
     
     // Grades
-    HOMEWORK_GRADES: '/homeworks/grades/child/:childId',
+    HOMEWORK_GRADES: '/api/homeworks/grades/child/:childId',
     
     // Reports
-    REPORTS: '/public/parent/reports',
+    REPORTS: '/api/public/parent/reports',
     
     // Notifications
-    NOTIFICATIONS: '/notifications',
-    MARK_READ: '/notifications/read',
+    NOTIFICATIONS: '/api/notifications',
+    MARK_READ: '/api/notifications/read',
     
     // Messages - Enhanced Endpoints
-    MESSAGES: '/messages',
-    SEND_MESSAGE: '/messages/send',
-    GET_CONVERSATIONS: '/messages/conversations',
-    GET_CONVERSATION: '/messages/conversations/:conversationId',
-    CREATE_CONVERSATION: '/messages/conversations/create',
-    MARK_MESSAGE_READ: '/messages/:messageId/read',
-    UPLOAD_MESSAGE_ATTACHMENT: '/messages/attachments/upload',
-    GET_MESSAGE_HISTORY: '/messages/conversations/:conversationId/history',
-    DELETE_MESSAGE: '/messages/:messageId',
-    EDIT_MESSAGE: '/messages/:messageId',
-    SEARCH_MESSAGES: '/messages/search',
-    GET_UNREAD_COUNT: '/messages/unread-count',
+    MESSAGES: '/api/messages',
+    SEND_MESSAGE: '/api/messages/send',
+    GET_CONVERSATIONS: '/api/messages/conversations',
+    GET_CONVERSATION: '/api/messages/conversations/:conversationId',
+    CREATE_CONVERSATION: '/api/messages/conversations/create',
+    MARK_MESSAGE_READ: '/api/messages/:messageId/read',
+    UPLOAD_MESSAGE_ATTACHMENT: '/api/messages/attachments/upload',
+    GET_MESSAGE_HISTORY: '/api/messages/conversations/:conversationId/history',
+    DELETE_MESSAGE: '/api/messages/:messageId',
+    EDIT_MESSAGE: '/api/messages/:messageId',
+    SEARCH_MESSAGES: '/api/messages/search',
+    GET_UNREAD_COUNT: '/api/messages/unread-count',
   },
   
   // Request timeouts

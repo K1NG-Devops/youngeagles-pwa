@@ -63,21 +63,27 @@ httpClient.interceptors.response.use(
           // Unauthorized - Token expired or invalid
           console.warn('🔐 Authentication failed:', originalRequest.url);
           
-          // List of endpoints that should not trigger redirect even if they return 401
-          const noRedirectEndpoints = [
-            // '/auth/verify', // Let verification failures trigger a logout
+          // List of endpoints that should not trigger token refresh attempts
+          const noTokenRefreshEndpoints = [
+            // Login endpoints - 401 means invalid credentials, not expired token
+            '/auth/login',
+            '/auth/teacher-login', 
+            '/auth/teacher/login',
+            '/auth/admin-login',
+            '/auth/register',
+            // Other endpoints that should just fail normally
             '/homework',
             '/parent/children',
             '/reports/parent'
           ];
           
-          // Check if this is an endpoint we should ignore for redirects
-          const shouldSkipRedirect = noRedirectEndpoints.some(endpoint => 
+          // Check if this is an endpoint that should not trigger token refresh
+          const shouldSkipTokenRefresh = noTokenRefreshEndpoints.some(endpoint => 
             originalRequest.url.includes(endpoint)
           );
           
-          if (shouldSkipRedirect) {
-            console.log('🔍 Skipping redirect for non-critical 401 on:', originalRequest.url);
+          if (shouldSkipTokenRefresh) {
+            console.log('🔍 Skipping token refresh for login/auth endpoint:', originalRequest.url);
             return Promise.reject(error);
           }
           

@@ -67,7 +67,7 @@ class AdminService {
   // Update user
   async updateUser(userId, userData) {
     try {
-      const response = await api.put(`/admin/users/${userId}`, userData);
+      const response = await api.put(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`, userData);
       return response.data;
     } catch (error) {
       console.error('Failed to update user:', error);
@@ -96,7 +96,7 @@ class AdminService {
   // Delete user
   async deleteUser(userId, userSource) {
     try {
-      const response = await api.delete(`/admin/users/${userId}`, {
+      const response = await api.delete(`${API_CONFIG.ENDPOINTS.ADMIN_USERS}/${userId}`, {
         data: { source: userSource }
       });
       return response.data;
@@ -125,7 +125,7 @@ class AdminService {
   // Delete parent specifically (from users table)
   async deleteParent(parentId) {
     try {
-      const response = await api.delete(`/admin/parents/${parentId}`);
+      const response = await api.delete(`${API_CONFIG.ENDPOINTS.ADMIN_PARENTS}/${parentId}`);
       return response.data;
     } catch (error) {
       console.error('Failed to delete parent:', error);
@@ -150,32 +150,32 @@ class AdminService {
 
   // Get system statistics
   async getSystemStats() {
-    const response = await api.get('/admin/stats');
+const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS);
     return response.data;
   }
 
   // Get all homework assignments (admin view)
   async getAllHomework() {
-    const response = await api.get('/admin/homework');
+    const response = await api.get('/api/admin/homework');
     return response.data;
   }
 
   // Get system logs
   async getSystemLogs() {
-    const response = await api.get('/admin/logs');
+    const response = await api.get('/api/admin/logs');
     return response.data;
   }
 
   // Get reports
   async getReports(reportType) {
-    const response = await api.get(`/admin/reports/${reportType}`);
+    const response = await api.get(`/api/admin/reports/${reportType}`);
     return response.data;
   }
 
   // Send system announcement
   async sendAnnouncement(announcementData) {
     try {
-      const response = await api.post('/admin/announcements', announcementData);
+      const response = await api.post('/api/admin/announcements', announcementData);
       return response.data;
     } catch (error) {
       console.error('Failed to send announcement:', error);
@@ -186,7 +186,7 @@ class AdminService {
   // Dashboard & Analytics
   async getDashboardStats() {
     try {
-      const response = await api.get('/admin/dashboard');
+const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);
@@ -224,7 +224,7 @@ class AdminService {
         params.all = 'true';
       }
       
-      const response = await api.get('/admin/children', { params });
+      const response = await api.get('/api/admin/children', { params });
       console.log(`📊 Retrieved ${response.data?.data?.length || 0} children from API`);
       return response.data;
     } catch (error) {
@@ -235,7 +235,7 @@ class AdminService {
 
   async createChild(childData) {
     try {
-      const response = await api.post('/admin/children', childData);
+      const response = await api.post('/api/admin/children', childData);
       return response.data;
     } catch (error) {
       console.error('Failed to create child:', error);
@@ -245,7 +245,7 @@ class AdminService {
 
   async updateChild(childId, childData) {
     try {
-      const response = await api.put(`/admin/children/${childId}`, childData);
+      const response = await api.put(`/api/admin/children/${childId}`, childData);
       return response.data;
     } catch (error) {
       console.error('Failed to update child:', error);
@@ -255,7 +255,7 @@ class AdminService {
 
   async deleteChild(childId) {
     try {
-      const response = await api.delete(`/admin/children/${childId}`);
+      const response = await api.delete(`/api/admin/children/${childId}`);
       return response.data;
     } catch (error) {
       console.error('Failed to delete child:', error);
@@ -266,7 +266,7 @@ class AdminService {
   // System Health
   async getSystemHealth() {
     try {
-      const response = await api.get('/admin/system-health');
+      const response = await api.get('/api/admin/system-health');
       return response.data;
     } catch (error) {
       console.error('Failed to fetch system health:', error);
@@ -277,7 +277,7 @@ class AdminService {
   // Teacher-specific methods
   async getTeachers(page = 1, limit = 20, search = '') {
     try {
-      const response = await api.get('/admin/users', {
+      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_USERS, {
         params: { page, limit, search, role: 'teacher', includeStaff: 'true' }
       });
       return response.data.data || response.data; // Handle both formats
@@ -289,7 +289,7 @@ class AdminService {
 
   async getTeacher(teacherId) {
     try {
-      const response = await api.get(`/admin/teachers/${teacherId}`);
+      const response = await api.get(`${API_CONFIG.ENDPOINTS.ADMIN_TEACHERS}/${teacherId}`);
       return response.data.teacher;
     } catch (error) {
       console.error('Failed to fetch teacher:', error);
@@ -300,7 +300,7 @@ class AdminService {
   async updateTeacher(teacherId, teacherData) {
     try {
       console.log('Updating teacher with staff table fields:', teacherData);
-      const response = await api.put(`/admin/teachers/${teacherId}`, teacherData);
+      const response = await api.put(`${API_CONFIG.ENDPOINTS.ADMIN_TEACHERS}/${teacherId}`, teacherData);
       return response.data;
     } catch (error) {
       console.error('Failed to update teacher:', error);
@@ -325,7 +325,7 @@ class AdminService {
   async deleteTeacher(teacherId) {
     try {
       console.log('Deleting teacher from staff table');
-      const response = await api.delete(`/admin/teachers/${teacherId}`);
+      const response = await api.delete(`${API_CONFIG.ENDPOINTS.ADMIN_TEACHERS}/${teacherId}`);
       return response.data;
     } catch (error) {
       console.error('Failed to delete teacher:', error);
