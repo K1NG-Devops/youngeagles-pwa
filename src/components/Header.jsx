@@ -224,7 +224,7 @@ const PWALayout = ({ isOnline = true }) => {
             <Route path="/dashboard" element={<PWAParentDashboard />} />
             <Route path="/student/homework" element={<HomeworkList />} />
             <Route path="/submit-work" element={<SubmitWork />} />
-            <Route path="/messages" element={<WhatsAppMessaging />} />
+            <Route path="/messages/*" element={<WhatsAppMessaging />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/teacher-dashboard" element={<PWATeacherDashboard />} />
             <Route path="/teacher/homework-list" element={<HomeworkList />} />

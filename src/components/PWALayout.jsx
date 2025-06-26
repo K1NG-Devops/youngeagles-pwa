@@ -282,7 +282,7 @@ const PWALayout = () => {
             <Route path="/dashboard" element={<PWAParentDashboard />} />
             <Route path="/student/homework" element={<HomeworkList />} />
             <Route path="/submit-work" element={<SubmitWork />} />
-            <Route path="/messages" element={<WhatsAppMessaging />} />
+            <Route path="/messages/*" element={<WhatsAppMessaging />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/manage-children" element={<ChildManagement />} />
             <Route path="/teacher-dashboard" element={<PWATeacherDashboard />} />

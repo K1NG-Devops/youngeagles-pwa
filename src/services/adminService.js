@@ -277,10 +277,19 @@ const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD);
   // Teacher-specific methods
   async getTeachers(page = 1, limit = 20, search = '') {
     try {
-      const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_USERS, {
-        params: { page, limit, search, role: 'teacher', includeStaff: 'true' }
-      });
-      return response.data.data || response.data; // Handle both formats
+      // Use the dedicated teachers endpoint that returns teachers from staff table
+      const response = await api.get('/api/teacher');
+      console.log('🔍 Teachers API response:', response.data);
+      
+      // Return the teachers array from the response
+      if (response.data && response.data.teachers) {
+        return response.data.teachers;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        console.warn('Unexpected teacher response format:', response.data);
+        return [];
+      }
     } catch (error) {
       console.error('Failed to fetch teachers:', error);
       throw error;

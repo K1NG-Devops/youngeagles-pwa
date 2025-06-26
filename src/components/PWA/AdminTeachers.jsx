@@ -35,18 +35,28 @@ const AdminTeachers = () => {
     setIsLoading(prev => ({ ...prev, teachers: true }));
     setErrors(prev => ({ ...prev, teachers: null }));
     try {
-      const response = await adminService.getUsers(1, 100, '', 'teacher');
-      const users = response.data || [];
-      const teacherUsers = users.filter(u => u.role === 'teacher');
+      // Use the dedicated teachers endpoint since teachers are in staff table
+      const response = await adminService.getTeachers();
+      console.log('👨‍🏫 Teachers API response:', response);
       
-      console.log('👨‍🏫 Fetched teachers:', teacherUsers.map(t => ({
+      // Handle different response formats
+      let teacherData = [];
+      if (Array.isArray(response)) {
+        teacherData = response;
+      } else if (response.data && Array.isArray(response.data)) {
+        teacherData = response.data;
+      } else if (response.teachers && Array.isArray(response.teachers)) {
+        teacherData = response.teachers;
+      }
+      
+      console.log('👨‍🏫 Fetched teachers:', teacherData.map(t => ({
         id: t.id,
         name: t.name,
-        class_id: t.class_id,
-        class_id_type: typeof t.class_id
+        className: t.className,
+        phone: t.phone
       })));
       
-      setTeachers(teacherUsers);
+      setTeachers(teacherData);
     } catch (err) {
       console.error('❌ Error fetching teachers:', err);
       setErrors(prev => ({ ...prev, teachers: 'Failed to load teachers.' }));
@@ -178,7 +188,12 @@ const AdminTeachers = () => {
         }, 500);
       } else {
         console.log('🆕 Creating teacher with data:', teacherData);
-        const createResponse = await adminService.createUser(teacherData);
+        // Use the dedicated admin users endpoint but specify it's for staff table
+        const staffUserData = {
+          ...teacherData,
+          source: 'staff_table' // Indicate this should go to staff table
+        };
+        const createResponse = await adminService.createUser(staffUserData);
         console.log('✅ Teacher create response:', createResponse);
         showTopNotification('Teacher created successfully!', 'success');
         
