@@ -14,13 +14,36 @@ const httpClient = axios.create({
 // Request interceptor - Add auth token and logging
 httpClient.interceptors.request.use(
   (config) => {
-    // Add authentication token if available
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log(`🔒 Adding auth token to ${config.url}: ${token.substring(0, 20)}...`);
+    // List of endpoints that should NOT have auth tokens
+    const noAuthEndpoints = [
+      '/api/auth/login',
+      '/api/auth/admin-login', 
+      '/api/auth/teacher-login',
+      '/api/auth/teacher/login',
+      '/api/auth/parent/login',
+      '/api/auth/register',
+      '/api/auth/parent/register',
+      '/api/auth/firebase-login',
+      '/api/health',
+      '/api/health/db'
+    ];
+    
+    // Check if this endpoint should have auth token
+    const shouldSkipAuth = noAuthEndpoints.some(endpoint => 
+      config.url?.includes(endpoint)
+    );
+    
+    // Add authentication token if available and not a login/register endpoint
+    if (!shouldSkipAuth) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log(`🔒 Adding auth token to ${config.url}: ${token.substring(0, 20)}...`);
+      } else {
+        console.warn(`⚠️ No auth token available for request to: ${config.url}`);
+      }
     } else {
-      console.warn(`⚠️ No auth token available for request to: ${config.url}`);
+      console.log(`🔓 Skipping auth token for login/public endpoint: ${config.url}`);
     }
 
     // Add default headers if not already set
