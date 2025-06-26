@@ -1,7 +1,7 @@
 import { API_CONFIG } from '../config/api.js';
 import parentService from './parentService.js';
 import websocketService from './websocketService.js';
-import { showTopNotification } from '../components/TopNotificationManager.js';
+import { showTopNotification } from '../components/TopNotificationManager.jsx';
 
 class MessagingService {
   constructor() {
