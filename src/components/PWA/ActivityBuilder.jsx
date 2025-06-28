@@ -9,7 +9,7 @@ const ActivityBuilder = () => {
     title: '',
     description: '',
     type: 'educational',
-    ageGroup: '3-4',
+    ageGroup: '4-6',
     duration: 30,
     materials: [''],
     instructions: [''],
@@ -17,6 +17,75 @@ const ActivityBuilder = () => {
     difficulty: 'easy',
     category: 'learning'
   });
+
+  const sampleActivities = [
+    {
+      title: 'Number Matching',
+      description: 'Match numbers with corresponding quantities.',
+      type: 'educational',
+      category: 'learning',
+      ageGroup: '4-6',
+      duration: 20,
+      materials: ['Cards with numbers', 'Cards with item pictures'],
+      instructions: ['Place number cards on the table', 'Match them with item picture cards'],
+      learningObjectives: ['Enhance number recognition', 'Counting skills']
+    },
+    {
+      title: 'Letter Tracing',
+      description: 'Trace letters using finger or pencil.',
+      type: 'educational',
+      category: 'language',
+      ageGroup: '4-6',
+      duration: 15,
+      materials: ['Tracing paper', 'Pencils'],
+      instructions: ['Trace the letter shapes', 'Repeat several times'],
+      learningObjectives: ['Enhance fine motor skills', 'Letter recognition']
+    },
+    {
+      title: 'Color Hunt',
+      description: 'Find objects of specific colors around the room.',
+      type: 'cognitive',
+      category: 'cognitive',
+      ageGroup: '4-6',
+      duration: 25,
+      materials: ['Color chart'],
+      instructions: ['Look for red objects', 'Collect and return to discuss'],
+      learningObjectives: ['Enhance color recognition', 'Observation skills']
+    },
+    {
+      title: 'Sequence Building',
+      description: 'Build simple sequences with blocks.',
+      type: 'cognitive',
+      category: 'cognitive',
+      ageGroup: '4-6',
+      duration: 30,
+      materials: ['Colored blocks'],
+      instructions: ['Arrange blocks in color order', 'Create repeating patterns'],
+      learningObjectives: ['Develop logic', 'Sequence understanding']
+    },
+    {
+      title: 'Leaf Collection',
+      description: 'Collect different types of leaves.',
+      type: 'nature',
+      category: 'nature',
+      ageGroup: '4-6',
+      duration: 35,
+      materials: ['Collection bag'],
+      instructions: ['Collect leaves from different trees', 'Discuss differences'],
+      learningObjectives: ['Awareness of nature', 'Understanding plant diversity']
+    },
+    {
+      title: 'Shape Sorting',
+      description: 'Sort shapes into different categories.',
+      type: 'cognitive',
+      category: 'cognitive',
+      ageGroup: '4-6',
+      duration: 20,
+      materials: ['Shape cutouts'],
+      instructions: ['Sort shapes by type', 'Explain sorting choices'],
+      learningObjectives: ['Recognize shapes', 'Categorization skills']
+    }
+  ];
 
   const [previewMode, setPreviewMode] = useState(false);
 

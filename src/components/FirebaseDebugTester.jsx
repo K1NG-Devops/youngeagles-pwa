@@ -45,7 +45,7 @@ const FirebaseDebugTester = () => {
     // Test 2: Network Connectivity
     addResult('Network Test', 'loading', 'Testing network connectivity...');
     try {
-      const response = await fetch('https://www.google.com', { 
+      await fetch('https://www.google.com', { 
         method: 'HEAD', 
         mode: 'no-cors',
         cache: 'no-cache'
@@ -153,7 +153,7 @@ const FirebaseDebugTester = () => {
   useEffect(() => {
     // Auto-run tests on component mount
     runFirebaseTests();
-  }, []);
+  }, [runFirebaseTests]);
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaUserShield, FaSpinner, FaEye, FaEyeSlash, FaUser, FaLock } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import useAuth from '../hooks/useAuth';
 
 const AdminLogin = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +18,7 @@ const AdminLogin = () => {
     }
     setIsLoading(true);
     try {
-      const result = await login(formData.email, formData.password, 'admin');
+      await login(formData.email, formData.password, 'admin');
       toast.success('Login successful!');
       
       // PWALayout will handle navigation automatically

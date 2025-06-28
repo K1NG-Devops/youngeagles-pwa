@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaBook, FaBell, FaUser, FaClipboardList, FaSpinner, FaChevronDown, FaChevronUp, FaUserPlus } from 'react-icons/fa';
+import { FaBook, FaBell, FaUser, FaClipboardList, FaSpinner, FaChevronDown, FaChevronUp, FaUserPlus, FaBrain, FaRocket } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import { showTopNotification } from '../TopNotificationManager';
 import { API_CONFIG } from '../../config/api';
 import { useTheme } from '../../hooks/useTheme.jsx';
 import parentService from '../../services/parentService';
+import ParentAssistant from './ParentAssistant';
 
 const PWAParentDashboard = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const PWAParentDashboard = () => {
     homework: null
   });
   const [expandedSection, setExpandedSection] = useState(null);
+  const [activeView, setActiveView] = useState('dashboard');
 
   const parent_id = auth?.user?.id || localStorage.getItem('parent_id');
   const token = auth?.accessToken;
@@ -103,10 +105,10 @@ const PWAParentDashboard = () => {
     }
   }, [parent_id, token]);
 
-  // Fetch homework data for progress tracking
+  // Fetch homework data for dashboard
   const fetchHomeworkData = useCallback(async () => {
-    if (!parent_id || !token || !selectedChild) {
-      console.warn('Dashboard: Missing data for homework fetch', { parent_id, token, selectedChild });
+    if (!selectedChild || !parent_id || !token) {
+      console.warn('Missing required data for homework fetch:', { selectedChild, parent_id, hasToken: !!token });
       return;
     }
     
@@ -114,19 +116,20 @@ const PWAParentDashboard = () => {
     setErrors(prev => ({ ...prev, homework: null }));
     
     try {
-      // Unify data fetching to use the correct, centralized service
+      console.log('🔍 Fetching homework data for child:', selectedChild, 'parent:', parent_id);
       const result = await parentService.getHomework(selectedChild, parent_id);
       
       if (result.success) {
         const hwList = Array.isArray(result.data) ? result.data : result.data?.homework || [];
         const total = hwList.length;
-        const submitted = hwList.filter(hw => hw.submission_at).length;
+        const submitted = hwList.filter(hw => hw.submission_at || hw.submitted).length;
         const pending = total - submitted;
         const percentage = total > 0 ? (submitted / total) * 100 : 0;
         
         console.log('Dashboard: Setting homework progress', { total, submitted, pending, percentage });
         setHomeworkProgress({ total, submitted, pending, percentage });
       } else {
+        console.error('Homework fetch failed:', result.error);
         throw new Error(result.error || 'Failed to fetch homework');
       }
     } catch (err) {
@@ -221,7 +224,7 @@ const PWAParentDashboard = () => {
   // Fetch progress report data from backend
   const fetchProgressReport = useCallback(async () => {
     if (!parent_id || !token || !selectedChild) {
-      console.warn('Missing parent_id, token, or selectedChild for fetching progress report');
+      console.warn('Skipping progress report fetch: missing required IDs or token.');
       setProgressReport(null);
       return;
     }
@@ -230,38 +233,35 @@ const PWAParentDashboard = () => {
     setReportError(null);
     
     try {
-      // Fetch detailed progress report
       const reportRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/parent/reports?child_id=${selectedChild}`,
+        `${API_CONFIG.getApiUrl()}/api/parent/reports?child_id=${selectedChild}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       
-      const reportData = reportRes.data;
-      
-      // Fetch recent graded submissions
       const gradesRes = await axios.get(
-        `${API_CONFIG.getApiUrl()}/homeworks/grades/child/${selectedChild}`,
+        `${API_CONFIG.getApiUrl()}/api/homeworks/grades/child/${selectedChild}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
+
+      const reportData = reportRes.data;
       const recentGrades = gradesRes.data.grades || [];
       
+      if (!reportData || !reportData.success) {
+        throw new Error(reportData.message || 'Failed to fetch report data.');
+      }
+
       setProgressReport({
         childId: selectedChild,
         childName: selectedChildData?.name || 'Child',
-        totalHomework: reportData.totalHomework || homeworkProgress.total,
-        submitted: reportData.submitted || homeworkProgress.submitted,
-        graded: reportData.graded || 0,
+        totalHomework: reportData.totalHomework,
+        submitted: reportData.submitted,
+        graded: reportData.graded,
         avgGrade: reportData.avgGrade || 'N/A',
-        submissionRate: reportData.submissionRate || homeworkProgress.percentage,
+        submissionRate: reportData.submissionRate,
         recentGrades: recentGrades.slice(0, 5).map(grade => ({
           title: grade.homework_title || 'Assignment',
           grade: grade.grade || 'N/A',
@@ -271,30 +271,13 @@ const PWAParentDashboard = () => {
       
     } catch (err) {
       console.error('Error fetching progress report:', err);
-      
-      // Fallback to basic data from homework progress if API fails
-      if (selectedChildData && homeworkProgress.total > 0) {
-        setProgressReport({
-          childId: selectedChild,
-          childName: selectedChildData.name,
-          totalHomework: homeworkProgress.total,
-          submitted: homeworkProgress.submitted,
-          graded: Math.floor(homeworkProgress.submitted * 0.8), // Estimate 80% graded
-          avgGrade: 'B+', // Default grade
-          submissionRate: homeworkProgress.percentage,
-          recentGrades: [
-            { title: 'Math Worksheet', grade: 'A', date: new Date(Date.now() - 86400000).toLocaleDateString() },
-            { title: 'Science Project', grade: 'B+', date: new Date(Date.now() - 172800000).toLocaleDateString() }
-          ]
-        });
-        setReportError('Using estimated data - full report unavailable');
-      } else {
-        setReportError('Failed to load progress report');
-      }
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to load progress report.';
+      setReportError(errorMessage);
+      setProgressReport(null); 
     } finally {
       setIsLoadingReport(false);
     }
-  }, [parent_id, token, selectedChild, selectedChildData, homeworkProgress]);
+  }, [parent_id, token, selectedChild, selectedChildData]);
 
   // Fetch progress report when child or homework data changes
   useEffect(() => {
@@ -302,6 +285,26 @@ const PWAParentDashboard = () => {
       fetchProgressReport();
     }
   }, [selectedChild, selectedChildData, fetchProgressReport, isLoading.homework]);
+
+  // Handle Parent Assistant view
+  if (activeView === 'assistant') {
+    return (
+      <div className={`px-3 pt-6 pb-20 space-y-4 max-w-full overflow-x-hidden ${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+        {/* Back to Dashboard Button */}
+        <div className="flex items-center space-x-3 mb-4">
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+          >
+            <span>← Back to Dashboard</span>
+          </button>
+        </div>
+        
+        {/* Parent Assistant Component */}
+        <ParentAssistant isDark={isDark} />
+      </div>
+    );
+  }
 
   return (
     <div className={`px-3 pt-6 pb-20 space-y-4 max-w-full overflow-x-hidden ${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
@@ -343,6 +346,27 @@ const PWAParentDashboard = () => {
         )}
       </div>
 
+      {/* Enhanced AI Parent Assistant */}
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg border p-6 my-4`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>AI Parent Assistant</h3>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Get personalized insights into your child's progress.</p>
+          </div>
+          <FaBrain className={`w-8 h-8 ${isDark ? 'text-pink-400' : 'text-pink-600'}`} />
+        </div>
+        <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} mb-6`}>
+          Our AI assistant analyzes your child's homework submissions and activity to provide you with actionable insights and suggestions. Click below to get started.
+        </p>
+        <button
+          onClick={() => setActiveView('assistant')}
+          className="w-full flex items-center justify-center p-3 text-center bg-gradient-to-r from-pink-500 to-red-600 text-white rounded-lg hover:from-pink-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+        >
+          <FaRocket className="mr-3" />
+          Activate Assistant
+        </button>
+      </div>
+
       {/* Mobile-First Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {quickActions.map((action) => {
@@ -376,7 +400,14 @@ const PWAParentDashboard = () => {
                 : 'bg-gradient-to-br from-yellow-100 to-yellow-200 border-yellow-300 text-yellow-800 ring-2 ring-yellow-300 ring-opacity-50'
               : isDark 
                 ? 'bg-yellow-900 border-yellow-700 text-yellow-300' 
-                : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                : 'bg-yellow-50 border-yellow-200 text-yellow-700',
+            pink: isHighlighted 
+              ? isDark
+                ? 'bg-gradient-to-br from-pink-900 to-pink-800 border-pink-600 text-pink-200 ring-2 ring-pink-600 ring-opacity-50' 
+                : 'bg-gradient-to-br from-pink-100 to-pink-200 border-pink-300 text-pink-800 ring-2 ring-pink-300 ring-opacity-50'
+              : isDark 
+                ? 'bg-pink-900 border-pink-700 text-pink-300' 
+                : 'bg-pink-50 border-pink-200 text-pink-700'
           };
           
           return (

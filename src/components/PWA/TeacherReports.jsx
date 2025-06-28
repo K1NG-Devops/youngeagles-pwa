@@ -23,58 +23,25 @@ const TeacherReports = () => {
     { id: 'last_month', label: 'Last Month' }
   ];
 
-  const classes = ['Panda Class', 'Curious Cubs', 'Little Explorers'];
+  const classes = ['Panda', 'Curious Cubs', 'Little Explorers'];
 
   const generateReport = async () => {
     setLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const mockData = {
-        attendance: {
-          title: 'Attendance Report',
-          summary: { totalStudents: 15, averageAttendance: 92, perfectAttendance: 8, belowThreshold: 2 },
-          details: [
-            { student: 'Emma Johnson', attendance: 95, daysPresent: 19, totalDays: 20 },
-            { student: 'Liam Johnson', attendance: 90, daysPresent: 18, totalDays: 20 },
-            { student: 'Sophia Davis', attendance: 100, daysPresent: 20, totalDays: 20 }
-          ]
-        },
-        homework: {
-          title: 'Homework Completion Report',
-          summary: { totalAssignments: 12, averageCompletion: 85, onTimeSubmissions: 78, lateSubmissions: 15 },
-          details: [
-            { student: 'Emma Johnson', completion: 88, onTime: 10, late: 1, missing: 1 },
-            { student: 'Liam Johnson', completion: 75, onTime: 9, late: 2, missing: 1 },
-            { student: 'Sophia Davis', completion: 95, onTime: 11, late: 1, missing: 0 }
-          ]
-        },
-        progress: {
-          title: 'Student Progress Report',
-          summary: { improvingStudents: 12, consistentPerformers: 8, needsAttention: 3, overallGrade: 'B+' },
-          details: [
-            { student: 'Emma Johnson', grade: 'A-', improvement: '+5%', areas: 'Math, Reading' },
-            { student: 'Liam Johnson', grade: 'B', improvement: '+2%', areas: 'Art, Social' },
-            { student: 'Sophia Davis', grade: 'A+', improvement: '+1%', areas: 'All Areas' }
-          ]
-        },
-        class_summary: {
-          title: 'Class Summary Report',
-          summary: { totalStudents: 15, activeParents: 14, completedActivities: 45, upcomingEvents: 3 },
-          details: [
-            { metric: 'Average Age', value: '4.5 years' },
-            { metric: 'Class Capacity', value: '18 students' },
-            { metric: 'Parent Engagement', value: '93%' },
-            { metric: 'Activity Participation', value: '87%' }
-          ]
-        }
-      };
-
-      setReportData(mockData[reportType]);
-      toast.success('Report generated successfully!');
+      // TODO: Implement real API calls for report generation
+      console.log(`Generating ${reportType} report for ${dateRange} period and class: ${selectedClass}`);
+      
+      showTopNotification('Report generation requires API implementation', 'info');
+      setReportData({
+        title: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
+        summary: { status: 'API implementation required' },
+        details: []
+      });
     } catch (error) {
       console.error('Error generating report:', error);
-      toast.error('Failed to generate report');
+      showTopNotification('Failed to generate report', 'error');
     } finally {
       setLoading(false);
     }
@@ -112,7 +79,7 @@ const TeacherReports = () => {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
-    toast.success('Report downloaded!');
+    showTopNotification('Report downloaded!', 'success');
   };
 
   return (

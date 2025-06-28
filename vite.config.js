@@ -94,7 +94,33 @@ export default defineConfig({
         target: process.env.VITE_API_LOCAL_URL || 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+        timeout: 30000,
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.error('❌ API Proxy error:', err.message);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('📡 Proxying API request:', req.method, req.url);
+          });
+        }
+      },
+      // Socket.IO proxy for development - separate from API calls
+      '/socket.io': {
+        target: process.env.VITE_API_LOCAL_URL || 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        timeout: 60000,
+        configure: (proxy, options) => {
+          proxy.on('proxyReqWs', (proxyReq, req, socket) => {
+            console.log('🔌 Proxying WebSocket request for Socket.IO');
+          });
+          proxy.on('error', (err, req, res) => {
+            if (err.code !== 'ECONNRESET') {
+              console.error('❌ WebSocket Proxy error:', err.message);
+            }
+          });
+        }
       }
     }
   },

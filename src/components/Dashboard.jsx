@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Users, BookOpen, Calendar, TrendingUp } from 'lucide-react'
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     totalStudents: 150,
     activeClasses: 8,
     upcomingEvents: 3,

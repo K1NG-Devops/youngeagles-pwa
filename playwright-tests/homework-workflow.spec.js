@@ -14,7 +14,7 @@ const TEST_DATA = {
     title: 'E2E Playwright Math Assignment',
     description: 'Test assignment for Playwright E2E testing',
     instructions: 'Complete the math problems and submit your work.',
-    className: 'Panda Class',
+    className: 'Panda',
     grade: 'Grade 3'
   }
 };

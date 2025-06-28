@@ -25,7 +25,7 @@ const AssignmentCreate = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    class_name: 'Panda Class',
+    class_name: 'Panda',
     due_date: '',
     child_ids: []
   });
@@ -192,7 +192,7 @@ const AssignmentCreate = () => {
         setFormData({
           title: '',
           description: '',
-          class_name: 'Panda Class',
+          class_name: 'Panda',
           due_date: '',
           child_ids: []
         });

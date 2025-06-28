@@ -4,7 +4,6 @@ import { FaUsers, FaChalkboardTeacher, FaBook, FaBell, FaChartBar, FaCog, FaClip
 import useAuth from '../../hooks/useAuth';
 import useWebSocket from '../../hooks/useWebSocket';
 import { showTopNotification } from '../TopNotificationManager';
-import { api } from '../../services/httpClient';
 import { API_CONFIG } from '../../config/api';
 import AdminService from '../../services/adminService';
 import AdminUserManagement from './AdminUserManagement';
@@ -13,16 +12,13 @@ import AdminTeachers from './AdminTeachers';
 import { useTheme } from '../../hooks/useTheme.jsx';
 
 const PWAAdminDashboard = () => {
-  const navigate = useNavigate();
   const { auth } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   
   // WebSocket Integration for Real-time Updates
   const { 
     isConnected: wsConnected, 
-    addEventListener: addWSListener, 
-    removeEventListener: removeWSListener,
-    lastMessage 
+    addEventListener: addWSListener 
   } = useWebSocket();
   
   const [dashboardData, setDashboardData] = useState(null);
@@ -155,8 +151,6 @@ const PWAAdminDashboard = () => {
       setLoading(false);
     }
   };
-
-  const adminName = auth?.user?.name || 'Admin';
 
   const quickActionsList = [
     {

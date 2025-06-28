@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { FaHome, FaBook, FaBell, FaUser, FaChalkboardTeacher, FaExternalLinkAlt, FaCog, FaGlobe, FaComments } from 'react-icons/fa'
 import useAuth from '../hooks/useAuth'
-import usePWA from '../hooks/usePWA'
 import { toast } from 'react-toastify'
 
 // Import dashboard components
@@ -26,7 +25,6 @@ const PWALayout = ({ isOnline = true }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { auth, logout } = useAuth()
-  const { openFullWebsite } = usePWA()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -36,12 +34,11 @@ const PWALayout = ({ isOnline = true }) => {
       try {
         const accessToken = localStorage.getItem('accessToken')
         const storedUser = localStorage.getItem('user')
-        const userRole = localStorage.getItem('role')
         
         // If we have a token but no auth user, try to restore the session
         if (accessToken && !auth?.user && storedUser) {
           try {
-            const parsedUser = JSON.parse(storedUser)
+            JSON.parse(storedUser)
             // You might want to validate the token here
             // await validateToken(accessToken);
           } catch (error) {

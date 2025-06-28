@@ -44,7 +44,7 @@ class ClassService {
           },
           { 
             id: 3, 
-            name: 'Panda Class', 
+            name: 'Panda', 
             description: 'Class for children ages 4-6',
             age_group_min: 4,
             age_group_max: 6,
@@ -88,7 +88,7 @@ class ClassService {
           },
           { 
             id: 3, 
-            name: 'Panda Class', 
+            name: 'Panda', 
             description: 'Class for children ages 4-6',
             age_group_min: 4,
             age_group_max: 6,

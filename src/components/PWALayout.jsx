@@ -19,7 +19,9 @@ import Register from './Register'
 import PasswordReset from './PasswordReset'
 import TeacherLogin from './TeacherLogin'
 import AuthTest from './AuthTest'
-import WhatsAppMessaging from './MessagingSystem/WhatsAppMessaging'
+import SimpleMessaging from './MessagingSystem/SimpleMessaging'
+import WhatsAppStyleMessaging from './MessagingSystem/WhatsAppStyleMessaging'
+import MessagingDebug from './MessagingSystem/MessagingDebug'
 import TopNotificationManager from './TopNotificationManager'
 import PrivateRoutePWA from './PWA/PrivateRoutePWA'
 import AdminLogin from './AdminLogin'
@@ -33,8 +35,11 @@ import AssignmentManagement from './PWA/AssignmentManagement'
 import TeacherStudentList from './PWA/TeacherStudentList'
 import TeacherReports from './PWA/TeacherReports'
 import ActivityBuilder from './PWA/ActivityBuilder'
+import InteractiveActivitiesHub from './PWA/InteractiveActivitiesHub'
 import AppSettings from './PWA/AppSettings'
 import UserDropdown from './UserDropdown'
+import TeacherProfile from './PWA/TeacherProfile'
+import NotificationDebugger from './NotificationDebugger'
 
 const PWALayout = () => {
   const navigate = useNavigate()
@@ -90,8 +95,7 @@ const PWALayout = () => {
     }
 
     const currentPath = location.pathname;
-    const isPublic =
-      currentPath.includes('login') || currentPath.includes('register');
+    const isPublic = isPublicRoute(currentPath);
 
     console.log(`🧭 Nav Check: Path=${currentPath}, Auth=${isAuthenticated}, Public=${isPublic}, Init=${isInitialized}`);
 
@@ -282,7 +286,8 @@ const PWALayout = () => {
             <Route path="/dashboard" element={<PWAParentDashboard />} />
             <Route path="/student/homework" element={<HomeworkList />} />
             <Route path="/submit-work" element={<SubmitWork />} />
-            <Route path="/messages/*" element={<WhatsAppMessaging />} />
+            <Route path="/messages" element={<WhatsAppStyleMessaging />} />
+            <Route path="/messages-debug" element={<MessagingDebug />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/manage-children" element={<ChildManagement />} />
             <Route path="/teacher-dashboard" element={<PWATeacherDashboard />} />
@@ -291,12 +296,15 @@ const PWALayout = () => {
             <Route path="/teacher/assignments/create" element={<AssignmentCreate />} />
             <Route path="/teacher-children-list" element={<TeacherStudentList />} />
             <Route path="/teacher-reports" element={<TeacherReports />} />
+            <Route path="/teacher/profile" element={<TeacherProfile />} />
             <Route path="/teacher-dashboard/activity-builder" element={<ActivityBuilder />} />
+            <Route path="/teacher-dashboard/interactive-activities" element={<InteractiveActivitiesHub />} />
             <Route path="/admin-dashboard" element={<PWAAdminDashboard />} />
             <Route path="/admin-teachers" element={<AdminTeachers />} />
             <Route path="/admin-users" element={<AdminUserManagement />} />
             <Route path="/admin-reports" element={<AdminTeachers />} />
             <Route path="/admin-settings" element={<AdminTeachers />} />
+            <Route path="/debug/notifications" element={<NotificationDebugger />} />
           </Route>
 
           <Route path="/register-2026" element={<Registration2026 />} />

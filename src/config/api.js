@@ -7,15 +7,18 @@ export const API_CONFIG = {
   // WebSocket Configuration
   WEBSOCKET: {
     URL: import.meta.env.VITE_API_WS_URL || 'wss://youngeagles-api-server.up.railway.app',
-    LOCAL_URL: 'ws://localhost:3001',
+    LOCAL_URL: 'http://localhost:3002', // Use the Vite dev server with proxy
     PATH: '/socket.io',
     getUrl() {
+      // Correctly determine if we should use the local or production WebSocket URL
       const forceLocal = import.meta.env.VITE_FORCE_LOCAL_API === 'true';
-      const isLocalDev = API_CONFIG.isDevelopment || forceLocal || window.location.hostname === 'localhost';
-      if (isLocalDev) {
-        console.log('🔌 Using LOCAL WebSocket URL:', this.LOCAL_URL);
+      const isRunningLocally = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      if (forceLocal || isRunningLocally) {
+        console.log('🔌 Using LOCAL WebSocket URL via proxy:', this.LOCAL_URL);
         return this.LOCAL_URL;
       }
+      
       console.log('🔌 Using PRODUCTION WebSocket URL:', this.URL);
       return this.URL;
     }
@@ -28,8 +31,8 @@ export const API_CONFIG = {
   // Get the appropriate API URL based on environment, with sanitization
   getApiUrl() {
     const forceLocal = import.meta.env.VITE_FORCE_LOCAL_API === 'true';
-    // FORCE LOCAL DEVELOPMENT FOR ADMIN TESTING
-    const isLocalDev = this.isDevelopment || forceLocal || window.location.hostname === 'localhost';
+    // Only use local if explicitly forced via environment variable
+    const isLocalDev = forceLocal;
     let url = isLocalDev ? this.LOCAL_URL : this.BASE_URL;
     
     // More aggressive sanitization to remove any trailing slashes or /api path
@@ -76,6 +79,8 @@ export const API_CONFIG = {
     TEACHER_DASHBOARD: '/api/teacher/dashboard',
     TEACHER_CLASSES: '/api/teacher/classes',
     TEACHER_PROFILE: '/api/teacher/profile',
+    TEACHER_PROFILE_UPDATE: '/api/teacher/profile/update',
+    TEACHER_PROFILE_UPLOAD: '/api/teacher/profile/upload-picture',
     TEACHER_STATS: '/api/teacher/stats',
     TEACHER_SUBMISSIONS: '/api/teacher/submissions',
     TEACHER_ATTENDANCE: '/api/teacher/attendance',
@@ -94,7 +99,7 @@ export const API_CONFIG = {
     HOMEWORK_SUBMIT: '/api/homework/submit/:homeworkId',
     HOMEWORK_CREATE: '/api/homework/create',
     HOMEWORK_DETAIL: '/api/homework/:id',
-    HOMEWORK_FOR_PARENT: '/api/parent/:parentId/child/:childId/homework',
+    HOMEWORK_FOR_PARENT: '/api/homework/parent/:parentId/child/:childId',
     HOMEWORK_FOR_TEACHER: '/api/homework/teacher/:teacherId',
     HOMEWORK_SUBMISSIONS: '/api/submissions/parent/:parentId',
     HOMEWORK_SUBMISSION_UPDATE: '/api/submissions/:submissionId',
@@ -112,27 +117,23 @@ export const API_CONFIG = {
     
     // Reports
     REPORTS: '/api/public/parent/reports',
+    PARENT_REPORTS: '/api/parent/reports',
     
     // Notifications
     NOTIFICATIONS: '/api/notifications',
     MARK_READ: '/api/notifications/read',
     
-    // Messages - Enhanced Endpoints (Updated to match backend)
-    MESSAGES: '/api/messages',
-    SEND_MESSAGE: '/api/messages/send',
+    // Messages - Updated to match actual backend routes
+    MESSAGES: '/api/messaging',
+    SEND_MESSAGE: '/api/messaging/send',
     GET_CONVERSATIONS: '/api/messaging/conversations',
-    GET_CONVERSATION: '/api/messaging/conversations/:conversationId',
+    GET_CONVERSATION: '/api/messaging/conversation/:otherUserId/:otherUserType',
     GET_CONVERSATION_MESSAGES: '/api/messaging/conversations/:conversationId/messages',
-    CREATE_CONVERSATION: '/api/messaging/conversations',
-    SEND_CONVERSATION_MESSAGE: '/api/messaging/conversations/:conversationId/messages',
     GET_CONTACTS: '/api/messaging/contacts',
-    BROADCAST_MESSAGE: '/api/messaging/broadcast',
-    MARK_CONVERSATION_READ: '/api/messaging/conversations/:conversationId/read',
     GET_UNREAD_COUNT: '/api/messaging/unread-count',
-    UPLOAD_MESSAGE_ATTACHMENT: '/api/messages/attachments/upload',
-    DELETE_MESSAGE: '/api/messages/:messageId',
-    EDIT_MESSAGE: '/api/messages/:messageId',
-    SEARCH_MESSAGES: '/api/messages/search',
+    MARK_MESSAGE_READ: '/api/messaging/:messageId/read',
+    GET_NOTIFICATIONS: '/api/messaging/notifications',
+    MARK_NOTIFICATION_READ: '/api/messaging/notifications/:notificationId/read',
   },
   
   // Request timeouts

@@ -120,33 +120,17 @@ const useWebSocket = () => {
   }, []);
 
   // Add custom event listener
-  const addEventListener = useCallback((event, callback) => {
-    websocketService.subscribe(event, callback);
-    
-    // Keep track of listeners for cleanup
-    if (!listenersRef.current.has(event)) {
-      listenersRef.current.set(event, new Set());
-    }
-    listenersRef.current.get(event).add(callback);
-
-    // Return cleanup function
-    return () => {
-      websocketService.unsubscribe(event, callback);
-      const eventListeners = listenersRef.current.get(event);
-      if (eventListeners) {
-        eventListeners.delete(callback);
-      }
-    };
+  const addEventListener = useCallback((conversationId) => {
+    console.log('🔗 Joining conversation via useWebSocket:', conversationId);
+    // For messaging, we use join_conversation event
+    websocketService.joinConversation(conversationId);
   }, []);
 
   // Remove event listener
-  const removeEventListener = useCallback((event, callback) => {
-    websocketService.unsubscribe(event, callback);
-    
-    const eventListeners = listenersRef.current.get(event);
-    if (eventListeners) {
-      eventListeners.delete(callback);
-    }
+  const removeEventListener = useCallback((conversationId) => {
+    console.log('🔗 Leaving conversation via useWebSocket:', conversationId);
+    // For messaging, we use leave_conversation event
+    websocketService.leaveConversation(conversationId);
   }, []);
 
   // Manual reconnect

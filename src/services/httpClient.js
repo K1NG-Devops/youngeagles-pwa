@@ -97,7 +97,10 @@ httpClient.interceptors.response.use(
             // Other endpoints that should just fail normally
             '/homework',
             '/parent/children',
-            '/reports/parent'
+            '/reports/parent',
+            // Messaging endpoints - don't redirect to login immediately
+            '/messaging/contacts',
+            '/messaging/conversations'
           ];
           
           // Check if this is an endpoint that should not trigger token refresh
@@ -134,7 +137,7 @@ httpClient.interceptors.response.use(
               if (refreshToken) {
                 console.log('🔑 Calling refresh token endpoint');
                 const response = await axios.post(
-                  `${API_CONFIG.getApiUrl()}/auth/refresh`,
+                  `${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`,
                   { refreshToken },
                   { timeout: 5000 } // Add timeout to refresh request
                 );

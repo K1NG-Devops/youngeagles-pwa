@@ -20,10 +20,169 @@ class TeacherService {
   // Get teacher profile
   async getProfile() {
     try {
+      // Check current authentication state
+      const token = localStorage.getItem('accessToken');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      console.log('🔍 Current auth state:', {
+        hasToken: !!token,
+        tokenLength: token?.length,
+        tokenStart: token?.substring(0, 20),
+        user: user,
+        userRole: user.role
+      });
+      
+      console.log('🔍 Fetching teacher profile from:', API_CONFIG.ENDPOINTS.TEACHER_PROFILE);
       const response = await api.get(API_CONFIG.ENDPOINTS.TEACHER_PROFILE);
+      
+      console.log('📋 Teacher profile response:', response);
+      console.log('📋 Response data:', response.data);
+      
+      // Handle the actual API response structure
+      // The API returns: { teacher: {...}, stats: {...} }
+      if (response && response.data) {
+        console.log('✅ Teacher profile API response received');
+        
+        // Check if it's the expected nested structure
+        if (response.data.teacher) {
+          console.log('📋 Found teacher data in nested structure');
+          return {
+            data: {
+              teacher: response.data.teacher,
+              stats: response.data.stats
+            }
+          };
+        } 
+        // Check if it's the old success/profile structure
+        else if (response.data.success && response.data.profile) {
+          console.log('📋 Found profile data in success structure');
+          return {
+            data: response.data.profile
+          };
+        }
+        // Fallback: use data directly
+        else {
+          console.log('📋 Using direct response data structure');
+          return response;
+        }
+      } else {
+        console.warn('⚠️ Response does not contain data property');
+        throw new Error('Invalid response structure');
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch teacher profile:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        url: error.config?.url
+      });
+      throw error;
+    }
+  }
+
+  // Update teacher profile
+  async updateProfile(profileData) {
+    try {
+      console.log('📝 Updating teacher profile with data:', profileData);
+      
+      // Transform frontend data to match API expectations
+      const apiData = {
+        name: `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim(),
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+        phone: profileData.phone,
+        qualification: profileData.qualification,
+        specialization: profileData.specialization,
+        bio: profileData.bio,
+        experience_years: profileData.experience_years,
+        emergency_contact_name: profileData.emergency_contact_name,
+        emergency_contact_phone: profileData.emergency_contact_phone
+      };
+      
+      console.log('📝 Transformed API data:', apiData);
+      
+      // Try multiple endpoints in order of preference
+      let response;
+      let lastError;
+      
+      // First try the update endpoint
+      try {
+        response = await api.put(API_CONFIG.ENDPOINTS.TEACHER_PROFILE_UPDATE, apiData);
+        console.log('📝 Update response (PUT /update):', response.data);
+      } catch (error) {
+        lastError = error;
+        console.log('⚠️ PUT /update failed, trying PATCH on main profile endpoint...');
+        
+        // Try PATCH on main profile endpoint
+        try {
+          response = await api.patch(API_CONFIG.ENDPOINTS.TEACHER_PROFILE, apiData);
+          console.log('📝 Update response (PATCH /profile):', response.data);
+        } catch (patchError) {
+          lastError = patchError;
+          console.log('⚠️ PATCH /profile failed, trying PUT on main profile endpoint...');
+          
+          // Fallback to PUT on main profile endpoint
+          try {
+            response = await api.put(API_CONFIG.ENDPOINTS.TEACHER_PROFILE, apiData);
+            console.log('📝 Update response (PUT /profile):', response.data);
+          } catch (putError) {
+            lastError = putError;
+            console.log('⚠️ PUT /profile failed, trying POST on update endpoint...');
+            
+            // Last resort: POST to update endpoint
+            response = await api.post(API_CONFIG.ENDPOINTS.TEACHER_PROFILE_UPDATE, apiData);
+            console.log('📝 Update response (POST /update):', response.data);
+          }
+        }
+      }
+      
+      // Handle API response structure
+      if (response.data) {
+        if (response.data.success && response.data.profile) {
+          return {
+            data: response.data.profile
+          };
+        } else if (response.data.teacher) {
+          return {
+            data: response.data.teacher
+          };
+        } else {
+          return response;
+        }
+      } else {
+        return response;
+      }
+    } catch (error) {
+      console.error('Failed to update teacher profile:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        url: error.config?.url
+      });
+      throw error;
+    }
+  }
+
+  // Upload profile picture
+  async uploadProfilePicture(file) {
+    try {
+      console.log('📸 Uploading profile picture:', file.name);
+      
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      
+      const response = await api.post(API_CONFIG.ENDPOINTS.TEACHER_PROFILE_UPLOAD, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      console.log('📸 Upload response:', response.data);
+      
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch teacher profile:', error);
+      console.error('Failed to upload profile picture:', error);
       throw error;
     }
   }
@@ -46,6 +205,17 @@ class TeacherService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch classes:', error);
+      throw error;
+    }
+  }
+
+  // Get students for the teacher's class
+  async getStudents() {
+    try {
+      const response = await api.get('/api/teacher/students');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch students:', error);
       throw error;
     }
   }
@@ -105,6 +275,53 @@ class TeacherService {
     }
   }
 
+  // Enhanced Student Report System Methods
+  async saveStudentReport(studentId, reportData, pdfBase64) {
+    try {
+      const response = await api.post(`/teacher/student-reports/${studentId}/generate-pdf`, {
+        reportData,
+        pdfBase64
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to save student report:', error);
+      throw error;
+    }
+  }
+
+  async generateHomeworkFromAssessment(studentId, assessmentArea, homeworkTemplates) {
+    try {
+      const response = await api.post(`/teacher/student-reports/${studentId}/generate-homework`, {
+        assessmentArea,
+        homeworkTemplates
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to generate homework:', error);
+      throw error;
+    }
+  }
+
+  async getStudentAnalytics(studentId) {
+    try {
+      const response = await api.get(`/teacher/student-analytics/${studentId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch student analytics:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendHomeworkToParent(homeworkId) {
+    try {
+      const response = await api.post(`/teacher/homework-library/${homeworkId}/send-to-parent`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to send homework to parent:', error);
+      throw error;
+    }
+  }
+
   // Grade homework submission
   async gradeSubmission(submissionId, gradeData) {
     try {
@@ -134,6 +351,30 @@ class TeacherService {
     }
   }
 
+  // Save student report
+  async saveStudentReport(reportData) {
+    try {
+      const response = await api.post('/api/teacher/reports', reportData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to save report:', error);
+      throw error;
+    }
+  }
+
+  // Get saved reports for a student
+  async getStudentReports(studentId) {
+    try {
+      const response = await api.get(`/api/teacher/reports/student/${studentId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch student reports:', error);
+      return { success: true, reports: [] };
+    }
+  }
+
+  /* MOCK DATA METHODS - COMMENTED OUT FOR PRODUCTION
+  
   // Mock data for development/fallback
   getMockDashboardData() {
     return {
@@ -336,6 +577,8 @@ class TeacherService {
       }
     ];
   }
+  
+  END OF COMMENTED MOCK DATA METHODS */
 }
 
 // Create singleton instance

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import useAuth from '../hooks/useAuth';
@@ -13,7 +13,19 @@ const AutoLogout = ({ children }) => {
   const LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes
   const WARNING_TIME = 25 * 60 * 1000; // 25 minutes (5 min warning)
 
-  const resetTimeout = () => {
+  const handleAutoLogout = useCallback(async () => {
+    try {
+      await logout();
+      toast.error('You have been logged out due to inactivity', {
+        position: 'top-center'
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error('Auto logout error:', error);
+    }
+  }, [logout, navigate]);
+
+  const resetTimeout = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -35,19 +47,8 @@ const AutoLogout = ({ children }) => {
         handleAutoLogout();
       }, LOGOUT_TIME);
     }
-  };
+  }, [isAuthenticated, WARNING_TIME, LOGOUT_TIME, handleAutoLogout]);
 
-  const handleAutoLogout = async () => {
-    try {
-      await logout();
-      toast.error('You have been logged out due to inactivity', {
-        position: 'top-center'
-      });
-      navigate('/login');
-    } catch (error) {
-      console.error('Auto logout error:', error);
-    }
-  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -76,7 +77,7 @@ const AutoLogout = ({ children }) => {
         }
       };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, resetTimeout]);
 
   return children;
 };

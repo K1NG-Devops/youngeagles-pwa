@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 // Components
 import AutoLogout from './components/AutoLogout'
@@ -12,6 +13,10 @@ import ContactUs from './pages/ContactUs'
 import Registration2026 from './pages/Registration2026'
 import Notifications from './components/Notifications'
 import MessagingCenter from './components/MessagingCenter'
+import SimpleMessaging from './components/MessagingSystem/SimpleMessaging'
+
+// Initialize notification system
+import notificationManager from './services/notificationManager'
 
 function App() {
   return (
@@ -21,11 +26,6 @@ function App() {
           {/* PWALayout handles all routes (public and authenticated) */}
           <Routes>
             <Route path="/*" element={<PWALayout />} />
-            <Route path="/homework" element={<PWALayout><HomeworkList /></PWALayout>} />
-            <Route path="/submit-work" element={<PWALayout><SubmitWork /></PWALayout>} />
-            <Route path="/submission/:submissionId" element={<PWALayout><ViewSubmission /></PWALayout>} />
-            <Route path="/notifications" element={<PWALayout><Notifications /></PWALayout>} />
-            <Route path="/messages" element={<PWALayout><MessagingCenter /></PWALayout>} />
           </Routes>
         </AutoLogout>
       </Router>

@@ -76,10 +76,32 @@ const TeacherLogin = () => {
 
         {/* Development Mode Notice */}
         {import.meta.env.DEV && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-            <p className="text-xs text-blue-800 text-center">
-              <strong>Development Mode:</strong> Using real API - need valid teacher credentials
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-xs text-blue-800 text-center mb-2">
+              <strong>Development Mode:</strong> Valid teacher credentials
             </p>
+            <div className="text-xs text-blue-700 space-y-1">
+              <div className="flex justify-between items-center">
+                <span>📧 Email:</span>
+                <code className="bg-blue-100 px-1 rounded text-blue-900">teacher@youngeagles.org.za</code>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>🔑 Password:</span>
+                <code className="bg-blue-100 px-1 rounded text-blue-900">Teacher@123</code>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    email: 'teacher@youngeagles.org.za',
+                    password: 'Teacher@123'
+                  });
+                }}
+                className="w-full mt-2 py-1 px-2 bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs rounded transition-colors"
+              >
+                🎯 Auto-fill credentials
+              </button>
+            </div>
           </div>
         )}
 

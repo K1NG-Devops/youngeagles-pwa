@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser, FaCog, FaSignOutAlt, FaUserCircle, FaExternalLinkAlt, FaChevronDown, FaShieldAlt, FaQuestionCircle, FaInfoCircle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 
 const UserDropdown = ({ user, onLogout, onSettings, onOpenWebsite }) => {
@@ -7,6 +8,7 @@ const UserDropdown = ({ user, onLogout, onSettings, onOpenWebsite }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const dropdownRef = useRef(null);
   const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -76,8 +78,7 @@ const UserDropdown = ({ user, onLogout, onSettings, onOpenWebsite }) => {
       label: 'Profile',
       description: 'View and edit your profile',
       action: () => {
-        // TODO: Navigate to profile page
-        console.log('Navigate to profile');
+        navigate('/teacher/profile');
       },
       divider: false
     },

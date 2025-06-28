@@ -49,12 +49,17 @@ const AssignmentManagement = () => {
         setAssignments(result.data || []);
         console.log('✅ Assignments loaded:', result.data?.length || 0, 'assignments');
       } else {
-        setError('Failed to load assignments');
-        showTopNotification('Failed to load assignments', 'error');
+        // Handle service-level errors
+        const errorMessage = result.error || 'Failed to load assignments';
+        setError(errorMessage);
+        setAssignments([]); // Set empty array on error
+        console.warn('⚠️ Assignment service returned error:', errorMessage);
       }
     } catch (error) {
-      console.error('❌ Error loading assignments:', error);
-      setError(error.message || 'Failed to load assignments');
+      console.error('❌ Error in loadAssignments:', error);
+      const errorMessage = error.message || 'Failed to load assignments';
+      setError(errorMessage);
+      setAssignments([]); // Set empty array on error
       showTopNotification('Failed to load assignments', 'error');
     } finally {
       setIsLoading(false);

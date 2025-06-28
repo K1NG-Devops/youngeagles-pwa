@@ -232,119 +232,49 @@ const HomeworkList = () => {
 
   // Fetch homeworks and submissions
   useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-    
-    const fetchHomeworkAndSubmissions = async () => {
-      if (!token) {
-        console.warn('HomeworkList: No auth token found, aborting fetch');
+    const fetchHomework = async () => {
+      if ((isTeacher && !teacherId) || (!isTeacher && (!parent_id || !selectedChild))) {
+        console.warn('Skipping homework fetch: missing required IDs.');
+        setHomeworks([]);
         return;
       }
-      if (!isTeacher && (!parent_id || !selectedChild)) {
-        console.warn('HomeworkList: Missing parent_id or selectedChild for parent view, aborting fetch');
-        return;
-      }
-      
+
       setIsLoading(prev => ({ ...prev, homeworks: true }));
       setError(null);
-      
+
       try {
-        let homeworkData;
-        
+        let result;
         if (isTeacher) {
-          const res = await api.get(
-            API_CONFIG.ENDPOINTS.HOMEWORK_FOR_TEACHER.replace(':teacherId', teacherId),
-            {
-              headers: { 'X-Request-Source': 'pwa-teacher-homework' },
-              signal: controller.signal
-            }
-          );
-          homeworkData = res.data;
+          // Placeholder for when teacher-specific service is available
+          const res = await api.get(`/api/teacher/${teacherId}/homework`);
+          result = res.data;
         } else {
-          // Use the updated parent service
-          const hwResult = await parentService.getHomework(selectedChild, parent_id);
-          
-          if (!hwResult.success) {
-            throw new Error(hwResult.error || 'Failed to fetch homework');
-          }
-          
-          homeworkData = hwResult.data || [];
+          result = await parentService.getHomework(selectedChild, parent_id);
         }
-        
-        // Fetch submissions for the parent
-        const subResult = await api.get(`/api/submissions/parent/${parent_id}`);
-        if (subResult.data.success) {
-          setSubmissions(subResult.data.submissions || []);
-        }
-        
-        if (!isMounted) return;
-        
-        // Handle different response structures
-        let hwList;
-        if (Array.isArray(homeworkData)) {
-          hwList = homeworkData;
-        } else if (homeworkData.data && Array.isArray(homeworkData.data)) {
-          hwList = homeworkData.data;
-        } else if (homeworkData.homeworks && Array.isArray(homeworkData.homeworks)) {
-          hwList = homeworkData.homeworks;
+
+        if (result && result.success) {
+          const fetchedHomeworks = result.data || result.homework || result.homeworks || [];
+          setHomeworks(fetchedHomeworks);
+          console.log(`Successfully fetched ${fetchedHomeworks.length} homework assignments.`);
         } else {
-          hwList = [];
+          const errorMsg = result ? result.error || result.message : 'Unknown error';
+          throw new Error(errorMsg);
         }
-        
-        console.log('HomeworkList: Processing homework data:', {
-          originalData: homeworkData,
-          extractedList: hwList,
-          listLength: hwList.length
-        });
-        
-        setHomeworks(hwList);
-        
-        // Clear any existing errors
-        setError(null);
-        
       } catch (err) {
-        console.error('HomeworkList: Error fetching homework:', err);
-        
-        if (!isMounted) return;
-        
-        const errorMessage = err.response?.data?.message || err.message;
-        setHomeworks([]); // Clear homework on error
-        
-        if (err.response?.status === 401) {
-          showTopNotification('Your session has expired. Please log in again.', 'error');
-          navigate('/login');
-        } else if (err.response?.status === 403) {
-          showTopNotification('You do not have permission to view homework assignments.', 'error');
-        } else if (err.response?.status === 404) {
-          // This is a user-friendly message for a common case.
-          showTopNotification('No homework found for the selected child.', 'info');
-          // We set the error to null because this is an expected empty state, not a system failure.
-          setError(null);
-        } else {
-          // For all other errors, show a generic but helpful message.
-          showTopNotification('Could not load homework. Please try again later.', 'error');
-          setError('An unexpected error occurred.');
+        console.error('Failed to fetch homework:', err);
+        const errorMsg = err.response?.data?.message || err.message || 'Could not load assignments.';
+        setError(errorMsg);
+        setHomeworks([]);
+        if (err.response?.status !== 404) { // Don't show error toast for "Not Found"
+          showTopNotification(errorMsg, 'error');
         }
       } finally {
-        if (isMounted) {
-          setIsLoading(prev => ({ ...prev, homeworks: false }));
-        }
+        setIsLoading(prev => ({ ...prev, homeworks: false }));
       }
     };
 
-    const timer = setTimeout(() => {
-      if ((isTeacher && teacherId && token) || 
-          (!isTeacher && parent_id && selectedChild && token)) {
-        fetchHomeworkAndSubmissions();
-      }
-    }, 500);
-    
-    return () => {
-      clearTimeout(timer);
-      isMounted = false;
-      controller.abort();
-    };
-  }, [isTeacher, parent_id, selectedChild, teacherId, token, navigate]);
+    fetchHomework();
+  }, [isTeacher, parent_id, selectedChild, teacherId, token]);
 
   // Filter homeworks based on selected filter
   const filteredHomeworks = homeworks.filter(hw => {
@@ -531,9 +461,9 @@ const HomeworkList = () => {
         <div className="flex space-x-2 overflow-x-auto">
           {[
             { id: 'all', label: 'All', count: homeworks.length },
-            { id: 'pending', label: 'Pending', count: homeworks.filter(hw => hw.status === 'pending' && new Date(hw.dueDate) >= new Date()).length },
+            { id: 'pending', label: 'Pending', count: homeworks.filter(hw => hw.status !== 'submitted').length },
             { id: 'submitted', label: 'Submitted', count: homeworks.filter(hw => hw.status === 'submitted').length },
-            { id: 'overdue', label: 'Overdue', count: homeworks.filter(hw => new Date(hw.dueDate) < new Date() && hw.status !== 'submitted').length }
+            { id: 'overdue', label: 'Overdue', count: homeworks.filter(hw => new Date(hw.due_date) < new Date() && hw.status !== 'submitted').length }
           ].map(tab => (
             <button
               key={tab.id}
@@ -558,7 +488,7 @@ const HomeworkList = () => {
           <div className="flex justify-between items-center">
             <h3 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Quick Actions</h3>
             <Link
-              to="/homework/upload"
+              to="/teacher/assignments/create"
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <FaPlus className="w-4 h-4" />
@@ -582,44 +512,66 @@ const HomeworkList = () => {
         ) : filteredHomeworks.length > 0 ? (
           <div className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
             {filteredHomeworks.map((homework) => {
-              const isSubmitted = homework.status === 'submitted';
-              const isOverdue = new Date(homework.dueDate) < new Date() && !isSubmitted;
+              const isSubmitted = homework.status === 'submitted' || homework.submission_status === 'Submitted';
               
-              return (
-                <div key={homework.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex justify-between items-start">
-                  {/* Left side content */}
-                  <div className="flex-grow space-y-3">
-                    <div>
-                      <p className="font-bold text-gray-800 dark:text-gray-100">{homework.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        General • {homework.className}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                      <FaCalendarAlt className="text-gray-400" />
-                      <span>Due: {formatDate(homework.dueDate)}</span>
-                    </div>
+              const HomeworkCard = ({ children }) => 
+                !isSubmitted && !isTeacher ? (
+                  <Link to={`/submit-work?homework_id=${homework.id}&child_id=${selectedChild}`} className="block hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    {children}
+                  </Link>
+                ) : (
+                  <div className="block">
+                    {children}
                   </div>
+                );
 
-                  {/* Right side status and button */}
-                  <div className="flex-shrink-0 flex flex-col items-end space-y-2">
-                    <div className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(homework)}`}>
-                      {getStatusText(homework)}
+              return (
+                <HomeworkCard key={homework.id}>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex justify-between items-start">
+                    {/* Left side content */}
+                    <div className="flex-grow space-y-3">
+                      <div>
+                        <p className="font-bold text-gray-800 dark:text-gray-100">{homework.title}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          General • {homework.class_name}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                        <FaCalendarAlt className="text-gray-400" />
+                        <span>Due: {formatDate(homework.due_date)}</span>
+                      </div>
                     </div>
-                    
-                    {isSubmitted && (() => {
-                      const submission = submissions.find(s => s.homework_id === homework.id);
-                      return submission ? (
-                        <Link
-                          to={`/submission/${submission.id}`}
-                          className="mt-1 text-center py-1 px-3 text-xs font-medium rounded-lg transition-colors bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-800 dark:text-green-200 dark:hover:bg-green-700"
-                        >
-                          View Submission
-                        </Link>
-                      ) : null;
-                    })()}
+
+                    {/* Right side status and button */}
+                    <div className="flex-shrink-0 flex flex-col items-end space-y-2">
+                      <div className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(homework)}`}>
+                        {getStatusText(homework)}
+                      </div>
+                      
+                      {!isTeacher && !isSubmitted && (
+                        <div className="mt-1 text-center py-1 px-3 text-xs font-medium rounded-lg transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-800 dark:text-blue-200 dark:hover:bg-blue-700">
+                          Start Assignment
+                        </div>
+                      )}
+
+                      {isSubmitted && (() => {
+                        const submission = submissions.find(s => s.homework_id === homework.id);
+                        return submission ? (
+                          <Link
+                            to={`/submission/${submission.id}`}
+                            className="mt-1 text-center py-1 px-3 text-xs font-medium rounded-lg transition-colors bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-800 dark:text-green-200 dark:hover:bg-green-700"
+                          >
+                            View Submission
+                          </Link>
+                        ) : (
+                           <span className="mt-1 text-center py-1 px-3 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                             Processing...
+                           </span>
+                        );
+                      })()}
+                    </div>
                   </div>
-                </div>
+                </HomeworkCard>
               );
             })}
           </div>
@@ -637,7 +589,7 @@ const HomeworkList = () => {
             </p>
             {isTeacher && filter === 'all' && (
               <Link
-                to="/homework/upload"
+                to="/teacher/assignments/create"
                 className="inline-flex items-center space-x-2 mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <FaPlus className="w-4 h-4" />

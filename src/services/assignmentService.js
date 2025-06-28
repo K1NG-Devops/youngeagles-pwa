@@ -88,36 +88,82 @@ class AssignmentService {
         { headers: this.getAuthHeaders() }
       );
 
-      console.log('✅ Teacher assignments fetched:', response.data);
+      console.log('✅ Teacher assignments API response:', response.data);
       
-      // Handle the corrected API response format
+      // Handle the API response format
       const data = this.handleResponse(response);
       
-      if (data.success && data.homeworks) {
-        // Transform the data to match expected format
+      // The API returns different formats - handle both
+      if (data.success) {
+        // Handle new API format with 'homework' array
+        if (data.homework && Array.isArray(data.homework)) {
+          return {
+            success: true,
+            data: data.homework.map(hw => ({
+              id: hw.id,
+              title: hw.title,
+              instructions: hw.instructions || hw.description,
+              due_date: hw.due_date,
+              class_name: hw.class_name,
+              grade: hw.grade,
+              submissionCount: hw.submissionCount || hw.submission_count || 0,
+              totalStudents: hw.totalStudents || hw.total_students || 0,
+              completionRate: hw.completionRate || 0,
+              created_at: hw.created_at,
+              status: hw.status
+            })),
+            totalHomeworks: data.totalHomework || data.homework.length,
+            teacher: data.teacher
+          };
+        }
+        
+        // Handle old API format with 'homeworks' array
+        if (data.homeworks && Array.isArray(data.homeworks)) {
+          return {
+            success: true,
+            data: data.homeworks.map(hw => ({
+              id: hw.id,
+              title: hw.title,
+              instructions: hw.instructions || hw.description,
+              due_date: hw.due_date,
+              class_name: hw.class_name,
+              grade: hw.grade,
+              submissionCount: hw.submissionCount || hw.submission_count || 0,
+              totalStudents: hw.totalStudents || hw.total_students || 0,
+              completionRate: hw.completionRate || 0,
+              created_at: hw.created_at,
+              status: hw.status
+            })),
+            totalHomeworks: data.totalHomeworks || data.homeworks.length,
+            teacher: data.teacher
+          };
+        }
+        
+        // If no homework found, return empty array
         return {
           success: true,
-          data: data.homeworks.map(hw => ({
-            id: hw.id,
-            title: hw.title,
-            instructions: hw.instructions,
-            due_date: hw.due_date,
-            class_name: hw.class_name,
-            grade: hw.grade,
-            submissionCount: hw.submissionCount || 0,
-            totalStudents: hw.totalStudents || 0,
-            completionRate: hw.completionRate || 0,
-            created_at: hw.created_at,
-            assignments: [hw] // Wrap single homework in assignments array for compatibility
-          })),
-          individualAssignments: data.totalHomeworks || 0,
-          teacher: data.teacher
+          data: [],
+          totalHomeworks: 0,
+          teacher: data.teacher || { id: teacherId }
         };
       }
       
-      return data;
+      // If API call failed, return error
+      return {
+        success: false,
+        error: data.message || 'Failed to fetch assignments',
+        data: []
+      };
+      
     } catch (error) {
-      this.handleError(error, operation);
+      console.error('❌ Error fetching teacher assignments:', error);
+      
+      // Return a structured error response instead of throwing
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to load assignments',
+        data: []
+      };
     }
   }
 
@@ -239,9 +285,9 @@ class AssignmentService {
     try {
       console.log(`🔍 Fetching children for teacher ${teacherId} from backend API...`);
       
-      // Use the correct backend endpoint: /auth/children
+      // Use the correct backend endpoint from API config
       const response = await axios.get(
-        buildUrl('/auth/children'),
+        buildUrl('/api/auth/children'),
         { headers: this.getAuthHeaders() }
       );
       
@@ -288,15 +334,15 @@ class AssignmentService {
       );
       
       const classData = response.data || response;
-      const className = classData.className || classData.class_name || 'Panda Class';
+      const className = classData.className || classData.class_name || 'Panda';
       console.log(`✅ Teacher ${teacherId} is assigned to: ${className}`);
       return className;
     } catch (error) {
       console.error('⚠️ API failed for getting teacher class:', error.response?.status || error.message);
       
       // Don't throw error, just return fallback class
-      console.log('🔄 Using fallback class: Panda Class');
-      return 'Panda Class';
+      console.log('🔄 Using fallback class: Panda');
+      return 'Panda';
     }
   }
 
@@ -322,7 +368,7 @@ class AssignmentService {
 
       const assignmentGroups = assignments.data;
       const totalAssignments = assignmentGroups.length;
-      const totalIndividualAssignments = assignments.individualAssignments || 0;
+      const totalIndividualAssignments = assignments.totalHomeworks || 0;
       
       // Calculate unique students
       const allAssignments = assignmentGroups.flatMap(group => group.assignments || []);

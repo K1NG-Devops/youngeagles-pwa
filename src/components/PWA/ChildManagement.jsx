@@ -14,7 +14,7 @@ import {
 const getClassByAge = (age) => {
   if (age < 2) return 'Little Explorers';
   if (age >= 2 && age <= 3) return 'Curious Cubs';
-  if (age >= 4 && age <= 6) return 'Panda Class';
+  if (age >= 4 && age <= 6) return 'Panda';
   return 'General Class';
 };
 
@@ -53,7 +53,7 @@ const ChildManagement = () => {
   const { isDark } = useTheme();
   
   // State for tab management
-  const [activeTab, setActiveTab] = useState('register');
+  const [activeTab, setActiveTab] = useState('manage');
   const [activeProfileSection, setActiveProfileSection] = useState('basic');
   
   // State for comprehensive child profile form
@@ -117,6 +117,7 @@ const ChildManagement = () => {
   
   // State for children list
   const [children, setChildren] = useState([]);
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
   const [editingChild, setEditingChild] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -163,9 +164,18 @@ const ChildManagement = () => {
       navigate('/login');
     }
   }, [navigate]);
+
+  // Debug effect to track children state changes
+  useEffect(() => {
+    console.log('ChildManagement: children state changed:', {
+      childrenCount: children.length,
+      children: children.map(child => ({ id: child.id, name: child.name })),
+      timestamp: new Date().toISOString()
+    });
+  }, [children]);
   
   // Function to fetch children for the parent
-  const fetchChildren = async (parentId) => {
+  const fetchChildren = useCallback(async (parentId) => {
     console.log('ChildManagement: fetchChildren called with parentId:', parentId);
     setLoading(prev => ({ ...prev, fetch: true }));
     
@@ -184,10 +194,25 @@ const ChildManagement = () => {
         hasDataArray: Array.isArray(response.data?.data)
       });
       
-      // Backend returns { success: true, data: [...] } structure
-      const childrenData = response.data.success && Array.isArray(response.data.data) 
-        ? response.data.data 
-        : [];
+      // Handle both direct array response and { success: true, data: [...] } structure
+      let childrenData;
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        childrenData = response.data;
+      } else if (response.data.success && Array.isArray(response.data.data)) {
+        // Wrapped response structure
+        childrenData = response.data.data;
+      } else {
+        childrenData = [];
+      }
+      
+      console.log('ChildManagement: Extracted children data:', {
+        rawResponse: response.data,
+        extractedData: childrenData,
+        isArray: Array.isArray(childrenData),
+        count: childrenData.length,
+        firstChild: childrenData[0] || 'none'
+      });
       
       // Add profile status detection
       const processedChildren = childrenData.map(child => ({
@@ -208,7 +233,13 @@ const ChildManagement = () => {
         }))
       });
       
-      setChildren(processedChildren);
+      // Force state update with new array reference and timestamp
+      setChildren([...processedChildren]);
+      setRefreshTimestamp(Date.now());
+      
+      // Additional logging to verify state update
+      console.log('ChildManagement: setChildren called with', processedChildren.length, 'children');
+      console.log('ChildManagement: Updated refresh timestamp:', Date.now());
       
       if (processedChildren.length === 0) {
         console.log('ChildManagement: No children found for parent', parentId);
@@ -235,19 +266,52 @@ const ChildManagement = () => {
     } finally {
       setLoading(prev => ({ ...prev, fetch: false }));
     }
-  };
+  }, []);
+
+  // Add window focus event listener to refresh data
+  useEffect(() => {
+    const handleFocus = () => {
+      const parentId = profileData.parent_id;
+      if (parentId && activeTab === 'manage') {
+        console.log('🔄 Window focus refresh triggered');
+        fetchChildren(parentId);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [profileData.parent_id, activeTab, fetchChildren]);
 
   // Handle form changes
   const handleProfileChange = useCallback((e) => {
     const { name, value, type, files } = e.target;
     const setCurrentData = isEditing ? setEditProfileData : setProfileData;
 
+    console.log('🔄 handleProfileChange called:', { name, value, type, isEditing });
+
     if (type === 'file') {
       setCurrentData(prev => ({ ...prev, [name]: files[0] }));
     } else if (name === 'dob') {
+      console.log('📅 DOB change detected:', value);
+      
+      if (!value) {
+        console.log('⚠️ Empty DOB value, clearing age and class');
+        setCurrentData(prev => ({
+          ...prev,
+          dob: value,
+          age: '',
+          className: '',
+          grade: '',
+        }));
+        return;
+      }
+      
       const age = calculateAge(value);
       const className = getClassByAge(age);
       const grade = getGradeByAge(age);
+      
+      console.log('📊 Calculated values:', { age, className, grade });
+      
       setCurrentData(prev => ({
         ...prev,
         dob: value,
@@ -391,7 +455,7 @@ const ChildManagement = () => {
       setActiveTab('manage');
       } else {
         // Create new child
-        response = await api.post('/auth/register-child', data);
+        response = await api.post(API_CONFIG.ENDPOINTS.REGISTER_CHILD, data);
         showTopNotification('Child profile created successfully!', 'success');
         setResponseMessage('Child profile created successfully!');
         
@@ -415,8 +479,9 @@ const ChildManagement = () => {
         }, 1500);
       }
       
-      // Refresh children list
-      fetchChildren(parentId);
+      // Force refresh children list immediately
+      console.log('🔄 Force refreshing children list after profile save');
+      await fetchChildren(parentId);
       
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'registering'} child:`, error);
@@ -553,8 +618,9 @@ const ChildManagement = () => {
       
       showTopNotification('Child profile deleted successfully!', 'success');
       
-      // Refresh the children list
-      fetchChildren(parentId);
+      // Force refresh the children list immediately
+      console.log('🔄 Force refreshing children list after deletion');
+      await fetchChildren(parentId);
     } catch (error) {
       console.error('Error deleting child:', error);
       
@@ -584,19 +650,6 @@ const ChildManagement = () => {
       isDark ? 'border-gray-600' : 'border-gray-200'
     }`}>
       <button
-        onClick={() => setActiveTab('register')}
-        className={`flex items-center px-4 py-2 border-b-2 font-medium text-sm whitespace-nowrap ${
-          activeTab === 'register'
-            ? 'border-blue-500 text-blue-600'
-            : isDark 
-              ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-        }`}
-      >
-        <FaUserPlus className="mr-2" />
-        Create Profile
-      </button>
-      <button
         onClick={() => setActiveTab('manage')}
         className={`flex items-center px-4 py-2 border-b-2 font-medium text-sm whitespace-nowrap ${
           activeTab === 'manage'
@@ -608,6 +661,19 @@ const ChildManagement = () => {
       >
         <FaList className="mr-2" />
         Manage Children
+      </button>
+      <button
+        onClick={() => setActiveTab('register')}
+        className={`flex items-center px-4 py-2 border-b-2 font-medium text-sm whitespace-nowrap ${
+          activeTab === 'register'
+            ? 'border-blue-500 text-blue-600'
+            : isDark 
+              ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        }`}
+      >
+        <FaUserPlus className="mr-2" />
+        Create Profile
       </button>
       {activeTab === 'view' && (
         <button
@@ -752,12 +818,12 @@ const ChildManagement = () => {
               type="text"
               name="grade"
             value={data.grade}
-              readOnly
-              className={`w-full p-2 border rounded-md ${
-                isDark 
-                  ? 'bg-gray-600 border-gray-600 text-gray-300' 
-                  : 'bg-gray-100 border-gray-300 text-gray-700'
-              }`}
+            readOnly
+            className={`w-full p-2 border rounded-md ${
+              isDark 
+                ? 'bg-gray-600 border-gray-600 text-gray-300' 
+                : 'bg-gray-100 border-gray-300 text-gray-700'
+            }`}
             />
           </div>
           <div>
@@ -768,12 +834,12 @@ const ChildManagement = () => {
               type="text"
               name="className"
             value={data.className}
-              readOnly
-              className={`w-full p-2 border rounded-md ${
-                isDark 
-                  ? 'bg-gray-600 border-gray-600 text-gray-300' 
-                  : 'bg-gray-100 border-gray-300 text-gray-700'
-              }`}
+            readOnly
+            className={`w-full p-2 border rounded-md ${
+              isDark 
+                ? 'bg-gray-600 border-gray-600 text-gray-300' 
+                : 'bg-gray-100 border-gray-300 text-gray-700'
+            }`}
             />
           </div>
         </div>
@@ -1369,9 +1435,38 @@ const ChildManagement = () => {
   // Render children list for management
   const renderChildrenList = () => (
     <>
-      <h3 className="text-2xl font-bold mb-4 text-blue-700">
-        Manage Your Children
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className={`text-2xl font-bold ${
+          isDark ? 'text-blue-300' : 'text-blue-700'
+        }`}>
+          Manage Your Children
+        </h3>
+        <button
+          onClick={async () => {
+            const parentId = profileData.parent_id;
+            if (parentId) {
+              console.log('🔄 Manual refresh triggered - forcing state reset');
+              setChildren([]);
+              setLoading(prev => ({ ...prev, fetch: true }));
+              await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+              await fetchChildren(parentId);
+            }
+          }}
+          className={`px-3 py-2 rounded-md transition flex items-center text-sm ${
+            isDark 
+              ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+          disabled={loading.fetch}
+        >
+          {loading.fetch ? (
+            <FaSpinner className="animate-spin mr-2" />
+          ) : (
+            <FaPlus className="mr-2" />
+          )}
+          Refresh
+        </button>
+      </div>
       
       {loading.fetch ? (
         <div className="flex items-center justify-center py-8">
@@ -1379,9 +1474,15 @@ const ChildManagement = () => {
           <span>Loading children...</span>
         </div>
       ) : children.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
-          <FaChild className="text-gray-400 text-5xl mx-auto mb-3" />
-          <p className="text-gray-600 mb-4">No children registered yet.</p>
+        <div className={`text-center py-8 rounded-lg ${
+          isDark ? 'bg-gray-700' : 'bg-gray-50'
+        }`}>
+          <FaChild className={`text-5xl mx-auto mb-3 ${
+            isDark ? 'text-gray-400' : 'text-gray-400'
+          }`} />
+          <p className={`mb-4 ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>No children registered yet.</p>
           <button 
             onClick={() => setActiveTab('register')}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition inline-flex items-center"
@@ -1391,15 +1492,21 @@ const ChildManagement = () => {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" key={refreshTimestamp}>
           {children.map(child => {
             const profile = child.profile_data || {};
             const hasExtendedProfile = child.profileStatus === 'complete' || Object.keys(profile).length > 0;
             
             return (
-              <div key={child.id} className="border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition">
+              <div key={child.id} className={`border rounded-lg shadow-sm hover:shadow-md transition ${
+                isDark 
+                  ? 'border-gray-600 bg-gray-700' 
+                  : 'border-gray-200 bg-white'
+              }`}>
                 {/* Child Header */}
-                <div className="p-4 border-b border-gray-100">
+                <div className={`p-4 border-b ${
+                  isDark ? 'border-gray-600' : 'border-gray-100'
+                }`}>
               <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
@@ -1407,8 +1514,12 @@ const ChildManagement = () => {
                           <FaChild className="text-blue-600 text-xl" />
                     </div>
                     <div>
-                          <h4 className="text-lg font-semibold text-gray-800">{child.name}</h4>
-                          <p className="text-sm text-gray-500">
+                          <h4 className={`text-lg font-semibold ${
+                            isDark ? 'text-white' : 'text-gray-800'
+                          }`}>{child.name}</h4>
+                          <p className={`text-sm ${
+                            isDark ? 'text-gray-300' : 'text-gray-500'
+                          }`}>
                             {child.age} years old • {child.className}
                           </p>
                     </div>
@@ -1449,19 +1560,29 @@ const ChildManagement = () => {
                 <div className="p-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-600">Gender:</span>
-                      <p className="capitalize">{child.gender}</p>
+                      <span className={`font-medium ${
+                        isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}>Gender:</span>
+                      <p className={`capitalize ${
+                        isDark ? 'text-gray-200' : 'text-gray-900'
+                      }`}>{child.gender}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">Grade:</span>
-                      <p>{child.grade}</p>
+                      <span className={`font-medium ${
+                        isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}>Grade:</span>
+                      <p className={isDark ? 'text-gray-200' : 'text-gray-900'}>{child.grade}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">Date of Birth:</span>
-                      <p>{new Date(child.dob).toLocaleDateString()}</p>
+                      <span className={`font-medium ${
+                        isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}>Date of Birth:</span>
+                      <p className={isDark ? 'text-gray-200' : 'text-gray-900'}>{new Date(child.dob).toLocaleDateString()}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">Profile Status:</span>
+                      <span className={`font-medium ${
+                        isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}>Profile Status:</span>
                       <p className={hasExtendedProfile ? "text-green-600" : "text-orange-600"}>
                         {hasExtendedProfile ? "Complete" : "Basic Only"}
                       </p>

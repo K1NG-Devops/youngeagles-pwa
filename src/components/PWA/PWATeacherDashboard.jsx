@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt, FaChartBar, FaMagic, FaRocket, FaGraduationCap, FaCalendarWeek } from 'react-icons/fa';
+import { FaBook, FaUsers, FaBell, FaPlus, FaEye, FaSpinner, FaChevronDown, FaChevronUp, FaUser, FaClipboardList, FaCalendarAlt, FaChartBar, FaMagic, FaRocket, FaGraduationCap, FaCalendarWeek, FaBrain, FaGamepad } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import { api } from '../../services/httpClient';
 import { showTopNotification } from '../TopNotificationManager';
@@ -9,7 +9,10 @@ import { useTheme } from '../../hooks/useTheme.jsx';
 import AdvancedHomeworkCreator from './AdvancedHomeworkCreator';
 import AdvancedProgressDashboard from './AdvancedProgressDashboard';
 import SkillProgressTracker from './SkillProgressTracker';
-import WeeklyReportDashboard from './WeeklyReportDashboard';
+import WeeklyReportDashboard from './WeeklyReportDashboard.jsx';
+import StudentReportBuilder from './StudentReportBuilder';
+import TeacherAssistant from './TeacherAssistant';
+import AdaptiveLearningEngine from './AdaptiveLearningEngine';
 
 const PWATeacherDashboard = () => {
   const navigate = useNavigate();
@@ -69,50 +72,67 @@ const PWATeacherDashboard = () => {
     
     try {
       // Fetch teacher class info and students
-      console.log('📡 Making API call to /teacher/profile with token:', token?.substring(0, 10) + '...');
-      const classRes = await api.get('/teacher/profile');
+      console.log('📡 Making API call to /api/teacher/profile with token:', token?.substring(0, 10) + '...');
+      const classRes = await api.get('/api/teacher/profile');
       
       const classData = classRes.data;
       if (classData.success && classData.teacher) {
         setTeacherClass(classData.teacher.className);
       }
       
-      // Fetch teacher stats from homework endpoint
-      const statsRes = await api.get('/homework/teacher/stats');
+      // Fetch students count
+      try {
+        const studentsRes = await api.get('/api/auth/children');
+        const studentCount = studentsRes.data?.children?.length || 0;
+        console.log(`📚 Found ${studentCount} students`);
+        
+        setTeacherStats(prev => ({
+          ...prev,
+          totalStudents: studentCount
+        }));
+      } catch (studentsError) {
+        console.warn('Could not fetch students:', studentsError);
+      }
       
-      if (statsRes.data.success && statsRes.data.stats) {
-        const stats = statsRes.data.stats;
-        setTeacherStats({
-          totalHomeworks: stats.totalHomework,
-          totalSubmissions: stats.totalSubmissions,
-          totalStudents: stats.totalStudents,
-          submissionRate: Math.round(stats.submissionRate)
-        });
+      // Fetch teacher stats from homework endpoint - with fallback
+      try {
+        const statsRes = await api.get('/api/homework/teacher/stats');
+        
+        if (statsRes.data.success && statsRes.data.stats) {
+          const stats = statsRes.data.stats;
+          setTeacherStats(prev => ({
+            ...prev,
+            totalHomeworks: stats.totalHomework || 0,
+            totalSubmissions: stats.totalSubmissions || 0,
+            submissionRate: Math.round(stats.averageCompletionRate || 0)
+          }));
+        }
+      } catch (statsError) {
+        console.warn('Teacher stats endpoint failed:', statsError);
+        // Keep existing stats, just update with empty homework stats
+        setTeacherStats(prev => ({
+          ...prev,
+          totalHomeworks: 0,
+          totalSubmissions: 0,
+          submissionRate: 0
+        }));
       }
       
       // Fetch all submissions for teacher
       try {
-        const submissionsRes = await api.get('/homework/teacher/submissions');
+        const submissionsRes = await api.get('/api/homework/teacher/submissions');
         
         const submissions = submissionsRes.data.submissions || [];
         setRecentSubmissions(submissions.slice(0, 5)); // Show latest 5 submissions
       } catch (submissionErr) {
-        console.warn('Could not fetch submissions, using empty array:', submissionErr);
+        console.warn('Could not fetch submissions:', submissionErr);
+        // Set empty submissions if API fails
         setRecentSubmissions([]);
       }
       
     } catch (err) {
       console.error('Error fetching teacher data:', err);
       showTopNotification('Failed to load dashboard data', 'error');
-      
-      // Fallback to empty state
-      setTeacherStats({
-        totalHomeworks: 0,
-        totalSubmissions: 0,
-        totalStudents: 0,
-        submissionRate: 0
-      });
-      setRecentSubmissions([]);
     } finally {
       setIsLoading(prev => ({ ...prev, stats: false, submissions: false }));
     }
@@ -129,6 +149,38 @@ const PWATeacherDashboard = () => {
   };
 
   const quickActions = [
+    {
+      id: 'ai-assistant',
+      title: '🤖 AI Teaching Assistant',
+      description: 'Smart insights & recommendations',
+      icon: FaRocket,
+      color: 'gradient',
+      action: () => setActiveView('assistant'),
+      badge: 'NEW',
+      isAdvanced: true,
+      priority: true
+    },
+    {
+      id: 'adaptive-engine',
+      title: '🚀 Adaptive Learning',
+      description: 'Auto-adjust content difficulty',
+      icon: FaBrain,
+      color: 'gradient',
+      action: () => setActiveView('adaptive'),
+      badge: 'AI',
+      isAdvanced: true,
+      priority: true
+    },
+    {
+      id: 'interactive-activities',
+      title: '🎮 Interactive Activities',
+      description: 'Ready-to-use activities',
+      icon: FaRocket,
+      color: 'gradient',
+      path: '/teacher-dashboard/interactive-activities',
+      badge: null,
+      isAdvanced: true
+    },
     {
       id: 'advanced-creator',
       title: '🎯 Advanced Creator',
@@ -166,6 +218,16 @@ const PWATeacherDashboard = () => {
       icon: FaCalendarWeek,
       color: 'gradient',
       action: () => setActiveView('reports'),
+      badge: null,
+      isAdvanced: true
+    },
+    {
+      id: 'student-reports',
+      title: '📝 Student Reports',
+      description: 'Developmental reports',
+      icon: FaClipboardList,
+      color: 'gradient',
+      action: () => setActiveView('student-reports'),
       badge: null,
       isAdvanced: true
     },
@@ -315,6 +377,73 @@ const PWATeacherDashboard = () => {
     );
   }
 
+  // Show Student Report Builder
+  if (activeView === 'student-reports') {
+    return (
+      <div className={`min-h-full ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-6`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-blue-400 hover:bg-gray-700' 
+                : 'text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+        <StudentReportBuilder />
+      </div>
+    );
+  }
+
+  // Show AI Teaching Assistant
+  if (activeView === 'assistant') {
+    return (
+      <div className={`min-h-full ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-6`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-blue-400 hover:bg-gray-700' 
+                : 'text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+        <div className="p-4">
+          <TeacherAssistant isDark={isDark} />
+        </div>
+      </div>
+    );
+  }
+
+  // Show Adaptive Learning Engine
+  if (activeView === 'adaptive') {
+    return (
+      <div className={`min-h-full ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-6`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-blue-400 hover:bg-gray-700' 
+                : 'text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+        <div className="p-4">
+          <AdaptiveLearningEngine isDark={isDark} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`p-4 space-y-4 max-w-full overflow-x-hidden pb-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} min-h-full`}>
       {/* Enhanced Welcome Section */}
@@ -416,6 +545,27 @@ const PWATeacherDashboard = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Enhanced Interactive Activities Hub */}
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg border p-6`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Interactive Activities Hub</h3>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Engage students with fun, educational games.</p>
+          </div>
+          <FaGamepad className={`w-8 h-8 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+        </div>
+        <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} mb-6`}>
+          Our Interactive Activities Hub offers a suite of ready-to-use games designed to make learning fun and effective. These activities cover a range of subjects including coding, math, and color recognition, and can be assigned as homework with a single click.
+        </p>
+        <Link
+          to="/teacher-dashboard/interactive-activities"
+          className="w-full flex items-center justify-center p-3 text-center bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+        >
+          <FaRocket className="mr-3" />
+          Explore Activities
+        </Link>
       </div>
 
       {/* Enhanced Quick Actions */}

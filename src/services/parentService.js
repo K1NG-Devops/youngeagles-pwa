@@ -81,7 +81,9 @@ class ParentService {
   async getHomework(childId, parentId) {
     try {
       console.log(`ParentService: Fetching homework for child ${childId} of parent ${parentId}`);
-      const response = await api.get(`/parent/${parentId}/child/${childId}/homework`, {
+      
+      // Use the correct API endpoint that exists in the backend
+      const response = await api.get(`/api/homework/parent/${parentId}/child/${childId}`, {
         headers: {
           'X-Request-Source': 'pwa-parent-homework',
           'Cache-Control': 'no-cache',
@@ -93,22 +95,32 @@ class ParentService {
       // Handle the response structure from the API
       let homeworkData = [];
       if (response.data) {
-        if (response.data.success && Array.isArray(response.data.homework)) {
-          // API returns: {success: true, homework: [...], child: {...}, total: n}
+        if (response.data.success && Array.isArray(response.data.data)) {
+          // New API format: {success: true, data: [...], child: {...}, total_count: n}
+          homeworkData = response.data.data.map(hw => ({
+            ...hw,
+            submission_at: hw.submitted_at, // Map submitted_at to submission_at for consistency
+            submission: hw.submitted ? { status: 'submitted' } : null
+          }));
+        } else if (response.data.success && Array.isArray(response.data.homework)) {
+          // Legacy API format: {success: true, homework: [...], child: {...}, total: n}
           homeworkData = response.data.homework.map(hw => ({
             ...hw,
+            submission_at: hw.submitted_at,
             submission: hw.status === 'submitted' ? { status: 'submitted' } : null
           }));
         } else if (Array.isArray(response.data.homework)) {
           // Direct homework array format
           homeworkData = response.data.homework.map(hw => ({
             ...hw,
+            submission_at: hw.submitted_at,
             submission: hw.status === 'submitted' ? { status: 'submitted' } : null
           }));
         } else if (Array.isArray(response.data)) {
           // Direct array format
           homeworkData = response.data.map(hw => ({
             ...hw,
+            submission_at: hw.submitted_at,
             submission: hw.status === 'submitted' ? { status: 'submitted' } : null
           }));
         }
@@ -166,14 +178,41 @@ class ParentService {
 
   // Get messages
   async getMessages() {
-    const response = await api.get(API_CONFIG.ENDPOINTS.MESSAGES);
-    return response.data;
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.MESSAGES);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Failed to fetch messages:', error);
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        console.log('🔐 Authentication failed for messages endpoint');
+        // Don't re-throw auth errors to prevent redirect loops
+        return { messages: [], error: 'AUTHENTICATION_FAILED' };
+      }
+      
+      // For other errors, return empty structure
+      return { messages: [], error: error.message };
+    }
   }
 
   // Send message
   async sendMessage(messageData) {
     try {
-      const response = await api.post(API_CONFIG.ENDPOINTS.SEND_MESSAGE, messageData);
+      console.log('💬 Sending message with data:', messageData);
+      
+      // Transform the data to match backend expectations
+      const backendData = {
+        recipient_id: messageData.recipientId || messageData.recipient_id,
+        recipient_type: messageData.recipientType || messageData.recipient_type,
+        message: messageData.message || messageData.content,
+        subject: messageData.subject || 'Message'
+      };
+      
+      console.log('🔄 Transformed data for backend:', backendData);
+      
+      const response = await api.post(API_CONFIG.ENDPOINTS.SEND_MESSAGE, backendData);
+      console.log('✅ Message sent successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -184,11 +223,22 @@ class ParentService {
   // Get available contacts (teachers, admins)
   async getAvailableContacts() {
     try {
+      console.log('🔍 Fetching available contacts from:', API_CONFIG.ENDPOINTS.GET_CONTACTS);
       const response = await api.get(API_CONFIG.ENDPOINTS.GET_CONTACTS); 
-      return response.data.contacts || [];
+      console.log('✅ Contacts API response:', response.data);
+      return response.data;
     } catch (error) {
-      console.error('Failed to fetch available contacts:', error);
-      return []; // Return empty array on failure
+      console.error('❌ Failed to fetch available contacts:', error);
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        console.log('🔐 Authentication failed for contacts endpoint');
+        // Don't re-throw auth errors to prevent redirect loops
+        return { contacts: [], error: 'AUTHENTICATION_FAILED' };
+      }
+      
+      // For other errors, return empty structure
+      return { contacts: [], error: error.message };
     }
   }
 
@@ -197,8 +247,29 @@ class ParentService {
       const response = await api.get(API_CONFIG.ENDPOINTS.GET_CONVERSATIONS);
       return response.data.conversations || [];
     } catch (error) {
-      console.error('Failed to fetch conversations:', error);
-      throw error;
+      console.error('❌ Failed to fetch conversations:', error);
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        console.log('🔐 Authentication failed for conversations endpoint');
+        return { conversations: [], error: 'AUTHENTICATION_FAILED' };
+      }
+      
+      // Handle specific database errors
+      if (error.response?.status === 500 && error.response?.data?.error === 'DATABASE_ERROR') {
+        console.warn('🗄️ Database connection issue detected for conversations');
+        return { conversations: [], error: 'DATABASE_ERROR', fallbackMode: true };
+      }
+      
+      // Handle schema errors (missing columns)
+      if (error.response?.status === 500 && error.message?.includes('Unknown column')) {
+        console.warn('🗄️ Database schema issue detected for conversations - missing columns');
+        return { conversations: [], error: 'SCHEMA_ERROR', fallbackMode: true };
+      }
+      
+      // For other errors, return empty structure instead of throwing
+      console.warn('💡 Conversations endpoint not available, falling back to contacts only');
+      return { conversations: [], error: error.message, fallbackMode: true };
     }
   }
 
@@ -259,12 +330,15 @@ class ParentService {
 
   async getMessageHistory(conversationId, page = 1, limit = 50) {
     try {
+      console.log('🔄 Fetching message history for conversation:', conversationId);
       const endpoint = API_CONFIG.ENDPOINTS.GET_CONVERSATION_MESSAGES.replace(':conversationId', conversationId);
       const response = await api.get(`${endpoint}?page=${page}&limit=${limit}`);
+      console.log('✅ Message history response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch message history:', error);
-      throw error;
+      console.error('❌ Failed to fetch message history:', error);
+      // Return empty messages array instead of throwing
+      return { messages: [], error: error.message };
     }
   }
 

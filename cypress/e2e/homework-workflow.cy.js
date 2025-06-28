@@ -22,7 +22,7 @@ describe('Homework Assignment End-to-End Workflow', () => {
         title: 'E2E Test Math Assignment',
         description: 'Test assignment for end-to-end testing',
         instructions: 'Complete the math problems and submit your work.',
-        class_name: 'Panda Class',
+        class_name: 'Panda',
         due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         child_ids: [1, 2], // Test with specific child IDs
         grade: 'Grade 3'
@@ -39,6 +39,7 @@ describe('Homework Assignment End-to-End Workflow', () => {
         // Verify assignment appears in teacher dashboard
         cy.reload();
         cy.contains('E2E Test Math Assignment').should('be.visible');
+        cy.contains('Panda').should('be.visible');
       });
     });
 
@@ -46,7 +47,7 @@ describe('Homework Assignment End-to-End Workflow', () => {
       // Navigate to assignments page to verify creation
       cy.visit('/teacher/assignments');
       cy.contains('E2E Test Math Assignment').should('be.visible');
-      cy.contains('Panda Class').should('be.visible');
+      cy.contains('Panda').should('be.visible');
       cy.contains('Grade 3').should('be.visible');
     });
   });
@@ -56,7 +57,7 @@ describe('Homework Assignment End-to-End Workflow', () => {
       cy.verifyAssignmentInDatabase(createdAssignmentId).then((assignment) => {
         expect(assignment).to.have.property('homework');
         expect(assignment.homework.title).to.eq('E2E Test Math Assignment');
-        expect(assignment.homework.class_name).to.eq('Panda Class');
+        expect(assignment.homework.class_name).to.eq('Panda');
         expect(assignment.homework.grade).to.eq('Grade 3');
         cy.log('✅ Assignment verified in database');
       });

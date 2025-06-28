@@ -35,7 +35,7 @@ const WhatsAppMessaging = React.memo(() => {
     isConnected,
     lastMessage,
     typingUsers,
-    sendMessage: wsSendMessage,
+    sendMessage: _wsSendMessage,
     sendTyping,
     addEventListener,
     removeEventListener,
@@ -51,12 +51,12 @@ const WhatsAppMessaging = React.memo(() => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording, _setIsRecording] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typingTimeout, setTypingTimeout] = useState(null);
+  const [_typingTimeout, _setTypingTimeout] = useState(null);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [availableTeachers, setAvailableTeachers] = useState([]);
-  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [onlineUsers, _setOnlineUsers] = useState([]);
   
   // Refs
   const messagesEndRef = useRef(null);
@@ -269,6 +269,13 @@ const WhatsAppMessaging = React.memo(() => {
       } catch (messageError) {
         console.warn('⚠️ Could not load messages from API:', messageError);
         chatData = []; // Empty array fallback
+        
+        // Show user-friendly error for database issues
+        if (messageError.response?.status === 500 && messageError.response?.data?.error === 'DATABASE_ERROR') {
+          showNotification('Messaging service temporarily unavailable - database maintenance in progress', 'warning');
+        } else if (messageError.response?.status === 500 && messageError.message?.includes('Unknown column')) {
+          showNotification('Messaging system is being updated - some features temporarily unavailable', 'warning');
+        }
       }
       
       // Map contacts to the chat format, so they appear in the list
@@ -389,61 +396,57 @@ const WhatsAppMessaging = React.memo(() => {
     try {
       console.log('🚀 Attempting to send via API...');
       
-      // Always use REST API for now (simpler and more reliable)
+      // Use the correct backend API format
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       console.log('👤 Current user sending message:', currentUser.email);
       
+      // Transform chat ID to get recipient info
+      let recipientId, recipientType;
+      
+      // Parse recipient info from selectedChat
+      if (selectedChat.recipientId && selectedChat.recipientType) {
+        recipientId = selectedChat.recipientId;
+        recipientType = selectedChat.recipientType;
+      } else {
+        // Extract from chat structure
+        if (selectedChat.id.startsWith('teacher_')) {
+          // Remove 'teacher_' prefix to get actual ID
+          recipientId = parseInt(selectedChat.id.replace('teacher_', ''));
+          recipientType = 'teacher';
+        } else if (selectedChat.role === 'Administration' || selectedChat.name.includes('Admin') || selectedChat.name.includes('Office')) {
+          recipientId = selectedChat.id === 'school_admin' ? 1 : selectedChat.id;
+          recipientType = 'admin';
+        } else {
+          // Default to teacher
+          recipientId = selectedChat.id;
+          recipientType = 'teacher';
+        }
+      }
+      
       const messageData = {
-        to: selectedChat.id,
+        recipient_id: recipientId,
+        recipient_type: recipientType,
         message: messageText,
-        subject: 'Chat Message',
-        from: currentUser.id,
-        timestamp: new Date().toISOString()
+        subject: `Message from ${currentUser.name || currentUser.email}`
       };
       
-      console.log('📡 Sending message data:', messageData);
+      console.log('📡 Sending message data (backend format):', messageData);
       
-      // Use the messages/send endpoint with environment-aware API URL
-      const apiUrl = `${API_CONFIG.getApiUrl()}/messages/send`;
-      console.log('🌐 Making API call to:', apiUrl);
+      // Use parentService which has the correct API endpoint
+      const result = await parentService.sendMessage(messageData);
       
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      console.log('🔑 Using token for request:', token ? `Token present (${token.substring(0, 20)}...)` : 'No token found');
-      console.log('🔍 Checking localStorage:', {
-        accessToken: !!localStorage.getItem('accessToken'),
-        token: !!localStorage.getItem('token'),
-        user: !!localStorage.getItem('user'),
-        role: localStorage.getItem('role')
-      });
+      console.log('✅ Message sent successfully:', result);
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(messageData)
-      });
+      // Update status to sent
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempMessage.id 
+            ? { ...msg, status: 'sent', id: result.messageId || msg.id }
+            : msg
+        )
+      );
       
-      console.log('📡 API Response status:', response.status, response.statusText);
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Message sent successfully:', result);
-        
-        // Update status to sent
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === tempMessage.id 
-              ? { ...msg, status: 'sent', id: result.messageId || msg.id }
-              : msg
-          )
-        );
-        
-        showNotification('Message sent!', 'success');
-      } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      showNotification('Message sent!', 'success');
       
       // Update chat list optimistically
       setChats(prev => prev.map(chat => {
@@ -473,7 +476,7 @@ const WhatsAppMessaging = React.memo(() => {
   }, [newMessage, selectedChat]);
 
   // Handle typing indicators
-  const handleInputChange = React.useCallback((e) => {
+  const _handleInputChange = React.useCallback((e) => {
     const value = e.target.value;
     console.log('✏️ Input changed in callback:', value);
     setNewMessage(value);
@@ -488,7 +491,7 @@ const WhatsAppMessaging = React.memo(() => {
     }
   }, [selectedChat?.id, isConnected, sendTyping]); // Added sendTyping to dependencies
 
-  const handleKeyPress = React.useCallback((e) => {
+  const _handleKeyPress = React.useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();

@@ -3,7 +3,9 @@ import { FaBook, FaGraduationCap, FaMicrophone, FaImage, FaPlay, FaStop, FaUploa
 import { showTopNotification } from '../TopNotificationManager';
 
 // Import API config
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://youngeagles-api-server.up.railway.app';
+import API_CONFIG from '../../config/api';
+
+const API_BASE_URL = API_CONFIG.getApiUrl();
 
 // Academic Framework for Preschool (3-6 years)
 const LEARNING_OBJECTIVES = {
@@ -72,7 +74,7 @@ const AdvancedHomeworkCreator = ({ onSave, onCancel, isDark, initialData = null 
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, setIsSubmitting] = useState(false);
 
   const [homework, setHomework] = useState({
     // Basic Information
@@ -264,7 +266,7 @@ const AdvancedHomeworkCreator = ({ onSave, onCancel, isDark, initialData = null 
       }
 
       // Add visual aids
-      homework.visualAids.forEach((aid, index) => {
+      homework.visualAids.forEach((aid, _index) => {
         if (aid.file) {
           formData.append('visualAids', aid.file);
         }

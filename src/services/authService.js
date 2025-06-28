@@ -1,7 +1,6 @@
 import { api } from './httpClient.js';
 import { API_CONFIG } from '../config/api.js';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 
 class AuthService {
   constructor() {
@@ -43,7 +42,6 @@ class AuthService {
     
     const accessToken = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
-    const role = localStorage.getItem('role');
     
     console.log('🚀 AuthService.init() called');
     

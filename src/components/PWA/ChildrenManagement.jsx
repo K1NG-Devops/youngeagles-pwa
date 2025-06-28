@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaBaby, FaPlus, FaEdit, FaTrash, FaSearch, FaEye, FaUserGraduate, FaCalendarAlt } from 'react-icons/fa';
 import adminService from '../../services/adminService';
-import { showTopNotification } from '../TopNotificationManager';
+import { toast } from 'react-toastify';
 
 const ChildrenManagement = ({ isDark = false }) => {
   const [children, setChildren] = useState([]);
