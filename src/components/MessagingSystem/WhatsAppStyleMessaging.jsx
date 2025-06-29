@@ -34,57 +34,57 @@ const checkUserOnlineStatus = async (userId) => {
   }
 };
 
-// Enhanced message status icons
-const getMessageStatusIcon = (status, isDark) => {
-  const iconStyle = { fontSize: '14px', marginLeft: '4px' };
-  
-  switch (status) {
-    case 'sending':
-      return <FaClock style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
-    case 'sent':
-      return <FaCheck style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
-    case 'delivered':
-      return <FaCheckDouble style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
-    case 'read':
-      return <FaCheckDouble style={{ ...iconStyle, color: '#53BDEB' }} />;
-    case 'failed':
-      return <FaExclamationCircle style={{ ...iconStyle, color: '#F15C6D' }} />;
-    default:
-      return <FaClock style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
-  }
-};
+// Enhanced message status icons (keeping for future use)
+// const getMessageStatusIcon = (status, isDark) => {
+//   const iconStyle = { fontSize: '14px', marginLeft: '4px' };
+//   
+//   switch (status) {
+//     case 'sending':
+//       return <FaClock style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+//     case 'sent':
+//       return <FaCheck style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+//     case 'delivered':
+//       return <FaCheckDouble style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+//     case 'read':
+//       return <FaCheckDouble style={{ ...iconStyle, color: '#53BDEB' }} />;
+//     case 'failed':
+//       return <FaExclamationCircle style={{ ...iconStyle, color: '#F15C6D' }} />;
+//     default:
+//       return <FaClock style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+//   }
+// };
 
-// Enhanced presence display
-const getPresenceDisplay = (isOnline, lastSeen) => {
-  if (isOnline) {
-    return { text: 'online', color: '#25D366' };
-  } else if (lastSeen) {
-    const lastSeenDate = new Date(lastSeen);
-    const now = new Date();
-    const diffInMinutes = (now - lastSeenDate) / (1000 * 60);
-    
-    if (diffInMinutes < 1) {
-      return { text: 'last seen just now', color: '#8696A0' };
-    } else if (diffInMinutes < 60) {
-      return { text: `last seen ${Math.floor(diffInMinutes)} minutes ago`, color: '#8696A0' };
-    } else if (diffInMinutes < 24 * 60) {
-      return { text: `last seen ${Math.floor(diffInMinutes / 60)} hours ago`, color: '#8696A0' };
-    } else {
-      return { text: lastSeenDate.toLocaleDateString(), color: '#8696A0' };
-    }
-  }
-  return { text: 'offline', color: '#8696A0' };
-};
+// Enhanced presence display (keeping for future use)
+// const getPresenceDisplay = (isOnline, lastSeen) => {
+//   if (isOnline) {
+//     return { text: 'online', color: '#25D366' };
+//   } else if (lastSeen) {
+//     const lastSeenDate = new Date(lastSeen);
+//     const now = new Date();
+//     const diffInMinutes = (now - lastSeenDate) / (1000 * 60);
+//     
+//     if (diffInMinutes < 1) {
+//       return { text: 'last seen just now', color: '#8696A0' };
+//     } else if (diffInMinutes < 60) {
+//       return { text: `last seen ${Math.floor(diffInMinutes)} minutes ago`, color: '#8696A0' };
+//     } else if (diffInMinutes < 24 * 60) {
+//       return { text: `last seen ${Math.floor(diffInMinutes / 60)} hours ago`, color: '#8696A0' };
+//     } else {
+//       return { text: lastSeenDate.toLocaleDateString(), color: '#8696A0' };
+//     }
+//   }
+//   return { text: 'offline', color: '#8696A0' };
+// };
 
-// Message reactions
-const commonReactions = [
-  { emoji: '👍', icon: FaThumbsUp },
-  { emoji: '❤️', icon: FaHeart },
-  { emoji: '😂', icon: FaGrinBeam },
-  { emoji: '😮', icon: FaSurprise },
-  { emoji: '😢', icon: FaFrown },
-  { emoji: '😡', icon: FaAngry }
-];
+// Message reactions (keeping for future use)
+// const commonReactions = [
+//   { emoji: '👍', icon: FaThumbsUp },
+//   { emoji: '❤️', icon: FaHeart },
+//   { emoji: '😂', icon: FaGrinBeam },
+//   { emoji: '😮', icon: FaSurprise },
+//   { emoji: '😢', icon: FaFrown },
+//   { emoji: '😡', icon: FaAngry }
+// ];
 
 const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
@@ -263,7 +263,7 @@ const ComposeView = ({ currentTheme, goBack, isLoading, availableContacts, start
     </div>
 );
   
-const ChatView = ({ currentTheme, goBack, selectedChat, messages, setMessages, messagesEndRef, newMessage, setNewMessage, sendMessage, handleKeyPress, inputRef, retryMessage, isDark, messagePriority, setMessagePriority, replyToMessage, setReplyToMessage, onReact, onReply, showChatOptions, setShowChatOptions, chatOptionsRef }) => (
+const ChatView = ({ currentTheme, goBack, selectedChat, messages, setMessages, messagesEndRef, newMessage, setNewMessage, sendMessage, handleKeyPress, inputRef, _retryMessage, isDark, _messagePriority, _setMessagePriority, replyToMessage, setReplyToMessage, onReact, onReply, showChatOptions, setShowChatOptions, chatOptionsRef }) => (
     <div style={{ backgroundColor: currentTheme.chatBg, minHeight: '100vh' }} className="flex flex-col">
       <div style={{ backgroundColor: currentTheme.headerBg, boxShadow: `0 1px 3px ${currentTheme.shadow}` }} className="px-4 py-3 flex items-center sticky top-0 z-10">
         <button onClick={goBack} className="mr-3 p-2 rounded-full hover:bg-white/10 transition-colors">
@@ -374,7 +374,7 @@ const ChatView = ({ currentTheme, goBack, selectedChat, messages, setMessages, m
               onDelete={(messageId) => {
                 const updatedMessages = messages.filter(m => m.id !== messageId);
                 setMessages(updatedMessages);
-                saveMessagesToStorage(selectedChat.id, updatedMessages);
+                localStorage.setItem(`messages_${selectedChat.id}`, JSON.stringify(updatedMessages));
               }}
               onReact={onReact}
               onReply={onReply}
