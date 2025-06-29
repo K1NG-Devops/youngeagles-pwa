@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaUser, FaStar, FaChartBar, FaEdit, FaSave, FaTimes, FaPlus, FaEye, FaSpinner, FaGraduationCap, FaBook, FaLightbulb } from 'react-icons/fa';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import { toast } from 'react-toastify';
 import { api } from '../../services/httpClient';
 

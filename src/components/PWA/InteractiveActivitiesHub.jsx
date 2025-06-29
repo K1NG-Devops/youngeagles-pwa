@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { useTheme } from '../../contexts/ThemeContext';
 import { FaRobot, FaCalculator, FaPalette, FaLeaf, FaSortAmountUp, FaSpellCheck, FaShapes, FaEye, FaPlay, FaCheck, FaHome } from 'react-icons/fa';
 import interactiveActivityService from '../../services/interactiveActivityService';
 

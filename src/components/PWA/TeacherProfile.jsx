@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaEdit, FaSave, FaTimes, FaSpinner, FaCamera, FaUpload } from 'react-icons/fa';
 import { teacherService } from '../../services/teacherService';
 import { showNotification } from '../../utils/notifications';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const TeacherProfile = () => {
   const { isDark } = useTheme();

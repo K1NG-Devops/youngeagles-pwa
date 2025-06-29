@@ -1,6 +1,6 @@
 import websocketService from './websocketService.js';
 import webPushService from './webPushService.js';
-import { showTopNotification } from '../components/TopNotificationManager.jsx';
+import { showTopNotification } from '../utils/notifications.js';
 
 /**
  * Hybrid Notification Manager

@@ -78,7 +78,6 @@ class AssignmentService {
    * @returns {Promise<Object>} Teacher assignments
    */
   async getTeacherAssignments(teacherId) {
-    const operation = 'Get Teacher Assignments';
     const endpoint = API_CONFIG.ENDPOINTS.HOMEWORK_FOR_TEACHER.replace(':teacherId', teacherId);
     logApiCall('GET', `${this.apiUrl}${endpoint}`);
 
@@ -174,7 +173,6 @@ class AssignmentService {
    * @returns {Promise<Object>} Updated assignment
    */
   async updateAssignment(homeworkId, updateData) {
-    const operation = 'Update Assignment';
     const endpoint = API_CONFIG.ENDPOINTS.ASSIGNMENT_UPDATE.replace(':homeworkId', homeworkId);
     logApiCall('PUT', `${this.apiUrl}${endpoint}`, updateData);
 
@@ -188,7 +186,7 @@ class AssignmentService {
       console.log('✅ Assignment updated successfully:', response.data);
       return this.handleResponse(response);
     } catch (error) {
-      this.handleError(error, operation);
+      this.handleError(error, 'Update Assignment');
     }
   }
 
@@ -198,7 +196,6 @@ class AssignmentService {
    * @returns {Promise<Object>} Deletion result
    */
   async deleteAssignment(homeworkId) {
-    const operation = 'Delete Assignment';
     const endpoint = API_CONFIG.ENDPOINTS.ASSIGNMENT_DELETE.replace(':homeworkId', homeworkId);
     logApiCall('DELETE', `${this.apiUrl}${endpoint}`);
 
@@ -211,7 +208,7 @@ class AssignmentService {
       console.log('✅ Assignment deleted successfully:', response.data);
       return this.handleResponse(response);
     } catch (error) {
-      this.handleError(error, operation);
+      this.handleError(error, 'Delete Assignment');
     }
   }
 
@@ -225,7 +222,6 @@ class AssignmentService {
    * @returns {Promise<Object>} Assignment submissions
    */
   async getAssignmentSubmissions(homeworkId) {
-    const operation = 'Get Assignment Submissions';
     const endpoint = API_CONFIG.ENDPOINTS.ASSIGNMENT_SUBMISSIONS.replace(':homeworkId', homeworkId);
     logApiCall('GET', `${this.apiUrl}${endpoint}`);
 
@@ -238,7 +234,7 @@ class AssignmentService {
       console.log('✅ Assignment submissions fetched:', response.data);
       return this.handleResponse(response);
     } catch (error) {
-      this.handleError(error, operation);
+      this.handleError(error, 'Get Assignment Submissions');
     }
   }
 
@@ -252,7 +248,6 @@ class AssignmentService {
    * @returns {Promise<Object>} Graded submission
    */
   async gradeSubmission(submissionId, gradeData) {
-    const operation = 'Grade Submission';
     const endpoint = API_CONFIG.ENDPOINTS.SUBMISSION_GRADE.replace(':submissionId', submissionId);
     logApiCall('PUT', `${this.apiUrl}${endpoint}`, gradeData);
 
@@ -266,7 +261,7 @@ class AssignmentService {
       console.log('✅ Submission graded successfully:', response.data);
       return this.handleResponse(response);
     } catch (error) {
-      this.handleError(error, operation);
+      this.handleError(error, 'Grade Submission');
     }
   }
 
@@ -280,8 +275,6 @@ class AssignmentService {
    * @returns {Promise<Array>} Available children in teacher's class
    */
   async getAvailableChildren(teacherId) {
-    const operation = 'Get Available Children';
-    
     try {
       console.log(`🔍 Fetching children for teacher ${teacherId} from backend API...`);
       
@@ -323,8 +316,6 @@ class AssignmentService {
    * @returns {Promise<string>} Teacher's class name
    */
   async getTeacherClass(teacherId) {
-    const operation = 'Get Teacher Class';
-    
     try {
       console.log(`🎯 Fetching class assignment for teacher ${teacherId}...`);
       
@@ -352,8 +343,6 @@ class AssignmentService {
    * @returns {Promise<Object>} Assignment statistics
    */
   async getAssignmentStats(teacherId) {
-    const operation = 'Get Assignment Stats';
-    
     try {
       const assignments = await this.getTeacherAssignments(teacherId);
       

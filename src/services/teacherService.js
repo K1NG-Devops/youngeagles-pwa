@@ -104,30 +104,26 @@ class TeacherService {
       
       // Try multiple endpoints in order of preference
       let response;
-      let lastError;
       
       // First try the update endpoint
       try {
         response = await api.put(API_CONFIG.ENDPOINTS.TEACHER_PROFILE_UPDATE, apiData);
         console.log('📝 Update response (PUT /update):', response.data);
-      } catch (error) {
-        lastError = error;
+      } catch {
         console.log('⚠️ PUT /update failed, trying PATCH on main profile endpoint...');
         
         // Try PATCH on main profile endpoint
         try {
           response = await api.patch(API_CONFIG.ENDPOINTS.TEACHER_PROFILE, apiData);
           console.log('📝 Update response (PATCH /profile):', response.data);
-        } catch (patchError) {
-          lastError = patchError;
+        } catch {
           console.log('⚠️ PATCH /profile failed, trying PUT on main profile endpoint...');
           
           // Fallback to PUT on main profile endpoint
           try {
             response = await api.put(API_CONFIG.ENDPOINTS.TEACHER_PROFILE, apiData);
             console.log('📝 Update response (PUT /profile):', response.data);
-          } catch (putError) {
-            lastError = putError;
+          } catch {
             console.log('⚠️ PUT /profile failed, trying POST on update endpoint...');
             
             // Last resort: POST to update endpoint
@@ -276,12 +272,19 @@ class TeacherService {
   }
 
   // Enhanced Student Report System Methods
-  async saveStudentReport(studentId, reportData, pdfBase64) {
+  async saveStudentReport(studentId, reportData, pdfBase64 = null) {
     try {
-      const response = await api.post(`/teacher/student-reports/${studentId}/generate-pdf`, {
-        reportData,
-        pdfBase64
-      });
+      // If pdfBase64 is provided, use the PDF generation endpoint
+      if (pdfBase64) {
+        const response = await api.post(`/teacher/student-reports/${studentId}/generate-pdf`, {
+          reportData,
+          pdfBase64
+        });
+        return response.data;
+      }
+      
+      // Otherwise use the standard report endpoint
+      const response = await api.post('/api/teacher/reports', reportData);
       return response.data;
     } catch (error) {
       console.error('Failed to save student report:', error);
@@ -347,17 +350,6 @@ class TeacherService {
       return response.data;
     } catch (error) {
       console.error('Failed to send message:', error);
-      throw error;
-    }
-  }
-
-  // Save student report
-  async saveStudentReport(reportData) {
-    try {
-      const response = await api.post('/api/teacher/reports', reportData);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to save report:', error);
       throw error;
     }
   }

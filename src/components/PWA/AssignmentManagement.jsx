@@ -16,10 +16,10 @@ import {
   FaClipboard,
   FaExclamationCircle
 } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import assignmentService from '../../services/assignmentService';
 import useAuth from '../../hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const AssignmentManagement = () => {
   const navigate = useNavigate();

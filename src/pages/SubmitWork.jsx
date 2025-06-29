@@ -102,8 +102,8 @@ const SubmitWork = () => {
           }
         );
         
-        // Correctly parse the API response
-        const childrenData = res.data?.data || [];
+        // Correctly parse the API response - children are returned directly, not wrapped in data
+        const childrenData = res.data || [];
         console.log(`SubmitWork: Fetched ${childrenData.length} children`);
         setChildren(childrenData);
         
@@ -148,7 +148,7 @@ const SubmitWork = () => {
     };
 
     fetchChildren();
-  }, [parent_id, token, selectedChild]);
+  }, [parent_id, token, selectedChild, navigate]);
 
   // Fetch homeworks when child is selected
   useEffect(() => {
@@ -218,7 +218,7 @@ const SubmitWork = () => {
     };
 
     fetchHomeworks();
-  }, [parent_id, token, selectedChild]);
+  }, [parent_id, token, selectedChild, navigate]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -320,7 +320,7 @@ const SubmitWork = () => {
       formData.append('parent_id', parent_id);
       formData.append('comment', ''); // Optional comment field
       
-      files.forEach((file, index) => {
+      files.forEach((file) => {
         formData.append('files', file);
       });
 

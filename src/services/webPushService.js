@@ -1,4 +1,4 @@
-import { API_CONFIG, buildUrl } from '../config/api.js';
+import { API_CONFIG } from '../config/api.js';
 import httpClient from './httpClient.js';
 
 class WebPushService {

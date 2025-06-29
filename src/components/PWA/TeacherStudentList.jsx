@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaGraduationCap, FaSearch, FaFilter } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import API_CONFIG from '../../config/api';
 
 const TeacherStudentList = () => {

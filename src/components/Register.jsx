@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaSpinner, FaUserPlus } from 'react-icons/fa';
-import { toast } from 'react-toastify';
 import axios from 'axios';
 import { API_CONFIG } from '../config/api';
 
@@ -20,6 +19,7 @@ const Register = () => {
       navigate('/dashboard');
     }
   }, [navigate]);
+
   const validatePhoneNumber = (phone) => {
     // Basic phone validation (accepts formats like: 123-456-7890, (123) 456-7890, 123.456.7890, etc.)
     const phoneRegex = /^[\d\s\-+().]{10,15}$/;
@@ -69,7 +69,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.REGISTER}`, formData);
+      await axios.post(`${API_CONFIG.getApiUrl()}${API_CONFIG.ENDPOINTS.REGISTER}`, formData);
 
       localStorage.removeItem('accessToken');
       

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaUser, FaChartBar, FaCalendarWeek, FaTrophy, FaStar, FaBookOpen, FaCog, FaEye, FaDownload, FaFilter, FaSort, FaSearch, FaSpinner } from 'react-icons/fa';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, PieChart, Pie, Cell } from 'recharts';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 
 // Skills Framework
 const SKILL_CATEGORIES = {
@@ -164,7 +164,7 @@ const AdvancedProgressDashboard = ({ isDark = false }) => {
         const children = studentsResult.data || studentsResult.children || [];
         
         // Transform children data to student progress format
-        const transformedStudents = children.map((child, index) => ({
+        const transformedStudents = children.map((child, _index) => ({
           id: child.id,
           name: child.name,
           avatar: `/avatars/child_${child.id}.jpg`,

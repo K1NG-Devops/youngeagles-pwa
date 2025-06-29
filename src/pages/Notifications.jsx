@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaCheck, FaTrash, FaEye, FaClock, FaExclamationTriangle, FaInfo, FaCheckCircle, FaSpinner } from 'react-icons/fa';
-import { showTopNotification } from '../components/TopNotificationManager';
-import useAuth from '../hooks/useAuth';
+import { showTopNotification } from '../utils/notifications';
 import parentService from '../services/parentService';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Notifications = () => {
-  const { auth } = useAuth();
   const { isDark } = useTheme();
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all'); // all, unread, read
@@ -22,7 +20,7 @@ const Notifications = () => {
       try {
         const res = await parentService.getNotifications();
         setNotifications(Array.isArray(res) ? res : res.notifications || []);
-      } catch (err) {
+      } catch {
         setError('Failed to load notifications');
         showTopNotification('Failed to load notifications', 'error');
       } finally {
@@ -56,7 +54,7 @@ const Notifications = () => {
         )
       );
       showTopNotification('Notification marked as read', 'success');
-    } catch (err) {
+    } catch {
       showTopNotification('Failed to update notification', 'error');
     } finally {
       setIsUpdating(false);
@@ -71,7 +69,7 @@ const Notifications = () => {
       );
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       showTopNotification('All notifications marked as read', 'success');
-    } catch (err) {
+    } catch {
       showTopNotification('Failed to update notifications', 'error');
     } finally {
       setIsUpdating(false);
@@ -84,7 +82,7 @@ const Notifications = () => {
       // No backend delete, just remove locally
       setNotifications(prev => prev.filter(notification => notification.id !== notificationId));
       showTopNotification('Notification deleted', 'success');
-    } catch (err) {
+    } catch {
       showTopNotification('Failed to delete notification', 'error');
     } finally {
       setIsUpdating(false);

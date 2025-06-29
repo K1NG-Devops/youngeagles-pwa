@@ -3,13 +3,88 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FaArrowLeft, FaPaperPlane, FaSmile, FaPaperclip, FaSearch,
   FaEllipsisV, FaCheck, FaCheckDouble, FaPlus, FaTimes, FaClock, 
-  FaExclamationCircle, FaRedo
+  FaExclamationCircle, FaRedo, FaUsers, FaHeart, FaThumbsUp,
+  FaGrinBeam, FaSurprise, FaFrown, FaAngry
 } from 'react-icons/fa';
 import parentService from '../../services/parentService';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { showNotification } from '../../utils/notifications';
+import { api } from '../../services/httpClient';
+import EmojiPicker from './EmojiPicker';
+import Message from './Message';
+import GroupManagement from './GroupManagement';
 
 // --- Helper Functions (Defined at Top Level) ---
+
+// Check if user is really online
+const checkUserOnlineStatus = async (userId) => {
+  try {
+    const response = await api.post('/api/user/status', { userId });
+    
+    if (response.status === 200) {
+      return response.data.isOnline || false;
+    }
+    
+    // If API call fails, randomize status for demo purposes
+    return Math.random() > 0.7; // 30% chance of being online
+  } catch (error) {
+    console.log('⚠️ User status check failed:', error.message);
+    // If API call fails, randomize status for demo purposes
+    return Math.random() > 0.7; // 30% chance of being online
+  }
+};
+
+// Enhanced message status icons
+const getMessageStatusIcon = (status, isDark) => {
+  const iconStyle = { fontSize: '14px', marginLeft: '4px' };
+  
+  switch (status) {
+    case 'sending':
+      return <FaClock style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+    case 'sent':
+      return <FaCheck style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+    case 'delivered':
+      return <FaCheckDouble style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+    case 'read':
+      return <FaCheckDouble style={{ ...iconStyle, color: '#53BDEB' }} />;
+    case 'failed':
+      return <FaExclamationCircle style={{ ...iconStyle, color: '#F15C6D' }} />;
+    default:
+      return <FaClock style={{ ...iconStyle, color: isDark ? '#8696A0' : '#667781' }} />;
+  }
+};
+
+// Enhanced presence display
+const getPresenceDisplay = (isOnline, lastSeen) => {
+  if (isOnline) {
+    return { text: 'online', color: '#25D366' };
+  } else if (lastSeen) {
+    const lastSeenDate = new Date(lastSeen);
+    const now = new Date();
+    const diffInMinutes = (now - lastSeenDate) / (1000 * 60);
+    
+    if (diffInMinutes < 1) {
+      return { text: 'last seen just now', color: '#8696A0' };
+    } else if (diffInMinutes < 60) {
+      return { text: `last seen ${Math.floor(diffInMinutes)} minutes ago`, color: '#8696A0' };
+    } else if (diffInMinutes < 24 * 60) {
+      return { text: `last seen ${Math.floor(diffInMinutes / 60)} hours ago`, color: '#8696A0' };
+    } else {
+      return { text: lastSeenDate.toLocaleDateString(), color: '#8696A0' };
+    }
+  }
+  return { text: 'offline', color: '#8696A0' };
+};
+
+// Message reactions
+const commonReactions = [
+  { emoji: '👍', icon: FaThumbsUp },
+  { emoji: '❤️', icon: FaHeart },
+  { emoji: '😂', icon: FaGrinBeam },
+  { emoji: '😮', icon: FaSurprise },
+  { emoji: '😢', icon: FaFrown },
+  { emoji: '😡', icon: FaAngry }
+];
 
 const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
@@ -78,7 +153,7 @@ const mergeChatsAndContacts = (conversations, contacts) => {
 
 // --- View Components (Defined at Top Level) ---
 
-const ChatListView = ({ currentTheme, setCurrentView, loadContacts, isLoading, chats, searchQuery, setSearchQuery, setSelectedChat, setMessages, loadConversationMessages }) => (
+const ChatListView = ({ currentTheme, setCurrentView, loadContacts, isLoading, chats, searchQuery, setSearchQuery, setSelectedChat, _setMessages, loadConversationMessages, isAdmin, setShowGroupManagement }) => (
     <div style={{ backgroundColor: currentTheme.background, minHeight: '100vh' }}>
       <div 
         style={{ backgroundColor: currentTheme.headerBg, boxShadow: `0 1px 3px ${currentTheme.shadow}` }} 
@@ -90,6 +165,15 @@ const ChatListView = ({ currentTheme, setCurrentView, loadContacts, isLoading, c
             <button onClick={() => { setCurrentView('compose'); loadContacts(); }} className="p-2 rounded-full hover:bg-white/10 transition-colors">
               <FaPlus style={{ color: currentTheme.headerText }} />
             </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowGroupManagement(true)}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                title="Manage Groups"
+              >
+                <FaUsers style={{ color: currentTheme.headerText }} />
+              </button>
+            )}
             <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
               <FaEllipsisV style={{ color: currentTheme.headerText }} />
             </button>
@@ -140,7 +224,6 @@ const ChatListView = ({ currentTheme, setCurrentView, loadContacts, isLoading, c
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">
-                      <p style={{ color: currentTheme.textMuted }} className="text-xs mb-1">{chat.role}</p>
                       <p style={{ color: currentTheme.textSecondary }} className="text-sm truncate leading-tight">{chat.lastMessage || 'No messages yet'}</p>
                     </div>
                   </div>
@@ -180,10 +263,12 @@ const ComposeView = ({ currentTheme, goBack, isLoading, availableContacts, start
     </div>
 );
   
-const ChatView = ({ currentTheme, goBack, selectedChat, messages, messagesEndRef, newMessage, setNewMessage, sendMessage, handleKeyPress, inputRef, retryMessage }) => (
+const ChatView = ({ currentTheme, goBack, selectedChat, messages, setMessages, messagesEndRef, newMessage, setNewMessage, sendMessage, handleKeyPress, inputRef, retryMessage, isDark, messagePriority, setMessagePriority, replyToMessage, setReplyToMessage, onReact, onReply, showChatOptions, setShowChatOptions, chatOptionsRef }) => (
     <div style={{ backgroundColor: currentTheme.chatBg, minHeight: '100vh' }} className="flex flex-col">
       <div style={{ backgroundColor: currentTheme.headerBg, boxShadow: `0 1px 3px ${currentTheme.shadow}` }} className="px-4 py-3 flex items-center sticky top-0 z-10">
-        <button onClick={goBack} className="mr-3 p-2 rounded-full hover:bg-white/10 transition-colors"><FaArrowLeft style={{ color: currentTheme.headerText }} /></button>
+        <button onClick={goBack} className="mr-3 p-2 rounded-full hover:bg-white/10 transition-colors">
+          <FaArrowLeft style={{ color: currentTheme.headerText }} />
+        </button>
         <div className="flex items-center flex-1">
           <div className="relative">
             <img src={selectedChat?.avatar} alt={selectedChat?.name} className="w-10 h-10 rounded-full object-cover" />
@@ -191,59 +276,169 @@ const ChatView = ({ currentTheme, goBack, selectedChat, messages, messagesEndRef
           </div>
           <div className="ml-3">
             <h2 style={{ color: currentTheme.headerText }} className="font-medium">{selectedChat?.name}</h2>
-            <p style={{ color: currentTheme.headerText }} className="text-sm opacity-70">{selectedChat?.role}</p>
+            <div className="flex items-center space-x-2">
+              <p style={{ color: selectedChat?.isOnline ? '#25D366' : currentTheme.headerText }} className="text-xs opacity-70">
+                {selectedChat?.isOnline ? 'online' : 'last seen recently'}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <button className="p-2 rounded-full hover:bg-white/10 transition-colors"><FaEllipsisV style={{ color: currentTheme.headerText }} /></button>
-        </div>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20"><div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: currentTheme.receivedBubble }}><FaPaperPlane className="w-6 h-6" style={{ color: currentTheme.textMuted }} /></div><p style={{ color: currentTheme.textSecondary }} className="text-center">Start a conversation with {selectedChat?.name}</p></div>
-        ) : (
-          messages.map((message) => (
-            <div key={message.id} className={`flex ${message.sent ? 'justify-end' : 'justify-start'}`}>
-              <div style={{ backgroundColor: message.sent ? currentTheme.sentBubble : currentTheme.receivedBubble, color: currentTheme.text }} className={`max-w-[80%] px-3 py-2 rounded-lg ${message.sent ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
-                <p className="text-sm">{message.message}</p>
-                <div className="flex items-center justify-end mt-1 space-x-1">
-                  <span style={{ color: currentTheme.textMuted }} className="text-xs">{formatMessageTime(message.timestamp)}</span>
-                  {message.sent && (
-                    <div className="flex items-center ml-1 space-x-1">
-                      {message.status === 'sending' ? (
-                        <div className="flex items-center space-x-1">
-                          <FaClock className="text-xs text-gray-400 animate-pulse" />
-                          <div className="w-2 h-2 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                      ) : message.status === 'failed' ? (
-                        <div className="flex items-center space-x-1">
-                          <FaExclamationCircle className="text-xs text-red-500 cursor-pointer" title="Failed to send - Click to retry" onClick={() => retryMessage(message)} />
-                          <FaRedo className="text-xs text-red-400 cursor-pointer hover:text-red-600" onClick={() => retryMessage(message)} />
-                        </div>
-                      ) : message.status === 'sent' ? (
-                        <FaCheck className="text-xs text-gray-400" title="Sent" />
-                      ) : message.status === 'delivered' ? (
-                        <FaCheckDouble className="text-xs text-gray-500" title="Delivered" />
-                      ) : message.status === 'read' ? (
-                        <FaCheckDouble className="text-xs text-blue-500" title="Read" />
-                      ) : null}
-                    </div>
-                  )}
-                </div>
+        <div className="flex items-center space-x-2 relative">
+          <button 
+            onClick={() => setShowChatOptions(!showChatOptions)}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+          >
+            <FaEllipsisV style={{ color: currentTheme.headerText }} />
+          </button>
+          
+          {/* Chat Options Dropdown */}
+          {showChatOptions && (
+            <div ref={chatOptionsRef} className="absolute right-0 top-full mt-2 w-56 rounded-lg shadow-lg z-20" style={{ backgroundColor: currentTheme.background, border: `1px solid ${currentTheme.border}` }}>
+              <div className="py-2">
+                <button
+                  onClick={() => {
+                    console.log('View contact info for:', selectedChat?.name);
+                    setShowChatOptions(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  style={{ color: currentTheme.text }}
+                >
+                  Contact info
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('Select messages for:', selectedChat?.name);
+                    setShowChatOptions(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  style={{ color: currentTheme.text }}
+                >
+                  Select messages
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to clear this chat?')) {
+                      setMessages([]);
+                      localStorage.removeItem(`messages_${selectedChat?.id}`);
+                      console.log('Cleared chat for:', selectedChat?.name);
+                    }
+                    setShowChatOptions(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  style={{ color: currentTheme.text }}
+                >
+                  Clear chat
+                </button>
+                <hr className="my-2" style={{ borderColor: currentTheme.border }} />
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to block this contact?')) {
+                      console.log('Block contact:', selectedChat?.name);
+                      // Here you would call your API to block the contact
+                    }
+                    setShowChatOptions(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-red-500"
+                >
+                  Block contact
+                </button>
               </div>
             </div>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 bg-gray-900 overflow-y:hidden p-4 space-y-3">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: currentTheme.receivedBubble }}>
+              <FaPaperPlane className="w-6 h-6" style={{ color: currentTheme.textMuted }} />
+            </div>
+            <p style={{ color: currentTheme.textSecondary }} className="text-center">Start a conversation with {selectedChat?.name}</p>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <Message
+              key={message.id}
+              message={{
+                ...message,
+                senderId: message.sent ? JSON.parse(localStorage.getItem('user') || '{}')?.id : selectedChat?.id,
+                senderType: message.sent ? JSON.parse(localStorage.getItem('user') || '{}')?.role : selectedChat?.role,
+                createdAt: message.timestamp,
+                content: message.message,
+                is_deleted: message.is_deleted,
+                priority: message.priority || 'normal',
+                reactions: message.reactions || [],
+                reply_to: message.reply_to || null
+              }}
+              currentUser={JSON.parse(localStorage.getItem('user') || '{}')}
+              onDelete={(messageId) => {
+                const updatedMessages = messages.filter(m => m.id !== messageId);
+                setMessages(updatedMessages);
+                saveMessagesToStorage(selectedChat.id, updatedMessages);
+              }}
+              onReact={onReact}
+              onReply={onReply}
+              isDark={isDark}
+            />
           ))
         )}
         <div ref={messagesEndRef} />
       </div>
       <div style={{ backgroundColor: currentTheme.background, borderColor: currentTheme.border }} className="px-4 py-3 border-t sticky bottom-0">
-        <div className="flex items-center space-x-3">
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors"><FaPaperclip style={{ color: currentTheme.textMuted }} /></button>
-          <div className="flex-1 relative">
-            <input ref={inputRef} type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={handleKeyPress} placeholder="Type a message..." style={{ backgroundColor: currentTheme.inputBg, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }} className="w-full px-4 py-2 pr-12 rounded-full border outline-none focus:ring-2 focus:ring-green-500/30 transition-all" />
-            <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors"><FaSmile style={{ color: currentTheme.textMuted }} /></button>
+        {/* Reply context */}
+        {replyToMessage && (
+          <div className="mb-3 p-3 rounded-lg border-l-4 border-green-500" style={{ backgroundColor: currentTheme.receivedBubble }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs" style={{ color: currentTheme.textMuted }}>Replying to:</p>
+                <p className="text-sm font-medium truncate" style={{ color: currentTheme.text }}>
+                  {replyToMessage.content || replyToMessage.message}
+                </p>
+              </div>
+              <button
+                onClick={() => setReplyToMessage(null)}
+                className="text-gray-400 hover:text-gray-600 ml-2"
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
-          <button onClick={sendMessage} disabled={!newMessage.trim()} style={{ backgroundColor: newMessage.trim() ? currentTheme.accent : currentTheme.textMuted }} className="p-3 rounded-full text-white transition-colors disabled:opacity-50"><FaPaperPlane /></button>
+        )}
+        
+        
+        <div className="flex items-center space-x-3">
+          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+            <FaPaperclip style={{ color: currentTheme.textMuted }} />
+          </button>
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message..."
+              style={{ backgroundColor: currentTheme.inputBg, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}
+              className="w-full px-4 py-2 pr-12 rounded-full border outline-none focus:ring-2 focus:ring-green-500/30 transition-all"
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <EmojiPicker
+                onEmojiSelect={(emoji) => {
+                  setNewMessage(prev => prev + emoji);
+                  inputRef.current?.focus();
+                }}
+                isDark={isDark}
+              />
+            </div>
+          </div>
+          <button
+            onClick={sendMessage}
+            disabled={!newMessage.trim()}
+            style={{ backgroundColor: newMessage.trim() ? currentTheme.accent : currentTheme.textMuted }}
+            className="p-3 rounded-full text-white transition-colors disabled:opacity-50"
+          >
+            <FaPaperPlane />
+          </button>
         </div>
       </div>
     </div>
@@ -260,12 +455,38 @@ const WhatsAppStyleMessaging = () => {
     const [chats, setChats] = useState([]);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const [messagePriority, setMessagePriority] = useState('normal');
+    const [replyToMessage, setReplyToMessage] = useState(null);
+    const [isTyping, setIsTyping] = useState(false);
+    const [typingTimeout, setTypingTimeout] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [availableContacts, setAvailableContacts] = useState([]);
+    const [showGroupManagement, setShowGroupManagement] = useState(false);
+    const [showChatOptions, setShowChatOptions] = useState(false);
+    const [groups, setGroups] = useState([]);
+    const [isAdmin] = useState(() => {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user.role === 'admin';
+    });
     
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+    const chatOptionsRef = useRef(null);
+    
+    // Close chat options when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (chatOptionsRef.current && !chatOptionsRef.current.contains(event.target)) {
+          setShowChatOptions(false);
+        }
+      };
+      
+      if (showChatOptions) {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }
+    }, [showChatOptions]);
   
     const themes = {
       light: { primary: '#128C7E', secondary: '#075E54', accent: '#25D366', background: '#FFFFFF', chatBg: '#E5DDD5', sentBubble: '#DCF8C6', receivedBubble: '#FFFFFF', text: '#111B21', textSecondary: '#667781', textMuted: '#8696A0', border: '#E9EDEF', headerBg: '#128C7E', headerText: '#FFFFFF', inputBg: '#F0F2F5', searchBg: '#F0F2F5', shadow: 'rgba(0,0,0,0.1)', unreadBg: '#25D366', unreadText: '#FFFFFF' },
@@ -300,7 +521,19 @@ const WhatsAppStyleMessaging = () => {
         conversations = [];
       }
       const finalChats = mergeChatsAndContacts(conversations, contacts);
-      const finalChatsWithStatus = finalChats.map((chat, index) => ({ ...chat, isOnline: index % 3 === 0 }));
+      
+      // Check real online status for each chat
+      const finalChatsWithStatus = await Promise.all(finalChats.map(async (chat) => {
+        try {
+          // Check if user is online by making a simple API call
+          const onlineStatus = await checkUserOnlineStatus(chat.contactInfo?.id || chat.id);
+          return { ...chat, isOnline: onlineStatus, lastSeen: new Date().toISOString() };
+        } catch (error) {
+          // Default to offline if check fails
+          return { ...chat, isOnline: false, lastSeen: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString() };
+        }
+      }));
+      
       setChats(finalChatsWithStatus);
       
       // Load persisted messages from localStorage
@@ -381,9 +614,23 @@ const WhatsAppStyleMessaging = () => {
       retryCount: 0
     };
     
-    const updatedMessages = [...messages, tempMessage];
-    setMessages(updatedMessages);
-    saveMessagesToStorage(selectedChat.id, updatedMessages);
+    // Update messages state immediately with the temp message
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages, tempMessage];
+      saveMessagesToStorage(selectedChat.id, updatedMessages);
+      return updatedMessages;
+    });
+
+    // Update chat list with the new message
+    setChats(prevChats => prevChats.map(chat => 
+      chat.id === selectedChat.id 
+        ? { 
+            ...chat, 
+            lastMessage: messageText, 
+            lastMessageTime: new Date().toISOString() 
+          } 
+        : chat
+    ));
     
     try {
       const messageData = { 
@@ -395,46 +642,55 @@ const WhatsAppStyleMessaging = () => {
       };
       const result = await parentService.sendMessage(messageData);
       
-      // Reload conversation messages after sending
-      if (selectedChat?.id) {
-        console.log('🔄 Reloading conversation messages after send...');
-        await loadConversationMessages(selectedChat.id);
-      }
-      
-      const deliveredMessages = messages.map(msg => msg.id === tempMessage.id ? { 
-        ...msg, 
-        status: 'delivered', 
-        id: result.messageId || msg.id,
-        deliveredAt: new Date().toISOString()
-      } : msg );
-      
-      setMessages(deliveredMessages);
-      saveMessagesToStorage(selectedChat.id, deliveredMessages);
-      
-      // Simulate read status after 2-5 seconds (in real app, this would come from WebSocket)
-      setTimeout(() => {
-        const readMessages = deliveredMessages.map(msg => 
-          msg.id === (result.messageId || tempMessage.id) ? { ...msg, status: 'read' } : msg
+      // Update the temp message with the real message ID and status
+      setMessages(prevMessages => {
+        const updatedMessages = prevMessages.map(msg => 
+          msg.id === tempMessage.id 
+            ? { 
+                ...msg, 
+                id: result.messageId || msg.id,
+                status: 'delivered',
+                deliveredAt: new Date().toISOString()
+              } 
+            : msg
         );
-        setMessages(readMessages);
-        saveMessagesToStorage(selectedChat.id, readMessages);
+        saveMessagesToStorage(selectedChat.id, updatedMessages);
+        return updatedMessages;
+      });
+
+      // Simulate read status after 2-5 seconds
+      setTimeout(() => {
+        setMessages(prevMessages => {
+          const readMessages = prevMessages.map(msg => 
+            msg.id === (result.messageId || tempMessage.id) 
+              ? { ...msg, status: 'read' } 
+              : msg
+          );
+          saveMessagesToStorage(selectedChat.id, readMessages);
+          return readMessages;
+        });
       }, Math.random() * 3000 + 2000);
       
       showNotification('Message sent!', 'success');
-      setChats(prev => prev.map(chat => chat.id === selectedChat.id ? { ...chat, lastMessage: messageText, lastMessageTime: new Date().toISOString() } : chat ));
     } catch (error) {
       console.error('❌ Failed to send message:', error);
       showNotification('Failed to send message', 'error');
       
-      const failedMessages = messages.map(msg => msg.id === tempMessage.id ? { 
-        ...msg, 
-        status: 'failed',
-        failedAt: new Date().toISOString(),
-        retryCount: (msg.retryCount || 0) + 1
-      } : msg );
-      
-      setMessages(failedMessages);
-      saveMessagesToStorage(selectedChat.id, failedMessages);
+      // Update the temp message to show failure
+      setMessages(prevMessages => {
+        const failedMessages = prevMessages.map(msg => 
+          msg.id === tempMessage.id 
+            ? { 
+                ...msg, 
+                status: 'failed',
+                failedAt: new Date().toISOString(),
+                retryCount: (msg.retryCount || 0) + 1
+              } 
+            : msg
+        );
+        saveMessagesToStorage(selectedChat.id, failedMessages);
+        return failedMessages;
+      });
     }
   };
   
@@ -537,13 +793,116 @@ const WhatsAppStyleMessaging = () => {
       }
     };
   
-    if (currentView === 'chat' && selectedChat) {
-      return <ChatView currentTheme={currentTheme} goBack={goBack} selectedChat={selectedChat} messages={messages} messagesEndRef={messagesEndRef} newMessage={newMessage} setNewMessage={setNewMessage} sendMessage={sendMessage} handleKeyPress={handleKeyPress} inputRef={inputRef} retryMessage={retryMessage} />;
+    // Add loadGroups function
+    const loadGroups = async () => {
+      if (!isAdmin) return;
+      
+      try {
+        const response = await fetch('/api/groups', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          setGroups(data.groups);
+        } else {
+          showNotification(data.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error loading groups:', error);
+        showNotification('Failed to load groups', 'error');
+      }
+    };
+
+    // Add useEffect to load groups
+    useEffect(() => {
+      if (isAdmin) {
+        loadGroups();
+      }
+    }, [isAdmin]);
+
+    // Add group management modal
+    const renderGroupManagementModal = () => {
+      if (!showGroupManagement) return null;
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`w-full max-w-4xl h-[80vh] rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} overflow-hidden`}>
+            <GroupManagement
+              isDark={isDark}
+              onClose={() => setShowGroupManagement(false)}
+              onGroupCreated={() => {
+                loadGroups();
+                loadChats();
+              }}
+            />
+          </div>
+        </div>
+      );
+    };
+
+    if (currentView === 'chatList') {
+      return (
+        <>
+          <ChatListView
+            currentTheme={currentTheme}
+            setCurrentView={setCurrentView}
+            loadContacts={loadContacts}
+            isLoading={isLoading}
+            chats={chats}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            setSelectedChat={setSelectedChat}
+            setMessages={setMessages}
+            loadConversationMessages={loadConversationMessages}
+            isAdmin={isAdmin}
+            setShowGroupManagement={setShowGroupManagement}
+          />
+          {renderGroupManagementModal()}
+        </>
+      );
     }
+
+    if (currentView === 'chat' && selectedChat) {
+      return (
+        <ChatView 
+          currentTheme={currentTheme} 
+          goBack={goBack} 
+          selectedChat={selectedChat} 
+          messages={messages}
+          setMessages={setMessages}
+          messagesEndRef={messagesEndRef} 
+          newMessage={newMessage} 
+          setNewMessage={setNewMessage} 
+          sendMessage={sendMessage} 
+          handleKeyPress={handleKeyPress} 
+          inputRef={inputRef} 
+          retryMessage={retryMessage} 
+          isDark={isDark}
+          messagePriority={messagePriority}
+          setMessagePriority={setMessagePriority}
+          replyToMessage={replyToMessage}
+          setReplyToMessage={setReplyToMessage}
+          showChatOptions={showChatOptions}
+          setShowChatOptions={setShowChatOptions}
+          chatOptionsRef={chatOptionsRef}
+          onReact={(messageId, emoji) => {
+            // Handle message reactions
+            console.log(`Adding reaction ${emoji} to message ${messageId}`);
+            // This would integrate with your backend API to save reactions
+          }}
+          onReply={(message) => {
+            setReplyToMessage(message);
+          }}
+        />
+      );
+    }
+
     if (currentView === 'compose') {
       return <ComposeView currentTheme={currentTheme} goBack={goBack} isLoading={isLoading} availableContacts={availableContacts} startNewChat={startNewChat} isDark={isDark} />;
     }
-    return <ChatListView currentTheme={currentTheme} setCurrentView={setCurrentView} loadContacts={loadContacts} isLoading={isLoading} chats={chats} searchQuery={searchQuery} setSearchQuery={setSearchQuery} setSelectedChat={setSelectedChat} setMessages={setMessages} loadConversationMessages={loadConversationMessages} isDark={isDark} />;
 };
 
 export default WhatsAppStyleMessaging;

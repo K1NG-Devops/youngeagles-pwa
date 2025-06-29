@@ -275,7 +275,7 @@ const response = await api.get(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD);
   }
 
   // Teacher-specific methods
-  async getTeachers(page = 1, limit = 20, search = '') {
+  async getTeachers() {
     try {
       // Use the dedicated teachers endpoint that returns teachers from staff table
       const response = await api.get('/api/teacher');

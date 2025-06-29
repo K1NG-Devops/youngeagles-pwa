@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '../../config/api';
 import { api } from '../../services/httpClient';
-import { showTopNotification } from '../TopNotificationManager';
-import { useTheme } from '../../hooks/useTheme';
+import { showTopNotification } from '../../utils/notifications';
+import { useTheme } from '../../contexts/ThemeContext';
 import { 
   FaChild, FaPlus, FaEdit, FaTrash, FaPen, FaSpinner, FaUserPlus, FaList, 
   FaCheck, FaTimes, FaArrowLeft, FaUser, FaMedkit, FaPhone, FaUtensils, 

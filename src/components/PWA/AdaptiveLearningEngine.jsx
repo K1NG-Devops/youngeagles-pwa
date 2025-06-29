@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCog, FaBrain, FaRocket, FaChartLine, FaLightbulb, FaSpinner, FaCheck, FaExclamationTriangle, FaGraduationCap, FaEdit } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import API_CONFIG from '../../config/api';
 
 const API_BASE_URL = API_CONFIG.getApiUrl();
@@ -301,7 +301,7 @@ const AdaptiveLearningEngine = ({ isDark = false }) => {
     Object.entries(categoryPerformance).forEach(([category, data]) => {
       if (data.students.length === 0) return;
       
-      const avgClassProficiency = data.students.reduce((sum, s) => sum + s.proficiency, 0) / data.students.length;
+      const _avgClassProficiency = data.students.reduce((sum, s) => sum + s.proficiency, 0) / data.students.length;
       const strugglingStudents = data.students.filter(s => s.proficiency < 2.5);
       const excellingStudents = data.students.filter(s => s.proficiency >= 4);
       

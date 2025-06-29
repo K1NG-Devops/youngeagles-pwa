@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCog, FaMoon, FaSun, FaBell, FaGlobe, FaUser, FaShieldAlt, FaDatabase, FaInfoCircle, FaUndo, FaArrowLeft, FaCheck } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 
 const AppSettings = ({ isDark, onThemeChange, onClose }) => {
   const [settings, setSettings] = useState({
@@ -114,10 +114,10 @@ const AppSettings = ({ isDark, onThemeChange, onClose }) => {
 
 
 
-  const SettingSection = ({ title, icon: Icon, children }) => (
+  const SettingSection = ({ title, icon: _Icon, children }) => (
     <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg border p-4 mb-4`}>
       <div className="flex items-center mb-3">
-        <Icon className={`mr-3 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+        <_Icon className={`mr-3 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
         <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
       </div>
       <div className="space-y-3">

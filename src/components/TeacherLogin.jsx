@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaSpinner, FaChalkboardTeacher } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import useAuth from '../hooks/useAuth';
 
 const TeacherLogin = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -33,7 +32,7 @@ const TeacherLogin = () => {
       console.log('🚀 Making API call for teacher login');
       console.log('📡 Calling login function with role: teacher');
       
-      const result = await login(formData.email, formData.password, 'teacher');
+      await login(formData.email, formData.password, 'teacher');
       
       console.log('✅ Teacher login successful!');
       toast.success('Login successful!');

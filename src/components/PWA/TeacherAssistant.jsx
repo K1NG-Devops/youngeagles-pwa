@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaRobot, FaExclamationTriangle, FaBullseye, FaLightbulb, FaUsers, FaChild, FaChartLine, FaTrophy, FaSpinner, FaEye, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import { mean, deviation, quantile } from 'd3-array';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import API_CONFIG from '../../config/api';
 
 const API_BASE_URL = API_CONFIG.getApiUrl();

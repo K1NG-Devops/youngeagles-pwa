@@ -79,7 +79,7 @@ async function testWithAxiosConfig() {
       console.log(`\n⏱️  Testing with ${timeout/1000}s timeout...`);
       const startTime = Date.now();
       
-      const response = await axios.post(`${API_BASE}/api/auth/admin-login`, {
+      await axios.post(`${API_BASE}/api/auth/admin-login`, {
         email: 'admin@youngeagles.org.za',
         password: '#Admin@2012'
       }, {

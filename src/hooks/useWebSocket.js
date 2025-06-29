@@ -7,7 +7,6 @@ const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [typingUsers, setTypingUsers] = useState(new Set());
-  const listenersRef = useRef(new Map());
   const connectionTimeoutRef = useRef(null);
 
   // Initialize WebSocket connection
@@ -32,7 +31,7 @@ const useWebSocket = () => {
       }
       websocketService.disconnect();
     };
-  }, [auth?.user?.id, auth?.user?.role]);
+  }, [auth?.user?.id, auth?.user?.role, isConnected]);
 
   // Setup event listeners
   useEffect(() => {

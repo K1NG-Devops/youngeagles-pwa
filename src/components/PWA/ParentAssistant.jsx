@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaHeart, FaHome, FaStar, FaBookOpen, FaBrain, FaSpinner, FaChild, FaGraduationCap, FaLightbulb, FaCalendarAlt, FaUsers } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import API_CONFIG from '../../config/api';
 
 const API_BASE_URL = API_CONFIG.getApiUrl();

@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import { API_CONFIG } from '../config/api.js';
-import { showTopNotification } from '../components/TopNotificationManager.jsx';
+import { showTopNotification } from '../utils/notifications.js';
 
 class WebSocketService {
   constructor() {

@@ -1,11 +1,10 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
 
 // Components
 import AutoLogout from './components/AutoLogout'
 import PWALayout from './components/PWALayout'
-import { ThemeProvider } from './hooks/useTheme'
+import { ThemeProvider } from './contexts/ThemeContext'
 import HomeworkList from './pages/HomeworkList'
 import SubmitWork from './pages/SubmitWork'
 import ViewSubmission from './pages/ViewSubmission'
@@ -14,9 +13,6 @@ import Registration2026 from './pages/Registration2026'
 import Notifications from './components/Notifications'
 import MessagingCenter from './components/MessagingCenter'
 import SimpleMessaging from './components/MessagingSystem/SimpleMessaging'
-
-// Initialize notification system
-import notificationManager from './services/notificationManager'
 
 function App() {
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { FaPlus, FaMinus, FaSave, FaEye, FaPalette, FaGamepad, FaBook, FaMusic, FaRunning } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { showTopNotification } from '../../utils/notifications';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ActivityBuilder = () => {
   const { isDark } = useTheme();
@@ -18,7 +18,7 @@ const ActivityBuilder = () => {
     category: 'learning'
   });
 
-  const sampleActivities = [
+  const _sampleActivities = [
     {
       title: 'Number Matching',
       description: 'Match numbers with corresponding quantities.',

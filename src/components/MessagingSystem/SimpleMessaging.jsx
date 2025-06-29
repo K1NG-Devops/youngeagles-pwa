@@ -4,7 +4,8 @@ import useAuth from '../../hooks/useAuth';
 import messagingAPI from '../../services/messagingApi';
 
 const SimpleMessaging = () => {
-  const { auth, user } = useAuth();
+  const { auth } = useAuth();
+  const user = auth?.user;
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -260,7 +261,7 @@ const SimpleMessaging = () => {
         hour: '2-digit', 
         minute: '2-digit' 
       });
-    } catch (error) {
+    } catch {
       return 'Unknown time';
     }
   };
@@ -279,7 +280,7 @@ const SimpleMessaging = () => {
       } else {
         return date.toLocaleDateString();
       }
-    } catch (error) {
+    } catch {
       return 'Unknown date';
     }
   };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { useTheme } from '../../contexts/ThemeContext';
 import { FaUser, FaSave, FaDownload, FaEye, FaPlus, FaBook, FaCheck, FaEdit, FaCalendar, FaGraduationCap, FaHeart, FaBrain, FaRunning, FaStar, FaExclamationTriangle, FaChartLine, FaLightbulb, FaFileAlt } from 'react-icons/fa';
 import teacherService from '../../services/teacherService';
 import html2pdf from 'html2pdf.js';

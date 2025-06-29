@@ -3,13 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { FaUsers, FaChalkboardTeacher, FaBook, FaBell, FaChartBar, FaCog, FaClipboardList, FaSpinner, FaUserShield, FaSchool, FaChild, FaBaby, FaExclamationTriangle, FaCheckCircle, FaPlus, FaUserPlus, FaSun, FaMoon, FaWifi, FaUnlink } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import useWebSocket from '../../hooks/useWebSocket';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import { API_CONFIG } from '../../config/api';
 import AdminService from '../../services/adminService';
 import AdminUserManagement from './AdminUserManagement';
 import ChildrenManagement from './ChildrenManagement';
 import AdminTeachers from './AdminTeachers';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import AdminNotifications from './AdminNotifications';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const PWAAdminDashboard = () => {
   const { auth } = useAuth();
@@ -421,6 +422,13 @@ const PWAAdminDashboard = () => {
             onClick={setActiveTab}
           />
           <TabButton
+            id="notifications"
+            label="Notifications"
+            icon={<FaBell size={16} />}
+            active={activeTab === 'notifications'}
+            onClick={setActiveTab}
+          />
+          <TabButton
             id="settings"
             label="Settings"
             icon={<FaCog size={16} />}
@@ -657,6 +665,10 @@ const PWAAdminDashboard = () => {
 
         {activeTab === 'children' && (
           <ChildrenManagement isDark={isDark} />
+        )}
+
+        {activeTab === 'notifications' && (
+          <AdminNotifications isDark={isDark} />
         )}
 
         {activeTab === 'analytics' && (

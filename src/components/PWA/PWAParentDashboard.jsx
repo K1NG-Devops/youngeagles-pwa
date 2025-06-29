@@ -4,9 +4,9 @@ import { FaBook, FaBell, FaUser, FaClipboardList, FaSpinner, FaChevronDown, FaCh
 import { toast } from 'react-toastify';
 import useAuth from '../../hooks/useAuth';
 import axios from 'axios';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import { API_CONFIG } from '../../config/api';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { useTheme } from '../../contexts/ThemeContext';
 import parentService from '../../services/parentService';
 import ParentAssistant from './ParentAssistant';
 
@@ -34,6 +34,8 @@ const PWAParentDashboard = () => {
   });
   const [expandedSection, setExpandedSection] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   const parent_id = auth?.user?.id || localStorage.getItem('parent_id');
   const token = auth?.accessToken;
@@ -105,6 +107,42 @@ const PWAParentDashboard = () => {
     }
   }, [parent_id, token]);
 
+  // Fetch notifications count
+  const fetchNotificationsCount = useCallback(async () => {
+    if (!token) {
+      console.warn('Missing token for notifications count fetch');
+      return;
+    }
+    
+    setIsLoadingNotifications(true);
+    
+    try {
+      console.log('🔔 Fetching notifications count...');
+      const response = await axios.get(
+        `${API_CONFIG.getApiUrl()}/api/notifications/unread-count`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      if (response.data && response.data.success) {
+        const count = response.data.unread_count || 0;
+        console.log('📊 Notifications count fetched:', count);
+        setNotificationCount(count);
+      } else {
+        console.warn('Unexpected notifications response format:', response.data);
+        setNotificationCount(0);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications count:', err);
+      setNotificationCount(0);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, [token]);
+
   // Fetch homework data for dashboard
   const fetchHomeworkData = useCallback(async () => {
     if (!selectedChild || !parent_id || !token) {
@@ -144,8 +182,9 @@ const PWAParentDashboard = () => {
   useEffect(() => {
     if (auth?.user?.id && auth?.accessToken) {
       fetchChildren();
+      fetchNotificationsCount();
     }
-  }, [auth?.user?.id, auth?.accessToken, fetchChildren]);
+  }, [auth?.user?.id, auth?.accessToken, fetchChildren, fetchNotificationsCount]);
 
   useEffect(() => {
     if (selectedChild && auth?.user?.id && auth?.accessToken) {
@@ -211,7 +250,7 @@ const PWAParentDashboard = () => {
       color: 'yellow',
       path: '/notifications',
       disabled: false,
-      badge: 0, // TODO: Add notification count
+      badge: notificationCount,
       showBadgeWhenZero: false
     }
   ];
@@ -250,18 +289,24 @@ const PWAParentDashboard = () => {
       const reportData = reportRes.data;
       const recentGrades = gradesRes.data.grades || [];
       
+      console.log('📊 Raw API response for progress report:', reportData);
+      console.log('📊 Raw API response for grades:', gradesRes.data);
+      
       if (!reportData || !reportData.success) {
         throw new Error(reportData.message || 'Failed to fetch report data.');
       }
 
+      // Extract data from the API response - the actual report data is nested
+      const actualReport = reportData.report || reportData;
+      
       setProgressReport({
         childId: selectedChild,
         childName: selectedChildData?.name || 'Child',
-        totalHomework: reportData.totalHomework,
-        submitted: reportData.submitted,
-        graded: reportData.graded,
-        avgGrade: reportData.avgGrade || 'N/A',
-        submissionRate: reportData.submissionRate,
+        totalHomework: actualReport.report_data?.summary?.totalHomework || homeworkProgress.total || 0,
+        submitted: actualReport.report_data?.summary?.submittedHomework || homeworkProgress.submitted || 0,
+        graded: actualReport.report_data?.summary?.totalHomework || homeworkProgress.total || 0,
+        avgGrade: actualReport.report_data?.summary?.averageAccuracy ? `${actualReport.report_data.summary.averageAccuracy}%` : 'N/A',
+        submissionRate: actualReport.report_data?.summary?.completionRate || homeworkProgress.percentage || 0,
         recentGrades: recentGrades.slice(0, 5).map(grade => ({
           title: grade.homework_title || 'Assignment',
           grade: grade.grade || 'N/A',
@@ -285,6 +330,17 @@ const PWAParentDashboard = () => {
       fetchProgressReport();
     }
   }, [selectedChild, selectedChildData, fetchProgressReport, isLoading.homework]);
+
+  // Auto-refresh notifications count every 30 seconds
+  useEffect(() => {
+    if (!token) return;
+    
+    const interval = setInterval(() => {
+      fetchNotificationsCount();
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [token, fetchNotificationsCount]);
 
   // Handle Parent Assistant view
   if (activeView === 'assistant') {

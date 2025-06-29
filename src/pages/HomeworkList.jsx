@@ -1,39 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { FaBook, FaClock, FaCalendarAlt, FaFileAlt, FaEye, FaCheckCircle, FaExclamationTriangle, FaSpinner, FaPlay, FaPlusCircle, FaPlus } from 'react-icons/fa';
-import { showTopNotification } from '../components/TopNotificationManager';
+import { showTopNotification } from '../utils/notifications';
 import useAuth from '../hooks/useAuth';
 import { api } from '../services/httpClient';
 import { API_CONFIG } from '../config/api';
 import parentService from '../services/parentService';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatDate } from '../utils/dateUtils';
-
-// Error handler for homework fetch errors - moved outside component to prevent re-renders
-const handleHomeworkError = (err, navigate, isTeacher) => {
-  if (!err.response) {
-    showTopNotification('Network error. Please check your connection and try again.', 'error');
-    return;
-  }
-
-  const { status } = err.response;
-  switch (status) {
-    case 401:
-      showTopNotification('Your session has expired. Please log in again.', 'error');
-      navigate('/login');
-      break;
-    case 403:
-      showTopNotification('You do not have permission to view homeworks.', 'error');
-      break;
-    case 404:
-      if (isTeacher) {
-        showTopNotification('No homework assignments found.', 'info');
-      }
-      break;
-    default:
-      showTopNotification('Failed to load homework assignments. Please try again later.', 'error');
-  }
-};
 
 const HomeworkList = () => {
   const navigate = useNavigate();
@@ -41,7 +15,7 @@ const HomeworkList = () => {
   const { isDark } = useTheme();
   const [searchParams] = useSearchParams();
   const [homeworks, setHomeworks] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
+  const [submissions] = useState([]);
   const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(() => {
     // Get child_id from query params first, but don't store invalid values
@@ -65,7 +39,6 @@ const HomeworkList = () => {
     children: false,
     homeworks: false
   });
-  const [error, setError] = useState(null);
 
   // Get user data from multiple sources for resilience
   const getAuthData = () => {
@@ -81,23 +54,21 @@ const HomeworkList = () => {
       console.log('HomeworkList: Saved parent_id to localStorage from auth context:', parent_id);
     }
     
-    const userRole = localStorage.getItem('role') || auth?.user?.role;
-    const isTeacher = userRole === 'teacher';
+    const isTeacher = (localStorage.getItem('role') || auth?.user?.role) === 'teacher';
     const teacherId = localStorage.getItem('teacherId') || auth?.user?.id;
     
     console.log('HomeworkList: Auth data retrieved:', {
       hasToken: !!token,
       hasParentId: !!parent_id,
-      userRole,
       isTeacher,
       hasTeacherId: !!teacherId
     });
     
-    return { token, parent_id, userRole, isTeacher, teacherId };
+    return { token, parent_id, isTeacher, teacherId };
   };
   
   // Use the function to get all auth data
-  const { token, parent_id, userRole, isTeacher, teacherId } = getAuthData();
+  const { token, parent_id, isTeacher, teacherId } = getAuthData();
 
   // Fetch children for parents
   useEffect(() => {
@@ -134,7 +105,6 @@ const HomeworkList = () => {
     
     const fetchChildren = async () => {
       setIsLoading(prev => ({ ...prev, children: true }));
-      setError(null);
       
       try {
         console.log(`HomeworkList: Fetching children for parent_id ${parent_id}`);
@@ -193,7 +163,6 @@ const HomeworkList = () => {
         }
       } catch (err) {
         console.error('HomeworkList: Error fetching children:', err);
-        setError('Failed to load children data');
         
         if (err.response) {
           const { status, data } = err.response;
@@ -228,7 +197,7 @@ const HomeworkList = () => {
     };
 
     fetchChildren();
-  }, [isTeacher, parent_id, token, navigate]);
+  }, [isTeacher, parent_id, token, navigate, auth?.user?.id, selectedChild]);
 
   // Fetch homeworks and submissions
   useEffect(() => {
@@ -240,8 +209,7 @@ const HomeworkList = () => {
       }
 
       setIsLoading(prev => ({ ...prev, homeworks: true }));
-      setError(null);
-
+      
       try {
         let result;
         if (isTeacher) {
@@ -263,7 +231,6 @@ const HomeworkList = () => {
       } catch (err) {
         console.error('Failed to fetch homework:', err);
         const errorMsg = err.response?.data?.message || err.message || 'Could not load assignments.';
-        setError(errorMsg);
         setHomeworks([]);
         if (err.response?.status !== 404) { // Don't show error toast for "Not Found"
           showTopNotification(errorMsg, 'error');
@@ -294,20 +261,6 @@ const HomeworkList = () => {
         return true;
     }
   });
-
-  const getStatusIcon = (homework) => {
-    const now = new Date();
-    const dueDate = new Date(homework.dueDate);
-    const isOverdue = dueDate < now && homework.status !== 'submitted';
-    
-    if (homework.status === 'submitted') {
-      return <FaCheckCircle className="text-green-500" />;
-    } else if (isOverdue) {
-      return <FaExclamationTriangle className="text-red-500" />;
-    } else {
-      return <FaClock className="text-yellow-500" />;
-    }
-  };
 
   const getStatusText = (homework) => {
     const now = new Date();

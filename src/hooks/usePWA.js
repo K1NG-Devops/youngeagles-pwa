@@ -8,8 +8,6 @@ export const usePWA = () => {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isInstallable, setIsInstallable] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
-  // Always force isOnline to true to prevent false offline detection
-  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     // Check if running in standalone mode (PWA installed)
@@ -49,9 +47,6 @@ export const usePWA = () => {
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
-
-    // We intentionally do not add online/offline event listeners
-    // to prevent false offline detection issues
     
     return () => {
       mediaQuery.removeEventListener('change', checkStandalone);

@@ -8,8 +8,13 @@ export const showNotification = (message, type = 'info', duration = 4000) => {
   window.dispatchEvent(event);
 };
 
-// Also export as showTopNotification for compatibility
-export const showTopNotification = showNotification;
+// Helper function to show top notifications from anywhere in the app
+export const showTopNotification = (message, type = 'info', duration = 4000) => {
+  const event = new CustomEvent('showTopNotification', {
+    detail: { message, type, duration }
+  });
+  window.dispatchEvent(event);
+};
 
 // Convenience methods for different notification types
 export const showSuccess = (message, duration = 4000) => {

@@ -21,7 +21,7 @@ import {
   FaTimes
 } from 'react-icons/fa';
 import parentService from '../../services/parentService';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { showNotification } from '../../utils/notifications';
 import useWebSocket from '../../hooks/useWebSocket';
 import { API_CONFIG } from '../../config/api';
@@ -1018,22 +1018,24 @@ const WhatsAppMessaging = React.memo(() => {
               
               return (
                 <div key={message.id || index} className={`flex ${message.sent ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs sm:max-w-md lg:max-w-lg ${isConsecutive ? 'mt-1' : 'mt-3'}`}>
+                  <div className={`max-w-[280px] sm:max-w-[320px] lg:max-w-[400px] ${isConsecutive ? 'mt-1' : 'mt-3'}`}>
                     {/* Message Bubble */}
                     <div
                       style={{ 
                         backgroundColor: message.sent ? currentTheme.sentBubble : currentTheme.receivedBubble,
                         color: currentTheme.text,
-                        boxShadow: `0 1px 2px ${currentTheme.shadow}`
+                        boxShadow: `0 1px 2px ${currentTheme.shadow}`,
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word'
                       }}
-                      className={`px-3 py-2 rounded-lg relative ${
+                      className={`px-3 py-2 rounded-lg relative overflow-hidden ${
                         message.sent 
                           ? 'rounded-br-sm bg-gradient-to-r' 
                           : 'rounded-bl-sm'
                       }`}
                     >
                       {/* Message Text */}
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      <p className="text-sm leading-relaxed break-words overflow-hidden">
                         {message.message}
                       </p>
                       

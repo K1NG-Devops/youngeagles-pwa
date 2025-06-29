@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { FaBook, FaGraduationCap, FaMicrophone, FaImage, FaPlay, FaStop, FaUpload, FaChevronLeft, FaChevronRight, FaCheck, FaPlus, FaTrash, FaTimes } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 
 // Import API config
 import API_CONFIG from '../../config/api';

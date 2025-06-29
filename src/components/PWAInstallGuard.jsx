@@ -70,8 +70,6 @@ const PWAInstallGuard = ({ children, onInstallComplete }) => {
   const getInstallInstructions = () => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isChrome = /Chrome/.test(navigator.userAgent);
-    const isFirefox = /Firefox/.test(navigator.userAgent);
-    const isSafari = /Safari/.test(navigator.userAgent) && !isChrome;
     const isEdge = /Edg/.test(navigator.userAgent);
 
     if (isIOS) {

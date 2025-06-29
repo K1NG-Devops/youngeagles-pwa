@@ -2,10 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { FaHome, FaBook, FaBell, FaUser, FaChalkboardTeacher, FaExternalLinkAlt, FaCog, FaGlobe, FaComments } from 'react-icons/fa'
 import useAuth from '../hooks/useAuth'
-import usePWA from '../hooks/usePWA'
 import { showNotification } from '../utils/notifications'
-import { useTheme } from '../hooks/useTheme'
-import useWebSocket from '../hooks/useWebSocket'
+import { useTheme } from '../contexts/ThemeContext'
 
 // Import dashboard components
 import PWAParentDashboard from './PWA/PWAParentDashboard'
@@ -45,9 +43,7 @@ const PWALayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { auth, user, role, isAuthenticated, logout, verifyAuth } = useAuth()
-  const { isOnline } = usePWA()
   const { isDark, toggleTheme } = useTheme()
-  const { isConnected, sendMessage, lastMessage } = useWebSocket()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [isInitialized, setIsInitialized] = useState(false)
   const [isVerifying, setIsVerifying] = useState(true)
@@ -73,12 +69,6 @@ const PWALayout = () => {
            path.includes('auth-test') ||
            path === '/contact-us' ||
            path === '/register-2026';
-  }
-
-  const getDashboardPath = (userRole) => {
-    if (userRole === 'teacher') return '/teacher-dashboard';
-    if (userRole === 'admin') return '/admin-dashboard';
-    return '/dashboard'; // Default for parents/students
   }
 
   // Reset navigation lock when auth state changes

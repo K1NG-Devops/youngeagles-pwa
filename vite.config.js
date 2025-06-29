@@ -44,6 +44,7 @@ export default defineConfig({
         clientsClaim: true,
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/youngeagles-api-server\.up\.railway\.app\/api\/.*/i,
@@ -95,11 +96,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         timeout: 30000,
-        configure: (proxy, options) => {
-          proxy.on('error', (err, req, res) => {
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
             console.error('❌ API Proxy error:', err.message);
           });
-          proxy.on('proxyReq', (proxyReq, req, res) => {
+          proxy.on('proxyReq', (_, req) => {
             console.log('📡 Proxying API request:', req.method, req.url);
           });
         }
@@ -111,11 +112,11 @@ export default defineConfig({
         secure: false,
         ws: true,
         timeout: 60000,
-        configure: (proxy, options) => {
-          proxy.on('proxyReqWs', (proxyReq, req, socket) => {
+        configure: (proxy) => {
+          proxy.on('proxyReqWs', () => {
             console.log('🔌 Proxying WebSocket request for Socket.IO');
           });
-          proxy.on('error', (err, req, res) => {
+          proxy.on('error', (err) => {
             if (err.code !== 'ECONNRESET') {
               console.error('❌ WebSocket Proxy error:', err.message);
             }
@@ -132,13 +133,43 @@ export default defineConfig({
     sourcemap: true, // Enable source maps for better debugging
     rollupOptions: {
       output: {
-        // Better chunk splitting for performance
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          utils: ['axios', 'react-toastify']
+        // Improved chunk splitting strategy
+        manualChunks: (id) => {
+          // Core React packages
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            return 'vendor-react';
+          }
+          
+          // Icons and UI utilities
+          if (id.includes('react-icons') || id.includes('react-toastify')) {
+            return 'vendor-ui';
+          }
+          
+          // HTTP and utilities
+          if (id.includes('axios') || id.includes('socket.io')) {
+            return 'vendor-utils';
+          }
+
+          // Firebase related
+          if (id.includes('firebase')) {
+            return 'vendor-firebase';
+          }
+
+          // Messaging system components
+          if (id.includes('MessagingSystem/')) {
+            return 'messaging';
+          }
+
+          // Main app components
+          if (id.includes('components/Dashboard')) {
+            return 'dashboard';
+          }
+          if (id.includes('components/Homework')) {
+            return 'homework';
+          }
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 2000 // 2MB warning limit
   }
 })

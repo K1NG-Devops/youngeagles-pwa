@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { useTheme } from '../../contexts/ThemeContext';
 import { FaFileAlt, FaDownload, FaEye, FaCalendar, FaGraduationCap, FaUser, FaSpinner } from 'react-icons/fa';
 import parentService from '../../services/parentService';
 

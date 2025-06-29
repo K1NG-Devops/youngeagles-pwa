@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaCalendarWeek, FaTrophy, FaStar, FaBookOpen, FaChartLine, FaDownload, FaEye, FaSpinner, FaChild, FaGraduationCap, FaBook } from 'react-icons/fa';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, PieChart, Pie, Cell } from 'recharts';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import API_CONFIG from '../../config/api';
 
 const API_BASE_URL = API_CONFIG.getApiUrl();
@@ -25,7 +25,7 @@ const WeeklyReportDashboard = ({ isDark = false }) => {
     skills: false,
     savedReports: false
   });
-  const [savedReports, setSavedReports] = useState([]);
+  const [_savedReports, _setSavedReports] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState(() => {
     const today = new Date();
     const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
@@ -48,7 +48,7 @@ const WeeklyReportDashboard = ({ isDark = false }) => {
     if (selectedChild) {
       fetchWeeklyReport();
       fetchSkillProgress();
-      fetchSavedReports();
+      // fetchSavedReports(); // TODO: Implement when API is ready
     }
   }, [selectedChild, selectedWeek]);
 
@@ -306,10 +306,8 @@ const WeeklyReportDashboard = ({ isDark = false }) => {
       if (response.ok) {
         const result = await response.json();
         showTopNotification('Report generated successfully!', 'success');
-        await Promise.all([
-          fetchWeeklyReport(),
-          fetchSavedReports()
-        ]);
+        await fetchWeeklyReport();
+        // await fetchSavedReports(); // TODO: Implement when API is ready
       } else if (response.status === 404) {
         // Fallback when endpoint doesn't exist
         console.log('📊 Generate report endpoint not available - simulating report generation');

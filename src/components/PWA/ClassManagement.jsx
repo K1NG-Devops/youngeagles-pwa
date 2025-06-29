@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaUsers, FaChalkboardTeacher } from 'react-icons/fa';
 import classService from '../../services/classService';
-import { showTopNotification } from '../TopNotificationManager';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { showTopNotification } from '../../utils/notifications';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ClassManagement = () => {
   const { isDark } = useTheme();

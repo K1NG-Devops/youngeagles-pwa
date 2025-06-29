@@ -119,7 +119,7 @@ const NotificationDebugger = () => {
     return isConnected ? 'text-green-500' : 'text-red-500';
   };
 
-  const getStatusIcon = (isConnected) => {
+  const _getStatusIcon = (isConnected) => {
     return isConnected ? FaCheckCircle : FaExclamationCircle;
   };
 

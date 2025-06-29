@@ -221,8 +221,8 @@ class AuthService {
 
       const response = await api.get(API_CONFIG.ENDPOINTS.VERIFY_TOKEN);
       return response.data;
-    } catch (error) {
-      console.warn('🔐 Token verification failed:', error.message);
+    } catch {
+      console.warn('🔐 Token verification failed');
       
       // Try to refresh token if verification fails
       try {
@@ -232,7 +232,7 @@ class AuthService {
         return retryResponse.data;
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError.message);
-      throw error;
+        throw new Error('Token verification and refresh failed');
       }
     }
   }
@@ -279,7 +279,7 @@ class AuthService {
       try {
         await this.verifyToken();
         return true;
-      } catch (error) {
+      } catch {
         // If verification fails, try to refresh
         await this.refreshToken();
         return true;

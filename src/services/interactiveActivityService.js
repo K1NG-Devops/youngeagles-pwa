@@ -1,6 +1,6 @@
 // This service will handle assigning interactive activities as homework
 import { api } from './httpClient';
-import { showTopNotification } from '../components/TopNotificationManager';
+import { showTopNotification } from '../utils/notifications';
 
 const assignActivityAsHomework = async (activity, classId = null) => {
   try {
@@ -12,7 +12,7 @@ const assignActivityAsHomework = async (activity, classId = null) => {
         if (profileRes.data.success && profileRes.data.teacher) {
           targetClass = profileRes.data.teacher.className;
         }
-      } catch (profileError) {
+      } catch {
         console.warn('Could not fetch teacher profile, using fallback');
         targetClass = 'Panda'; // Fallback class
       }

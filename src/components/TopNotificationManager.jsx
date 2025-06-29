@@ -94,18 +94,8 @@ const TopNotificationManager = () => {
           </div>
         ))}
       </div>
-      
-
     </div>
   );
-};
-
-// Helper function to show top notifications from anywhere in the app
-export const showTopNotification = (message, type = 'info', duration = 4000) => {
-  const event = new CustomEvent('showTopNotification', {
-    detail: { message, type, duration }
-  });
-  window.dispatchEvent(event);
 };
 
 export default TopNotificationManager; 

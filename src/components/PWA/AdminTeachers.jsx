@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import adminService from '../../services/adminService';
 import classService from '../../services/classService';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import { FaSpinner, FaEye, FaEyeSlash, FaUserGraduate, FaExclamationCircle } from 'react-icons/fa';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const AdminTeachers = () => {
   const { isDark } = useTheme();

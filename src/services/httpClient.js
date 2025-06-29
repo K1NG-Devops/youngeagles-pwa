@@ -322,7 +322,7 @@ export const testConnection = async () => {
     if (prodResponse.status === 200) {
       return { success: true, url: API_CONFIG.BASE_URL, type: 'production' };
     }
-  } catch (prodError) {
+  } catch {
     console.log('Production API not reachable, trying local...');
   }
 
@@ -332,7 +332,7 @@ export const testConnection = async () => {
     if (localResponse.status === 200) {
       return { success: true, url: API_CONFIG.LOCAL_URL, type: 'local' };
     }
-  } catch (localError) {
+  } catch {
     console.warn('Local API not reachable');
   }
 

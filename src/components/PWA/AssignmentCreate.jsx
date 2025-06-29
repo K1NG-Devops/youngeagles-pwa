@@ -10,7 +10,7 @@ import {
   FaCheck,
   FaArrowLeft
 } from 'react-icons/fa';
-import { showTopNotification } from '../TopNotificationManager';
+import { showTopNotification } from '../../utils/notifications';
 import assignmentService from '../../services/assignmentService';
 import useAuth from '../../hooks/useAuth';
 

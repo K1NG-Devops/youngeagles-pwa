@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import AdminService from '../../services/adminService';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaUser, FaEnvelope, FaPhone, FaUserTie, FaUserFriends, FaSpinner, FaEye, FaEyeSlash, FaTimes, FaSchool, FaChalkboardTeacher } from 'react-icons/fa';
-import { useTheme } from '../../hooks/useTheme.jsx';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // --- Re-usable, Memoized Form Components (Moved outside for stability) ---
 
@@ -349,7 +349,7 @@ const AdminUserManagement = ({ userType = 'all', isDark: propIsDark }) => {
             setLoading(false);
             return;
           }
-        } catch (teacherError) {
+        } catch {
           console.log('⚠️ Teachers endpoint failed, continuing with user filtering...');
         }
       }
@@ -630,13 +630,13 @@ const AdminUserManagement = ({ userType = 'all', isDark: propIsDark }) => {
           try {
             await AdminService.deleteTeacher(user.id);
             console.log('✅ Teacher deleted successfully via dedicated endpoint');
-          } catch (teacherError) {
+          } catch {
             console.log('⚠️ Dedicated teacher endpoint failed, trying parent endpoint as fallback...');
             // Some teachers might be stored in the users table, try parent deletion
             try {
               await AdminService.deleteParent(user.id);
               console.log('✅ User deleted successfully via parent endpoint');
-            } catch (parentError) {
+            } catch {
               console.log('❌ Both teacher and parent endpoints failed');
               throw new Error('Unable to delete user: no suitable deletion endpoint found');
             }

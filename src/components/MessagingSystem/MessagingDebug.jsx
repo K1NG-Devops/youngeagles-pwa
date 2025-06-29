@@ -28,7 +28,7 @@ const MessagingDebug = () => {
         addLog(`User ID: ${userData.id}`, 'info');
         addLog(`User Email: ${userData.email}`, 'info');
         addLog(`User Role: ${userData.role}`, 'info');
-      } catch (e) {
+      } catch {
         addLog('❌ Failed to parse user data', 'error');
       }
     }

@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { FaLock, FaEye, FaEyeSlash, FaCheck, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import authService from '../services/authService';
-import useAuth from '../hooks/useAuth';
 
 const PasswordReset = () => {
-  const { auth } = useAuth();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',

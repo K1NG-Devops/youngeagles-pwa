@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser, FaCog, FaSignOutAlt, FaUserCircle, FaExternalLinkAlt, FaChevronDown, FaShieldAlt, FaQuestionCircle, FaInfoCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const UserDropdown = ({ user, onLogout, onSettings, onOpenWebsite }) => {
   const [isOpen, setIsOpen] = useState(false);

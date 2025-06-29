@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaFilePdf, FaFileImage, FaFileWord, FaFile, FaSpinner, FaArrowLeft, FaCheckCircle, FaUser, FaChalkboardTeacher, FaCalendarAlt, FaGraduationCap } from 'react-icons/fa';
 import { api } from '../services/httpClient';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatDate } from '../utils/dateUtils';
 import { toast } from 'react-toastify';
 
