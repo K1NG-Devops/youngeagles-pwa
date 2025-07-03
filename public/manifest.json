@@ -1,0 +1,11 @@
+{
+  "name": "Young Eagles PWA",
+  "short_name": "Young Eagles",
+  "description": "Young Eagles Progressive Web App",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": []
+}
