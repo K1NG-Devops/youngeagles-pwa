@@ -13,7 +13,8 @@ import {
   FaTimes, 
   FaArrowLeft,
   FaDownload,
-  FaGraduationCap
+  FaGraduationCap,
+  FaCalendarAlt
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';

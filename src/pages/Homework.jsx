@@ -4,18 +4,19 @@ import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
 import { toast } from 'react-toastify';
-import { 
-  FaCheckCircle, 
-  FaExclamationCircle, 
-  FaClock, 
-  FaDownload,
-  FaChild,
+import {
   FaBook,
+  FaClock,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaChild,
   FaCalendarAlt,
   FaChalkboardTeacher,
-  FaSpinner,
   FaEye,
-  FaUpload
+  FaUpload,
+  FaDownload,
+  FaSpinner,
+  FaGamepad
 } from 'react-icons/fa';
 
 const Homework = () => {
@@ -26,6 +27,7 @@ const Homework = () => {
   const [children, setChildren] = useState([]);
   const [selectedChildId, setSelectedChildId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -121,27 +123,49 @@ const Homework = () => {
           }
           
         } else {
-          // For parents, use existing logic
-          const response = await apiService.get(`/api/homework/parent/${user.id}${selectedChildId ? `?childId=${selectedChildId}` : ''}`);
-          const homeworkData = response.data.homework || [];
-          setHomework(homeworkData);
-          setChildren(response.data.children || []);
+          // For parents, use proper API method
+          console.log(`👨‍👩‍👧‍👦 Loading homework for parent: ${user.name} (ID: ${user.id})`);
           
-          // Calculate stats
-          const now = new Date();
-          const stats = {
-            total: homeworkData.length,
-            pending: homeworkData.filter(h => h.status === 'pending').length,
-            submitted: homeworkData.filter(h => h.status === 'submitted').length,
-            overdue: homeworkData.filter(h => 
-              h.status === 'pending' && new Date(h.due_date) < now
-            ).length
-          };
-          setStats(stats);
-          
-          // Set first child as default if none selected
-          if (!selectedChildId && response.data.children?.length > 0) {
-            setSelectedChildId(response.data.children[0].id);
+          try {
+            const response = await apiService.homework.getByParent(user.id, selectedChildId);
+            const homeworkData = response.data.homework || [];
+            setHomework(homeworkData);
+            setChildren(response.data.children || []);
+            
+            console.log(`📋 Found ${homeworkData.length} homework assignments for parent:`, homeworkData);
+            
+            // Calculate stats (include graded as submitted)
+            const now = new Date();
+            const stats = {
+              total: homeworkData.length,
+              pending: homeworkData.filter(h => h.status === 'pending').length,
+              submitted: homeworkData.filter(h => h.status === 'submitted' || h.status === 'graded').length,
+              overdue: homeworkData.filter(h => 
+                h.status === 'pending' && new Date(h.due_date) < now
+              ).length
+            };
+            setStats(stats);
+            
+            // Set first child as default if none selected
+            if (!selectedChildId && response.data.children?.length > 0) {
+              setSelectedChildId(response.data.children[0].id);
+            }
+          } catch (parentError) {
+            console.error('Error fetching parent homework data:', parentError);
+            // Try alternative endpoint if the first one fails
+            try {
+              console.log('🔄 Trying alternative endpoint for parent homework...');
+              const alternativeResponse = await apiService.get(`/api/homework/parent/${user.id}${selectedChildId ? `?childId=${selectedChildId}` : ''}`);
+              const homeworkData = alternativeResponse.data.homework || [];
+              setHomework(homeworkData);
+              setChildren(alternativeResponse.data.children || []);
+              
+              console.log(`📋 Found ${homeworkData.length} homework assignments via alternative endpoint:`, homeworkData);
+            } catch (altError) {
+              console.error('Error with alternative endpoint:', altError);
+              setHomework([]);
+              setChildren([]);
+            }
           }
         }
         
@@ -156,14 +180,14 @@ const Homework = () => {
     if (user) {
       fetchHomework();
     }
-  }, [user]);
+  }, [user, refreshTrigger, selectedChildId]);
 
 
   const getStatusColor = (status, dueDate) => {
     const now = new Date();
     const isOverdue = new Date(dueDate) < now && status === 'pending';
     
-    if (status === 'submitted') {
+    if (status === 'submitted' || status === 'graded') {
       return isDark 
         ? 'bg-green-900/20 text-green-400 border-green-800' 
         : 'bg-green-100 text-green-800 border-green-200';
@@ -355,7 +379,7 @@ const Homework = () => {
                           {assignment.title}
                         </h3>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full self-start ${getStatusColor(assignment.status, assignment.due_date)}`}>
-                          {assignment.status.toUpperCase()}
+                          {assignment.status === 'graded' ? 'GRADED' : assignment.status.toUpperCase()}
                         </span>
                       </div>
                     
@@ -382,7 +406,7 @@ const Homework = () => {
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 border-t border-gray-200 dark:border-gray-600">
                     <button
-                      onClick={() => navigate(`/homework/${assignment.id}/details`)}
+                      onClick={() => navigate(`/homework/${assignment.id}/details?child_id=${selectedChildId}`)}
                       className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                         isDark 
                           ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
@@ -393,19 +417,33 @@ const Homework = () => {
                       View Details
                     </button>
                     
-                    {assignment.status === 'pending' && (
-                      <button
-                        onClick={() => navigate(`/submit-work?homework_id=${assignment.id}&child_id=${selectedChildId}`)}
-                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        <FaUpload className="w-4 h-4 mr-2" />
-                        Submit Work
-                      </button>
+                    {(assignment.status === 'pending') && (
+                      // Show different buttons based on homework type
+                      assignment.content_type === 'interactive' || 
+                      assignment.title.includes('Basic Addition') || 
+                      assignment.title.includes('Counting') || 
+                      assignment.title.includes('Number Recognition') ? (
+                        <button
+                          onClick={() => navigate(`/homework/${assignment.id}/details?child_id=${selectedChildId}`)}
+                          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          <FaGamepad className="w-4 h-4 mr-2" />
+                          Start Homework
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => navigate(`/submit-work?homework_id=${assignment.id}&child_id=${selectedChildId}`)}
+                          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <FaUpload className="w-4 h-4 mr-2" />
+                          Submit Work
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
 
-                {assignment.status === 'submitted' && (
+                {(assignment.status === 'submitted' || assignment.status === 'graded') && (
                   <div className={`mt-6 p-4 rounded-lg border ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600' 
@@ -415,12 +453,19 @@ const Homework = () => {
                     <div className="space-y-2 text-sm">
                       <p><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Submitted:</span> {formatDate(assignment.submitted_at)}</p>
                       {assignment.grade && (
-                        <p><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Grade:</span> {assignment.grade}</p>
+                        <p><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Grade:</span> {assignment.grade}%</p>
                       )}
-                      {assignment.feedback && (
+                      {assignment.teacher_feedback && (
                         <div className="mt-3">
                           <p className={`mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Teacher Feedback:</p>
-                          <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>{assignment.feedback}</p>
+                          <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>{assignment.teacher_feedback}</p>
+                        </div>
+                      )}
+                      {assignment.status === 'graded' && (
+                        <div className={`mt-3 p-2 rounded ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+                          <p className={`text-sm font-medium ${isDark ? 'text-green-400' : 'text-green-800'}`}>
+                            ✅ Graded and returned by teacher
+                          </p>
                         </div>
                       )}
                     </div>

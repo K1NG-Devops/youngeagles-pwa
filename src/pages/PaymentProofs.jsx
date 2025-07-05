@@ -38,7 +38,7 @@ const PaymentProofs = () => {
       try {
         const childrenResponse = await apiService.children.getByParent(user.id);
         setChildren(childrenResponse.data.children || []);
-        
+
         try {
           const proofsResponse = await apiService.payments.getProofs();
           setProofs(proofsResponse.data.proofs || []);
@@ -192,7 +192,7 @@ const PaymentProofs = () => {
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 rounded-xl mb-6">
               <h2 className="text-xl font-semibold flex items-center">
                 <FaMoneyBill className="mr-3" />
-                Submit Payment Proof
+              Submit Payment Proof
               </h2>
               <p className="text-green-100 text-sm mt-1">
                 Upload your payment receipt or bank statement
@@ -385,7 +385,7 @@ const PaymentProofs = () => {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl mb-6">
               <h3 className="text-lg font-semibold flex items-center">
                 <FaFileInvoice className="mr-3" />
-                Recent Submissions
+              Recent Submissions
               </h3>
               <p className="text-blue-100 text-sm mt-1">
                 Track the status of your payment proofs
@@ -457,4 +457,4 @@ const PaymentProofs = () => {
   );
 };
 
-export default PaymentProofs;
+export default PaymentProofs; 

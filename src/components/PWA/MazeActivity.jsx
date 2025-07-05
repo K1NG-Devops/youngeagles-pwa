@@ -21,6 +21,9 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       return [];
     }
   });
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showNextLevelPrompt, setShowNextLevelPrompt] = useState(false);
+  const [nextLevel, setNextLevel] = useState(null);
 
   // Different maze configurations based on difficulty - 5 levels total
   const mazes = {
@@ -34,8 +37,8 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       ],
       size: 5,
       maxCommands: 8,
-      name: 'Beginner',
-      description: 'Simple maze with basic obstacles'
+      name: 'Beginner'
+      // description: 'Simple maze with basic obstacles'
     },
     medium: {
       grid: [
@@ -234,8 +237,8 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       currentPos = newPos;
       setRobotPosition(newPos);
       
-      // Wait for animation
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for smooth animation transition
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Check if robot reached the goal
       if (currentMaze.grid[newPos.y][newPos.x] === 2) {
@@ -273,6 +276,18 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
             commandsUsed: commands.length
           });
         }
+        
+        // Show celebration and prompt for next level
+        const currentLevelIndex = levelOrder.indexOf(validDifficulty);
+        const nextLevelId = levelOrder[currentLevelIndex + 1];
+        
+        if (nextLevelId && onLevelChange) {
+          setShowConfetti(true);
+          setNextLevel(nextLevelId);
+          setTimeout(() => {
+            setShowNextLevelPrompt(true);
+          }, 1500); // Show prompt after celebration
+        }
         return;
       }
     }
@@ -295,8 +310,74 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     return 'text-orange-500';
   };
 
+  const handleNextLevel = () => {
+    setShowConfetti(false);
+    setShowNextLevelPrompt(false);
+    resetGame();
+    if (nextLevel && onLevelChange) {
+      // Use Tailwind's transform and transition classes for smooth level change
+      const mazeContainer = document.getElementById('maze-container');
+      if (mazeContainer) {
+        mazeContainer.className += ' -translate-x-full opacity-0';
+        setTimeout(() => {
+          onLevelChange(nextLevel);
+          mazeContainer.className = mazeContainer.className.replace(' -translate-x-full opacity-0', ' translate-x-0 opacity-100');
+        }, 300);
+      } else {
+        onLevelChange(nextLevel);
+      }
+    }
+  };
+
   return (
-    <div className={`max-w-4xl mx-auto p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+    <div id="maze-container" className={`w-full h-full mt-20 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg relative transition-all duration-500 ease-in-out transform ${gameStatus === 'completed' ? 'scale-105' : ''}`}>
+      {/* Confetti effect */}
+      {showConfetti && (
+        <div className="absolute inset-0 pointer-events-none z-50 animate-confetti">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-2 rounded-full"
+              style={{
+                backgroundColor: ['#FFD700', '#FF69B4', '#00FF00', '#4169E1'][i % 4],
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `confetti-fall ${1 + Math.random() * 2}s linear forwards`,
+                animationDelay: `${Math.random() * 1}s`
+              }}
+            />
+          ))}
+        </div>
+      )}
+      
+      {/* Next Level Prompt */}
+      {showNextLevelPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-6 rounded-xl shadow-xl max-w-md mx-4 transform scale-in-center`}>
+            <h3 className="text-2xl font-bold mb-4 text-center">🎉 Level Complete!</h3>
+            <p className="text-lg mb-6 text-center">
+              Ready to take on the next challenge?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={handleNextLevel}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                Next Level →
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfetti(false);
+                  setShowNextLevelPrompt(false);
+                }}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              >
+                Stay Here
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="text-center mb-6">
         <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -326,9 +407,6 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
         
         <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
           {currentMaze.description}
-        </p>
-        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
-          Grid Size: {currentMaze.size}×{currentMaze.size} • Max Commands: {currentMaze.maxCommands}
         </p>
         
         {/* Overall Progress */}
@@ -360,151 +438,16 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
           </span>
         </div>
       </div>
-
-      {/* Level Selection */}
-      {onLevelChange && (
-        <div className="mb-6">
-          <h3 className={`text-lg font-semibold mb-3 text-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            Choose Your Challenge
-          </h3>
-          <div className="flex flex-wrap justify-center gap-2">
-            {Object.entries(mazes).map(([level, maze], index) => {
-              const isUnlocked = isLevelUnlocked(level);
-              const isCompleted = completedLevels.includes(level);
-              const isCurrentLevel = validDifficulty === level;
-              
-              return (
-                <button
-                  key={level}
-                  onClick={() => handleLevelChange(level)}
-                  disabled={gameStatus === 'running' || isExecuting || !isUnlocked}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${
-                    !isUnlocked
-                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-60' 
-                      : isCurrentLevel
-                        ? level === 'easy' ? 'bg-green-500 text-white' :
-                          level === 'medium' ? 'bg-yellow-500 text-white' :
-                            level === 'hard' ? 'bg-orange-500 text-white' :
-                              level === 'expert' ? 'bg-red-500 text-white' :
-                                'bg-purple-500 text-white'
-                        : isCompleted
-                          ? isDark 
-                            ? 'bg-green-700 text-green-200 hover:bg-green-600 border-2 border-green-400'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200 border-2 border-green-500'
-                          : isDark 
-                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                  title={!isUnlocked ? `Complete Level ${index} to unlock` : ''}
-                >
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center space-x-1">
-                      {!isUnlocked && <span className="text-xs">🔒</span>}
-                      {isCompleted && <span className="text-xs">✅</span>}
-                      <span>Level {index + 1}</span>
-                    </div>
-                    <span className="text-xs">{maze.name}</span>
-                    <div className="flex mt-1">
-                      {Array.from({ length: index + 1 }, (_, i) => (
-                        <span key={i} className="text-xs">⭐</span>
-                      ))}
-                    </div>
-                  </div>
-                  {isCompleted && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                      <span className="text-xs text-white">✓</span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className={`p-3 rounded-lg text-center ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-          <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {formatTime(timeElapsed)}
-          </div>
-          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Time</div>
-        </div>
-        <div className={`p-3 rounded-lg text-center ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-          <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {commands.length}/{currentMaze.maxCommands}
-          </div>
-          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Commands</div>
-        </div>
-        <div className={`p-3 rounded-lg text-center ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-          <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {attempts}
-          </div>
-          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Attempts</div>
-        </div>
-        <div className={`p-3 rounded-lg text-center ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-          <div className={`text-lg font-bold ${getScoreColor()}`}>
-            {score}
-          </div>
-          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Score</div>
-        </div>
-      </div>
-
-      {/* Maze Grid */}
-      <div className="mb-6 flex justify-center">
-        <div 
-          className="grid gap-1 p-4 rounded-lg border-2 border-dashed border-blue-300 max-w-full overflow-hidden"
-          style={{ 
-            gridTemplateColumns: `repeat(${currentMaze.size}, 1fr)`,
-            width: 'fit-content',
-            maxWidth: '90vw'
-          }}
+      {/* Execute Button */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={executeCommands}
+          disabled={isExecuting || commands.length === 0 || gameStatus === 'running'}
+          className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
         >
-          {currentMaze.grid.map((row, y) =>
-            row.map((cell, x) => {
-              const isRobotHere = robotPosition.x === x && robotPosition.y === y;
-              const isGoal = cell === 2;
-              const isWall = cell === 1;
-              const isEmpty = cell === 0;
-
-              // Dynamic cell size based on maze size
-              const cellSize = currentMaze.size <= 5 ? 'w-12 h-12 text-lg' : 
-                currentMaze.size <= 7 ? 'w-10 h-10 text-base' : 
-                  'w-8 h-8 text-sm';
-
-              return (
-                <div
-                  key={`${x}-${y}`}
-                  className={`${cellSize} flex items-center justify-center font-bold border-2 rounded-lg transition-all duration-300 ${
-                    isRobotHere
-                      ? 'bg-blue-500 border-blue-600 transform scale-110'
-                      : isGoal
-                        ? 'bg-green-500 border-green-600'
-                        : isWall
-                          ? isDark 
-                            ? 'bg-gray-900 border-gray-800' 
-                            : 'bg-gray-800 border-gray-700'
-                          : isEmpty
-                            ? isDark
-                              ? 'bg-gray-700 border-gray-600'
-                              : 'bg-gray-100 border-gray-300'
-                            : ''
-                  }`}
-                >
-                  {isRobotHere ? (
-                    <FaRobot className={`text-white animate-bounce ${currentMaze.size > 7 ? 'text-xs' : ''}`} />
-                  ) : isGoal ? (
-                    <span className={currentMaze.size > 7 ? 'text-xs' : ''}>🎯</span>
-                  ) : isWall ? (
-                    <span className={currentMaze.size > 7 ? 'text-xs' : ''}>🧱</span>
-                  ) : (
-                    ''
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
+          <FaPlay className="mr-2" />
+          {isExecuting ? 'Running...' : 'Execute Commands'}
+        </button>
       </div>
 
       {/* Command Buttons */}
@@ -513,12 +456,12 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
           Add Commands
         </h3>
         <div className="flex justify-center">
-          <div className="grid grid-cols-3 gap-2 max-w-xs">
+          <div className="grid grid-cols-3 gap-3 w-full max-w-[280px] sm:max-w-xs">
             <div></div>
             <button
               onClick={() => addCommand('up')}
               disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-              className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="p-4 text-xl bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               ↑
             </button>
@@ -580,15 +523,6 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
 
       {/* Control Buttons */}
       <div className="flex flex-wrap gap-3 justify-center mb-6">
-        <button
-          onClick={executeCommands}
-          disabled={isExecuting || commands.length === 0 || gameStatus === 'running'}
-          className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-        >
-          <FaPlay className="mr-2" />
-          {isExecuting ? 'Running...' : 'Execute Commands'}
-        </button>
-        
         <button
           onClick={removeLastCommand}
           disabled={isExecuting || commands.length === 0 || gameStatus !== 'idle'}

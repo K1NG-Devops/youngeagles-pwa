@@ -1,35 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
-import { Link } from 'react-router-dom';
-import apiService from '../services/apiService';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import LessonLibrary from '../components/LessonLibrary';
-import { 
-  FaBook, 
-  FaUsers, 
-  FaGraduationCap, 
-  FaChartLine, 
+import {
+  FaBook,
+  FaUsers,
+  FaGraduationCap,
+  FaChartLine,
   FaPlus,
   FaBell,
   FaTasks,
   FaLightbulb,
-  FaArrowRight
+  FaArrowRight,
+  FaRobot,
+  FaClipboardCheck,
+  FaComments,
+  FaFileAlt,
+  FaSpinner,
+  FaCheckCircle,
+  FaExclamationCircle
 } from 'react-icons/fa';
+import LessonLibrary from '../components/LessonLibrary';
+import AIGradingPanel from '../components/AIGradingPanel';
+import StudentProgressModal from '../components/StudentProgressModal';
+import ParentCommunicationPanel from '../components/ParentCommunicationPanel';
+import AdvancedHomeworkAssignment from '../components/AdvancedHomeworkAssignment';
+import NewHomeworkAssignment from '../components/NewHomeworkAssignment';
 import Header from '../components/Header';
 
+// Hooks and Services
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../hooks/useTheme';
+import apiService from '../services/apiService';
 const TeacherDashboard = () => {
-  const { user } = useAuth();
-  const { isDark } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState({
     classes: 0,
     students: 0,
     assignments: 0,
-    pending: 0
+    pending: 0,
+    pendingGrading: 0,
+    completedAssignments: 0
   });
   const [classes, setClasses] = useState([]);
   const [showLessonLibrary, setShowLessonLibrary] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [showAIGrading, setShowAIGrading] = useState(false);
+  const [showParentComm, setShowParentComm] = useState(false);
+  const [showHomeworkAssignment, setShowHomeworkAssignment] = useState(false);
+  const [pendingSubmissions, setPendingSubmissions] = useState([]);
+  const navigate = useNavigate();
+  const { isDark } = useTheme();
+  const { user } = useAuth();
+  const [gradingQueue, setGradingQueue] = useState([]);
+  const [aiGradingStatus, setAiGradingStatus] = useState('idle');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchTeacherData = async () => {
@@ -67,24 +90,45 @@ const TeacherDashboard = () => {
           }
         }
         
-        // Fetch homework assignments by teacher
+        // Fetch homework assignments and submissions
         try {
           const homeworkResponse = await apiService.homework.getByTeacher(user.id);
           const homework = homeworkResponse.data.homework || [];
+          
+          // TODO: Implement these endpoints in the backend
+          // Fetch pending submissions for grading
+          // const submissionsResponse = await apiService.homework.getPendingSubmissions(user.id);
+          // const submissions = submissionsResponse.data.submissions || [];
+          const submissions = []; // Mock empty data for now
+          setPendingSubmissions(submissions);
+
+          // Fetch AI grading queue status
+          // const gradingQueueResponse = await apiService.ai.getGradingQueue(user.id);
+          // const queue = gradingQueueResponse.data.queue || [];
+          const queue = []; // Mock empty data for now
+          setGradingQueue(queue);
+
+          const completedAssignments = submissions.filter(sub => sub.status === 'graded').length;
+          const pendingGrading = submissions.filter(sub => sub.status === 'submitted').length;
           
           setStats({
             classes: Math.max(teacherClasses.length, studentCount > 0 ? 1 : 0),
             students: studentCount,
             assignments: homework.length,
-            pending: homework.filter(hw => hw.status === 'assigned').length
+            pending: homework.filter(hw => hw.status === 'assigned').length,
+            pendingGrading: pendingGrading,
+            completedAssignments: completedAssignments
           });
-        } catch {
+        } catch (error) {
+          console.error('Error fetching homework data:', error);
           // Use empty data when homework API is not available
           setStats({
             classes: Math.max(teacherClasses.length, studentCount > 0 ? 1 : 0),
             students: studentCount,
             assignments: 0,
-            pending: 0
+            pending: 0,
+            pendingGrading: 0,
+            completedAssignments: 0
           });
         }
       } catch (error) {
@@ -105,22 +149,149 @@ const TeacherDashboard = () => {
     if (user) {
       fetchTeacherData();
     }
-  }, [user]);
+  }, [user, refreshTrigger]);
 
   const handleAssignHomework = async (homeworkData) => {
     try {
-      await apiService.homework.create(homeworkData);
+      const response = await apiService.homework.create(homeworkData);
+      const homeworkId = response?.data?.homeworkId || response?.data?.homework?.id;
       toast.success(`Lesson "${homeworkData.title}" assigned successfully!`);
-      
+
       // Refresh stats
       setStats(prev => ({
         ...prev,
         assignments: prev.assignments + 1,
         pending: prev.pending + homeworkData.classes.length
       }));
+
+      // Navigate to newly created homework details page if we have the ID
+      if (homeworkId) {
+        navigate(`/homework/${homeworkId}`);
+      }
     } catch (error) {
+      const errorMessage = error?.response?.data?.message || error.message || 'Failed to assign homework';
+      toast.error(errorMessage);
       console.error('Error assigning homework:', error);
-      throw error; // Re-throw to let LessonLibrary handle the error
+      throw error; // Re-throw so calling component can still handle if needed
+    }
+  };
+
+  // Handle homework creation from advanced component
+  const handleHomeworkCreated = (newHomework) => {
+    console.log('New homework created:', newHomework);
+    
+    // Force a complete refresh of teacher data
+    const refreshAllData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch updated homework data
+        const homeworkResponse = await apiService.homework.getByTeacher(user.id);
+        const homework = homeworkResponse.data.homework || [];
+        
+        // Update stats with fresh data
+        setStats(prev => ({
+          ...prev,
+          assignments: homework.length,
+          pending: homework.filter(hw => hw.status === 'assigned' || hw.status === 'active').length
+        }));
+        
+        console.log(`✅ Refreshed homework data: ${homework.length} total assignments`);
+        
+        // Trigger refresh trigger to update other components
+        setRefreshTrigger(prev => prev + 1);
+        
+      } catch (error) {
+        console.error('Error refreshing homework data:', error);
+        toast.error('Failed to refresh homework data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Wait a moment for the API to process, then refresh
+    setTimeout(refreshAllData, 500);
+  };
+
+  // AI Grading handlers
+  const handleStartAIGrading = async (submissions) => {
+    try {
+      setAiGradingStatus('processing');
+      // TODO: Implement this endpoint in the backend
+      // const response = await apiService.ai.startGrading(submissions);
+      // if (response.data.success) {
+      //   setGradingQueue(response.data.queue || []);
+      //   toast.success('AI grading has started!');
+      // }
+      
+      // Mock response for now
+      toast.success('AI grading feature coming soon!');
+      setTimeout(() => {
+        setAiGradingStatus('completed');
+      }, 3000);
+    } catch (error) {
+      console.error('Error starting AI grading:', error);
+      toast.error('Failed to start AI grading');
+      setAiGradingStatus('idle');
+    }
+  };
+
+  const handleViewGradingResults = async (submissionId) => {
+    try {
+      // TODO: Implement this endpoint in the backend
+      // const response = await apiService.ai.getGradingResults(submissionId);
+      // if (response.data.success) {
+      //   // Update the UI with grading results
+      //   setPendingSubmissions(prev => 
+      //     prev.map(sub => 
+      //       sub.id === submissionId 
+      //         ? { ...sub, ...response.data.results, status: 'graded' }
+      //         : sub
+      //     )
+      //   );
+      // }
+      
+      // Mock response for now
+      toast.info('Grading results feature coming soon!');
+    } catch (error) {
+      console.error('Error viewing grading results:', error);
+      toast.error('Failed to load grading results');
+    }
+  };
+
+  // Parent Communication handlers
+  const handleShareWithParent = async (studentId, gradedWork) => {
+    try {
+      // TODO: Implement this endpoint in the backend
+      // const response = await apiService.communication.shareWithParent(studentId, gradedWork);
+      // if (response.data.success) {
+      //   toast.success('Successfully shared with parent!');
+      // }
+      
+      // Mock response for now
+      toast.success('Parent communication feature coming soon!');
+    } catch (error) {
+      console.error('Error sharing with parent:', error);
+      toast.error('Failed to share with parent');
+    }
+  };
+
+  const handleGenerateProgressReport = async (studentId) => {
+    try {
+      // TODO: Implement this endpoint in the backend
+      // const response = await apiService.reports.generateProgress(studentId);
+      // if (response.data.success) {
+      //   toast.success('Progress report generated successfully!');
+      //   return response.data.report;
+      // }
+      
+      // Mock response for now
+      toast.success('Progress report feature coming soon!');
+      return null;
+    } catch (error) {
+      console.error('Error generating progress report:', error);
+      toast.error('Failed to generate progress report');
+      return null;
     }
   };
 
@@ -159,25 +330,104 @@ const TeacherDashboard = () => {
     );
   }
 
+  if (showAIGrading) {
+    return (
+      <div>
+        <div className="mb-4 p-4">
+          <button
+            onClick={() => setShowAIGrading(false)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowRight className="w-4 h-4 mr-2 rotate-180" />
+            Back to Dashboard
+          </button>
+        </div>
+        <AIGradingPanel 
+          pendingSubmissions={pendingSubmissions}
+          gradingQueue={gradingQueue}
+          onStartGrading={handleStartAIGrading}
+          onViewResults={handleViewGradingResults}
+          onShareWithParent={handleShareWithParent}
+          aiGradingStatus={aiGradingStatus}
+        />
+      </div>
+    );
+  }
+
+  if (showParentComm) {
+    return (
+      <div>
+        <div className="mb-4 p-4">
+          <button
+            onClick={() => setShowParentComm(false)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowRight className="w-4 h-4 mr-2 rotate-180" />
+            Back to Dashboard
+          </button>
+        </div>
+        <ParentCommunicationPanel 
+          classes={classes}
+          onShareResults={handleShareWithParent}
+          onGenerateReport={handleGenerateProgressReport}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
+      
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white mt-20">
-        <div className="max-w-6xl mx-auto py-6">
-          <h2 className="text-xl font-bold mb-1">Welcome back, {user?.name}!</h2>
-          <p className="text-green-100 text-sm">Manage your classes and create engaging lessons</p>
-          {/* Display teacher's class name if they have one */}
-          {classes.length > 0 && (
-            <div className="mt-3 bg-white/10 rounded-lg p-3">
-              <p className="text-sm font-medium">Your Class:</p>
-              <p className="text-lg font-bold">{classes[0].name}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
       <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-28">
+
+        <div className="bg-gradient-to-r text-center rounded-xl from-green-500 to-blue-600 text-white mt-20">
+          <div className="max-w-6xl mx-auto py-6">
+            <h2 className="text-xl font-bold mb-1">Welcome back, {user?.name}!</h2>
+            <p className="text-green-100 text-sm">Manage your classes and create engaging lessons</p>
+            {/* Display teacher's class name if they have one */}
+            {classes.length > 0 && (
+              <div className="mt-3 bg-white/10 rounded-lg p-3">
+                <p className="text-lg font-bold">{classes[0].name} Class</p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* AI Grading Status Banner */}
+        {aiGradingStatus === 'processing' && (
+          <div className={`p-4 rounded-lg border-l-4 border-blue-500 ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+            <div className="flex items-center">
+              <FaSpinner className="animate-spin text-blue-500 mr-3" />
+              <div>
+                <p className={`font-medium ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>AI Grading in Progress</p>
+                <p className={`text-sm ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                  {gradingQueue.length} submissions are being processed. You'll be notified when complete.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {aiGradingStatus === 'completed' && (
+          <div className={`p-4 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+            <div className="flex items-center">
+              <FaCheckCircle className="text-green-500 mr-3" />
+              <div>
+                <p className={`font-medium ${isDark ? 'text-green-300' : 'text-green-800'}`}>AI Grading Complete!</p>
+                <p className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                  New graded assignments are ready for review and sharing with parents.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -232,7 +482,28 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Create Homework Assignment */}
+          <button
+            onClick={() => setShowHomeworkAssignment(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border-indigo-700 hover:border-indigo-600' : 'bg-gradient-to-r from-indigo-100 to-purple-100 border-indigo-200 hover:border-indigo-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl">📝</div>
+              <FaPlus className={`text-2xl ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Create Homework
+            </h3>
+            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              Create and assign homework to individual students or entire classes
+            </p>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+              Create Homework <FaArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </button>
           {/* Lesson Library */}
           <button
             onClick={() => setShowLessonLibrary(true)}
@@ -254,31 +525,57 @@ const TeacherDashboard = () => {
               Explore Lessons <FaArrowRight className="ml-2 w-4 h-4" />
             </div>
           </button>
-
-          {/* Create Assignment */}
-          <Link
-            to="/homework"
-            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md ${
-              isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-100 hover:bg-gray-50'
+          {/* AI Grading Panel */}
+          <button
+            onClick={() => setShowAIGrading(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-blue-900/20 to-cyan-900/20 border-blue-700 hover:border-blue-600' : 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-200 hover:border-blue-300'
             }`}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="text-4xl">📝</div>
-              <FaPlus className={`text-2xl ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+              <div className="text-4xl">🤖</div>
+              <FaRobot className={`text-2xl ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
             </div>
             <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Create Assignment
+              AI Grading Assistant
             </h3>
             <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Create custom homework assignments for your students
+              Automatically grade assignments with detailed feedback and analysis
+            </p>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+              Grade Work <FaArrowRight className="ml-2 w-4 h-4" />
+            </div>
+            {stats.pendingGrading > 0 && (
+              <div className={`mt-2 px-2 py-1 rounded-full text-xs font-medium ${isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'}`}>
+                {stats.pendingGrading} pending
+              </div>
+            )}
+          </button>
+
+          {/* Parent Communication */}
+          <button
+            onClick={() => setShowParentComm(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-green-900/20 to-emerald-900/20 border-green-700 hover:border-green-600' : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-200 hover:border-green-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl">👨‍👩‍👧‍👦</div>
+              <FaComments className={`text-2xl ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Parent Communication
+            </h3>
+            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              Share graded work and generate progress reports for parents
             </p>
             <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-              Get Started <FaArrowRight className="ml-2 w-4 h-4" />
+              Communicate <FaArrowRight className="ml-2 w-4 h-4" />
             </div>
-          </Link>
+          </button>
         </div>
 
-        {/* Feature Cards Grid */}
+        {/* Enhanced Feature Cards Grid */}
         <div className="grid grid-cols-2 gap-4">
           {/* Mark Register */}
           <Link
@@ -325,20 +622,20 @@ const TeacherDashboard = () => {
             </div>
           </Link>
 
-          {/* Reports */}
-          <button
-            onClick={() => toast.info('Reports feature coming soon!')}
+          {/* Progress Reports */}
+          <Link
+            to="/reports"
             className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md ${
               isDark ? 'bg-orange-800 border-orange-700 hover:bg-orange-750' : 'bg-orange-500 hover:bg-orange-600'
             }`}
           >
             <div className="text-center text-white">
               <FaChartLine className="text-2xl mx-auto mb-2" />
-              <div className="text-lg font-bold">View</div>
+              <div className="text-lg font-bold">{stats.completedAssignments}</div>
               <div className="text-xs opacity-90">Reports</div>
-              <div className="text-xs opacity-75 mt-1">Student progress</div>
+              <div className="text-xs opacity-75 mt-1">Progress tracking</div>
             </div>
-          </button>
+          </Link>
         </div>
 
         {/* Class Overview */}
@@ -374,6 +671,14 @@ const TeacherDashboard = () => {
           )}
         </div>
       </div>
+      
+      {/* New Homework Assignment Modal */}
+      {showHomeworkAssignment && (
+        <NewHomeworkAssignment
+          onClose={() => setShowHomeworkAssignment(false)}
+          onHomeworkCreated={handleHomeworkCreated}
+        />
+      )}
     </div>
   );
 };

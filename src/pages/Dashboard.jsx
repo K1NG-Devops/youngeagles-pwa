@@ -156,7 +156,7 @@ const Dashboard = () => {
             
             {/* Left Column - Main Actions */}
             <div className="lg:col-span-2 space-y-6">
-              
+
               {/* Quick Actions for Parents */}
               {user?.role === 'parent' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -165,10 +165,10 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          Payment Proofs 💳
+                  Payment Proofs 💳
                         </h3>
                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Submit proof of payment for school fees
+                  Submit proof of payment for school fees
                         </p>
                       </div>
                       <FaUpload className={`text-2xl ${isDark ? 'text-green-400' : 'text-green-500'}`} />
@@ -177,7 +177,7 @@ const Dashboard = () => {
                       to="/payment-proofs"
                       className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center"
                     >
-                      Submit POP
+              Submit POP
                     </Link>
                   </div>
 
@@ -189,7 +189,7 @@ const Dashboard = () => {
                           AI Assistant 🧠
                         </h3>
                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Get personalized insights into your child's progress
+                  Get personalized insights into your child's progress
                         </p>
                       </div>
                       <FaBrain className={`text-2xl ${isDark ? 'text-pink-400' : 'text-pink-500'}`} />
@@ -198,7 +198,7 @@ const Dashboard = () => {
                       onClick={() => toast.info('AI Assistant feature coming soon!')}
                       className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-pink-600 hover:to-purple-700 transition-all flex items-center justify-center"
                     >
-                      Activate Assistant
+              Activate Assistant
                     </button>
                   </div>
                 </div>
@@ -270,13 +270,13 @@ const Dashboard = () => {
 
             {/* Right Column - Progress & Reports */}
             <div className="space-y-6">
-              
+
               {/* Homework Progress */}
               <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
                 <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Homework Progress
                 </h3>
-                
+          
                 {/* Progress Circle */}
                 <div className="flex items-center justify-center mb-6">
                   <div className="relative w-24 h-24">
@@ -319,7 +319,7 @@ const Dashboard = () => {
                     <span className={`font-semibold ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>{stats.pending}</span>
                   </div>
                 </div>
-                
+          
                 {stats.homework === 0 && (
                   <div className={`mt-4 p-4 rounded-lg text-center ${isDark ? 'bg-blue-900/20 border border-blue-800' : 'bg-blue-50 border border-blue-200'}`}>
                     <p className={`text-sm ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
@@ -359,4 +359,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard; 

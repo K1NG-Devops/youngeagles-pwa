@@ -209,7 +209,14 @@ const apiService = {
   // Auth endpoints
   auth: {
     parentLogin: (credentials) => apiClient.post('/api/auth/parent-login', credentials),
-    teacherLogin: (credentials) => apiClient.post('/api/auth/teacher-login', credentials),
+    teacherLogin: (credentials) => {
+      // API expects 'username' field instead of 'email' for teachers
+      const teacherCreds = {
+        username: credentials.email || credentials.username,
+        password: credentials.password
+      };
+      return apiClient.post('/api/auth/teacher-login', teacherCreds);
+    },
     adminLogin: (credentials) => apiClient.post('/api/auth/admin-login', credentials)
   },
 
@@ -393,8 +400,26 @@ const apiService = {
     // Get payment history
     getHistory: () => apiClient.get('/api/payments/history'),
     
-    // Get payment statistics
+  // Get payment statistics
     getStats: () => apiClient.get('/api/payments/stats')
+  },
+
+  // AI endpoints
+  ai: {
+    // Start AI grading for submissions
+    startGrading: (submissions) => apiClient.post('/api/ai/grading/start', { submissions }),
+    
+    // Get grading queue status
+    getGradingQueue: () => apiClient.get('/api/ai/grading/queue'),
+    
+    // Get grading results for specific submission
+    getGradingResults: (submissionId) => apiClient.get(`/api/ai/grading/results/${submissionId}`),
+    
+    // Generate lesson content
+    generateLesson: (lessonData) => apiClient.post('/api/ai/lessons/generate', lessonData),
+    
+    // AI service health check
+    healthCheck: () => apiClient.get('/api/ai/health')
   }
 };
 

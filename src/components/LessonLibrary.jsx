@@ -429,7 +429,8 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
           <input
             type="date"
             value={assignmentDetails.dueDate}
-            onChange={(e) => setAssignmentDetails({...assignmentDetails, dueDate: e.target.value})}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={(e) => setAssignmentDetails({ ...assignmentDetails, dueDate: e.target.value })}
             className={`w-full p-3 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
           />
         </div>

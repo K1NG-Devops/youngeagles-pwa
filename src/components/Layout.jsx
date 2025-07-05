@@ -52,19 +52,19 @@ const Layout = () => {
     const isFullWidth = location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard';
     
     if (!showNavigation) {
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full px-4 sm:px-6 lg:px-8 pb-4 overflow-y-auto';
+      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
     }
     
     switch (navigationStyle) {
     case 'side':
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full px-4 sm:px-6 lg:px-8 pb-4 overflow-y-auto';
+      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
     case 'top':
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full px-4 sm:px-6 lg:px-8 pb-4 overflow-y-auto';
+      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
     case 'floating':
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full px-4 sm:px-6 lg:px-8 pb-4 overflow-y-auto';
+      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
     case 'bottom':
     default:
-      return isFullWidth ? 'h-full pb-20 overflow-y-auto' : 'h-full px-4 sm:px-6 lg:px-8 pb-20 overflow-y-auto';
+      return isFullWidth ? 'h-full pb-20 overflow-y-auto' : 'h-full pb-20 overflow-y-auto';
     }
   };
 
@@ -80,7 +80,7 @@ const Layout = () => {
       <main className="flex-1 overflow-hidden">
         <div className={getMainContentClasses()}>
           {/* Conditionally wrap content with max-width container */}
-          {location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard' ? (
+          {location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard' || location.pathname === '/activities' ? (
             <Outlet />
           ) : (
             <div className="max-w-7xl mx-auto">

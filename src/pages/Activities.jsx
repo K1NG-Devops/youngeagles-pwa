@@ -378,7 +378,7 @@ const Activities = () => {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
         {/* Back Button */}
-        <div className="p-6">
+        <div className="absolute top-0 left-0 z-10 p-4">
           <button
             onClick={() => setSelectedActivity(null)}
             className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
@@ -393,7 +393,7 @@ const Activities = () => {
         </div>
 
         {/* Activity Component */}
-        <div className="px-6 pb-6">
+        <div className="h-screen w-full">
           <ActivityRenderer activity={selectedActivity} />
         </div>
       </div>
@@ -402,7 +402,7 @@ const Activities = () => {
 
   return (
     <div className={`min-h-screen py-6 mt-18 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-4">Interactive Activities Hub</h1>
