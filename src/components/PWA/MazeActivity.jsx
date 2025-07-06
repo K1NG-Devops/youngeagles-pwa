@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaRobot, FaUndo, FaPlay, FaCheckCircle } from 'react-icons/fa';
 import { useTheme } from '../../hooks/useTheme';
-
 const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
   const { isDark } = useTheme();
   const [commands, setCommands] = useState([]);
@@ -23,8 +22,8 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
   });
   const [showConfetti, setShowConfetti] = useState(false);
   const [showNextLevelPrompt, setShowNextLevelPrompt] = useState(false);
+  const [showGameComplete, setShowGameComplete] = useState(false);
   const [nextLevel, setNextLevel] = useState(null);
-
   // Different maze configurations based on difficulty - 5 levels total
   const mazes = {
     easy: {
@@ -103,9 +102,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       description: 'Ultimate challenge - largest and most complex maze'
     }
   };
-
   const levelOrder = ['easy', 'medium', 'hard', 'expert', 'master'];
-
   // Check if a level is unlocked
   const isLevelUnlocked = (level) => {
     if (level === 'easy') return true; // First level is always unlocked
@@ -114,11 +111,10 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     const previousLevel = levelOrder[levelIndex - 1];
     return completedLevels.includes(previousLevel);
   };
-  
+
   // Ensure we're using a valid difficulty level
   const validDifficulty = levelOrder.includes(difficulty) && isLevelUnlocked(difficulty) ? difficulty : 'easy';
   const currentMaze = mazes[validDifficulty];
-
   // Save progress to localStorage
   const saveProgress = (level) => {
     const updatedProgress = [...completedLevels];
@@ -126,9 +122,11 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       updatedProgress.push(level);
       setCompletedLevels(updatedProgress);
       localStorage.setItem('mazeGameProgress', JSON.stringify(updatedProgress));
+      console.log(`Level ${level} completed and saved. Progress:`, updatedProgress);
+    } else {
+      console.log(`Level ${level} already completed. Progress:`, updatedProgress);
     }
   };
-
   // Reset all progress (for testing or if player wants to start over)
   const resetProgress = () => {
     setCompletedLevels([]);
@@ -137,21 +135,18 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       onLevelChange('easy'); // Go back to first level
     }
   };
-
   // Handle level change with unlock validation
   const handleLevelChange = (level) => {
     if (isLevelUnlocked(level) && onLevelChange) {
       onLevelChange(level);
     }
   };
-
   // Notify parent if difficulty was auto-corrected
   useEffect(() => {
     if (validDifficulty !== difficulty && onLevelChange) {
       onLevelChange(validDifficulty);
     }
   }, [validDifficulty, difficulty, onLevelChange]);
-
   // Timer effect
   useEffect(() => {
     let interval;
@@ -162,7 +157,6 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     }
     return () => clearInterval(interval);
   }, [isTimerRunning]);
-
   const addCommand = (direction) => {
     if (commands.length < currentMaze.maxCommands && gameStatus === 'idle') {
       setCommands([...commands, direction]);
@@ -171,20 +165,17 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       }
     }
   };
-
   const removeLastCommand = () => {
     if (commands.length > 0 && gameStatus === 'idle') {
       setCommands(commands.slice(0, -1));
     }
   };
-
   const clearCommands = () => {
     if (gameStatus === 'idle') {
       setCommands([]);
       setRobotPosition({ x: 0, y: 0 });
     }
   };
-
   const resetGame = () => {
     setCommands([]);
     setRobotPosition({ x: 0, y: 0 });
@@ -193,38 +184,33 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     setTimeElapsed(0);
     setIsTimerRunning(false);
   };
-
   const executeCommands = async () => {
     if (commands.length === 0) return;
-
     setIsExecuting(true);
     setGameStatus('running');
     setAttempts(prev => prev + 1);
-
     let currentPos = { x: 0, y: 0 };
-    
+
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
       const newPos = { ...currentPos };
-
       // Calculate new position based on command
       switch (command) {
-      case 'up':
-        newPos.y = Math.max(0, currentPos.y - 1);
-        break;
-      case 'down':
-        newPos.y = Math.min(currentMaze.size - 1, currentPos.y + 1);
-        break;
-      case 'left':
-        newPos.x = Math.max(0, currentPos.x - 1);
-        break;
-      case 'right':
-        newPos.x = Math.min(currentMaze.size - 1, currentPos.x + 1);
-        break;
-      default:
-        break;
+        case 'up':
+          newPos.y = Math.max(0, currentPos.y - 1);
+          break;
+        case 'down':
+          newPos.y = Math.min(currentMaze.size - 1, currentPos.y + 1);
+          break;
+        case 'left':
+          newPos.x = Math.max(0, currentPos.x - 1);
+          break;
+        case 'right':
+          newPos.x = Math.min(currentMaze.size - 1, currentPos.x + 1);
+          break;
+        default:
+          break;
       }
-
       // Check if robot hits a wall
       if (currentMaze.grid[newPos.y][newPos.x] === 1) {
         setGameStatus('failed');
@@ -232,14 +218,12 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
         setIsTimerRunning(false);
         return;
       }
-
       // Update position with animation delay
       currentPos = newPos;
       setRobotPosition(newPos);
-      
+
       // Wait for smooth animation transition
       await new Promise(resolve => setTimeout(resolve, 300));
-
       // Check if robot reached the goal
       if (currentMaze.grid[newPos.y][newPos.x] === 2) {
         // Enhanced scoring system based on difficulty
@@ -250,23 +234,22 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
           expert: 2.5,
           master: 3
         }[validDifficulty];
-
         const baseScore = 100 * difficultyMultiplier;
         const timeBonus = Math.max(0, (120 - timeElapsed) * difficultyMultiplier);
         const commandsBonus = Math.max(0, (currentMaze.maxCommands - commands.length) * 10 * difficultyMultiplier);
         const attemptsBonus = Math.max(0, (4 - attempts) * 20 * difficultyMultiplier);
         const perfectBonus = (attempts === 1 && commands.length <= currentMaze.maxCommands * 0.7) ? 50 * difficultyMultiplier : 0;
-        
+
         const totalScore = Math.round(baseScore + timeBonus + commandsBonus + attemptsBonus + perfectBonus);
-        
+
         setScore(totalScore);
         setGameStatus('completed');
         setIsExecuting(false);
         setIsTimerRunning(false);
-        
+
         // Save progress for this level
         saveProgress(validDifficulty);
-        
+
         if (onComplete) {
           onComplete({
             difficulty: validDifficulty,
@@ -276,13 +259,20 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
             commandsUsed: commands.length
           });
         }
-        
-        // Show celebration and prompt for next level
+
+        // Show celebration and prompt for next level or game completion
         const currentLevelIndex = levelOrder.indexOf(validDifficulty);
         const nextLevelId = levelOrder[currentLevelIndex + 1];
+
+        setShowConfetti(true);
         
-        if (nextLevelId && onLevelChange) {
-          setShowConfetti(true);
+        if (validDifficulty === 'master') {
+          // Final level completed - show game completion celebration
+          setTimeout(() => {
+            setShowGameComplete(true);
+          }, 2000); // Show game complete modal after longer celebration
+        } else if (nextLevelId && onLevelChange) {
+          // Regular level completion - show next level prompt
           setNextLevel(nextLevelId);
           setTimeout(() => {
             setShowNextLevelPrompt(true);
@@ -291,25 +281,21 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
         return;
       }
     }
-
     // If we reach here, robot didn't reach goal but didn't hit wall either
     setGameStatus('failed');
     setIsExecuting(false);
     setIsTimerRunning(false);
   };
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   const getScoreColor = () => {
     if (score >= 150) return 'text-green-500';
     if (score >= 120) return 'text-yellow-500';
     return 'text-orange-500';
   };
-
   const handleNextLevel = () => {
     setShowConfetti(false);
     setShowNextLevelPrompt(false);
@@ -329,236 +315,374 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     }
   };
 
+  const handleGameComplete = () => {
+    setShowConfetti(false);
+    setShowGameComplete(false);
+    resetGame();
+    // Optionally reset to first level or keep on master level
+    if (onLevelChange) {
+      onLevelChange('easy'); // Reset to first level for replay
+    }
+  };
   return (
-    <div id="maze-container" className={`w-full h-full mt-20 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg relative transition-all duration-500 ease-in-out transform ${gameStatus === 'completed' ? 'scale-105' : ''}`}>
-      {/* Confetti effect */}
-      {showConfetti && (
-        <div className="absolute inset-0 pointer-events-none z-50 animate-confetti">
-          {[...Array(50)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-2 rounded-full"
-              style={{
-                backgroundColor: ['#FFD700', '#FF69B4', '#00FF00', '#4169E1'][i % 4],
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animation: `confetti-fall ${1 + Math.random() * 2}s linear forwards`,
-                animationDelay: `${Math.random() * 1}s`
-              }}
-            />
-          ))}
-        </div>
-      )}
-      
-      {/* Next Level Prompt */}
-      {showNextLevelPrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-6 rounded-xl shadow-xl max-w-md mx-4 transform scale-in-center`}>
-            <h3 className="text-2xl font-bold mb-4 text-center">🎉 Level Complete!</h3>
-            <p className="text-lg mb-6 text-center">
-              Ready to take on the next challenge?
-            </p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={handleNextLevel}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-              >
-                Next Level →
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfetti(false);
-                  setShowNextLevelPrompt(false);
-                }}
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
-              >
-                Stay Here
-              </button>
-            </div>
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-4`}>
+      <div
+        id="maze-container"
+        className={`w-full max-w-4xl mx-auto px-4 rounded-xl ${
+          isDark ? 'bg-gray-800' : 'bg-white'
+        } shadow-lg relative transition-all duration-500 ease-in-out transform ${gameStatus === 'completed' ? 'scale-105' : ''}`}
+      >
+        {/* Header */}
+        <div className="text-center mb-6 pt-6">
+          <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+            🤖 Robot Maze Navigator
+          </h2>
+          <div className={`inline-flex items-center px-4 py-2 rounded-lg mb-2 ${validDifficulty === 'easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+              validDifficulty === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                validDifficulty === 'hard' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
+                  validDifficulty === 'expert' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+            }`}>
+            <span className="font-semibold">Level {Object.keys(mazes).indexOf(validDifficulty) + 1}: {currentMaze.name}</span>
+            {validDifficulty === 'easy' && <span className="ml-2">⭐</span>}
+            {validDifficulty === 'medium' && <span className="ml-2">⭐⭐</span>}
+            {validDifficulty === 'hard' && <span className="ml-2">⭐⭐⭐</span>}
+            {validDifficulty === 'expert' && <span className="ml-2">⭐⭐⭐⭐</span>}
+            {validDifficulty === 'master' && <span className="ml-2">⭐⭐⭐⭐⭐</span>}
           </div>
-        </div>
-      )}
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-          🤖 Robot Maze Navigator
-        </h2>
-        <div className={`inline-flex items-center px-4 py-2 rounded-lg mb-2 ${
-          validDifficulty === 'easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-            validDifficulty === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-              validDifficulty === 'hard' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
-                validDifficulty === 'expert' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
-                  'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-        }`}>
-          <span className="font-semibold">Level {Object.keys(mazes).indexOf(validDifficulty) + 1}: {currentMaze.name}</span>
-          {validDifficulty === 'easy' && <span className="ml-2">⭐</span>}
-          {validDifficulty === 'medium' && <span className="ml-2">⭐⭐</span>}
-          {validDifficulty === 'hard' && <span className="ml-2">⭐⭐⭐</span>}
-          {validDifficulty === 'expert' && <span className="ml-2">⭐⭐⭐⭐</span>}
-          {validDifficulty === 'master' && <span className="ml-2">⭐⭐⭐⭐⭐</span>}
-        </div>
-        
-        {/* Level Auto-Correction Notice */}
-        {validDifficulty !== difficulty && (
-          <div className={`text-xs px-3 py-1 rounded-full mb-2 ${isDark ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'}`}>
-            ⚠️ Level {Object.keys(mazes).indexOf(difficulty) + 1} is locked. Complete previous levels to unlock it!
-          </div>
-        )}
-        
-        <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
-          {currentMaze.description}
-        </p>
-        
-        {/* Overall Progress */}
-        <div className="flex items-center justify-center space-x-2">
-          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Progress:</span>
-          <div className="flex space-x-1">
-            {levelOrder.map((level, index) => (
-              <div
-                key={level}
-                className={`w-3 h-3 rounded-full ${
-                  completedLevels.includes(level)
-                    ? 'bg-green-500'
-                    : level === validDifficulty
-                      ? 'bg-blue-500'
-                      : isLevelUnlocked(level)
-                        ? isDark ? 'bg-gray-600' : 'bg-gray-300'
-                        : isDark ? 'bg-gray-800' : 'bg-gray-200'
-                }`}
-                title={`Level ${index + 1}: ${mazes[level].name} ${
-                  completedLevels.includes(level) ? '(Completed)' :
-                    level === difficulty ? '(Current)' :
-                      isLevelUnlocked(level) ? '(Available)' : '(Locked)'
-                }`}
-              />
-            ))}
-          </div>
-          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {completedLevels.length}/{levelOrder.length}
-          </span>
-        </div>
-      </div>
-      {/* Execute Button */}
-      <div className="flex justify-center mb-4">
-        <button
-          onClick={executeCommands}
-          disabled={isExecuting || commands.length === 0 || gameStatus === 'running'}
-          className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-        >
-          <FaPlay className="mr-2" />
-          {isExecuting ? 'Running...' : 'Execute Commands'}
-        </button>
-      </div>
 
-      {/* Command Buttons */}
-      <div className="mb-6">
-        <h3 className={`text-lg font-semibold mb-3 text-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
-          Add Commands
-        </h3>
-        <div className="flex justify-center">
-          <div className="grid grid-cols-3 gap-3 w-full max-w-[280px] sm:max-w-xs">
-            <div></div>
-            <button
-              onClick={() => addCommand('up')}
-              disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-              className="p-4 text-xl bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              ↑
-            </button>
-            <div></div>
-            
-            <button
-              onClick={() => addCommand('left')}
-              disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-              className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              ←
-            </button>
-            <div></div>
-            <button
-              onClick={() => addCommand('right')}
-              disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-              className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              →
-            </button>
-            
-            <div></div>
-            <button
-              onClick={() => addCommand('down')}
-              disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-              className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              ↓
-            </button>
-            <div></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Commands Display */}
-      <div className="mb-6">
-        <h3 className={`text-lg font-semibold mb-3 text-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
-          Command Sequence
-        </h3>
-        <div className={`min-h-[60px] p-4 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-          {commands.length === 0 ? (
-            <p className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              No commands yet. Add some directions above!
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2 justify-center">
-              {commands.map((command, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-blue-500 text-white rounded-full text-sm font-medium"
-                >
-                  {command}
-                </span>
-              ))}
+          {/* Level Auto-Correction Notice */}
+          {validDifficulty !== difficulty && (
+            <div className={`text-xs px-3 py-1 rounded-full mb-2 ${isDark ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'}`}>
+              ⚠️ Level {Object.keys(mazes).indexOf(difficulty) + 1} is locked. Complete previous levels to unlock it!
             </div>
           )}
+
+          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
+            {currentMaze.description}
+          </p>
+
+          {/* Overall Progress */}
+          <div className="flex items-center justify-center space-x-2">
+            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Progress:</span>
+            <div className="flex space-x-1">
+              {levelOrder.map((level, index) => (
+                <div
+                  key={level}
+                  className={`w-3 h-3 rounded-full ${completedLevels.includes(level)
+                      ? 'bg-green-500'
+                      : level === validDifficulty
+                        ? 'bg-blue-500'
+                        : isLevelUnlocked(level)
+                          ? isDark ? 'bg-gray-600' : 'bg-gray-300'
+                          : isDark ? 'bg-gray-800' : 'bg-gray-200'
+                    }`}
+                  title={`Level ${index + 1}: ${mazes[level].name} ${completedLevels.includes(level) ? '(Completed)' :
+                      level === difficulty ? '(Current)' :
+                        isLevelUnlocked(level) ? '(Available)' : '(Locked)'
+                    }`}
+                />
+              ))}
+            </div>
+            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              {completedLevels.length}/{levelOrder.length}
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Control Buttons */}
-      <div className="flex flex-wrap gap-3 justify-center mb-6">
-        <button
-          onClick={removeLastCommand}
-          disabled={isExecuting || commands.length === 0 || gameStatus !== 'idle'}
-          className="flex items-center px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          <FaUndo className="mr-2" />
-          Undo
-        </button>
-        
-        <button
-          onClick={clearCommands}
-          disabled={isExecuting || gameStatus === 'running'}
-          className="flex items-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          Clear All
-        </button>
-        
-        <button
-          onClick={resetGame}
-          className="flex items-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-        >
-          Reset Game
-        </button>
-        
-        {/* Reset Progress Button (for development/testing) */}
-        {(completedLevels.length > 0 && process.env.NODE_ENV === 'development') && (
-          <button
-            onClick={resetProgress}
-            className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-xs"
-            title="Reset all level progress"
-          >
-            🔄 Reset Progress
-          </button>
+        {/* Maze Game Container */}
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          {/* Maze Grid */}
+          <div className="flex-1 flex justify-center">
+            <div className="maze-grid" style={{ gridTemplateColumns: `repeat(${currentMaze.size}, 1fr)` }}>
+              {currentMaze.grid.map((row, y) =>
+                row.map((cell, x) => {
+                  const isRobot = robotPosition.x === x && robotPosition.y === y;
+                  let cellClass = 'maze-cell ';
+
+                  if (isRobot) {
+                    cellClass += 'maze-cell-robot';
+                  } else if (cell === 1) {
+                    cellClass += 'maze-cell-wall';
+                  } else if (cell === 2) {
+                    cellClass += 'maze-cell-goal';
+                  } else {
+                    cellClass += 'maze-cell-empty';
+                  }
+
+                  return (
+                    <div
+                      key={`${x}-${y}`}
+                      className={cellClass}
+                    >
+                      {isRobot && '🤖'}
+                      {!isRobot && cell === 2 && '🎯'}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Controls Panel */}
+          <div className="flex-1 max-w-md mx-auto lg:mx-0">
+            {/* Execute Button */}
+            <div className="flex justify-center mb-4">
+              <button
+                onClick={executeCommands}
+                disabled={isExecuting || commands.length === 0 || gameStatus === 'running'}
+                className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                <FaPlay className="mr-2" />
+                {isExecuting ? 'Running...' : 'Execute Commands'}
+              </button>
+            </div>
+
+            {/* Command Buttons */}
+            <div className="mb-6">
+              <h3 className={`text-lg font-semibold mb-3 text-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                Add Commands
+              </h3>
+              <div className="flex justify-center">
+                <div className="grid grid-cols-3 gap-3 w-full max-w-[280px] sm:max-w-xs">
+                  <div></div>
+                  <button
+                    onClick={() => addCommand('up')}
+                    disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
+                    className="p-4 text-xl bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ↑
+                  </button>
+                  <div></div>
+
+                  <button
+                    onClick={() => addCommand('left')}
+                    disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
+                    className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ←
+                  </button>
+                  <div></div>
+                  <button
+                    onClick={() => addCommand('right')}
+                    disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
+                    className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    →
+                  </button>
+
+                  <div></div>
+                  <button
+                    onClick={() => addCommand('down')}
+                    disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
+                    className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ↓
+                  </button>
+                  <div></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Commands Display */}
+            <div className="mb-6">
+              <h3 className={`text-lg font-semibold mb-3 text-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                Command Sequence
+              </h3>
+              <div className={`min-h-[60px] p-4 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                {commands.length === 0 ? (
+                  <p className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    No commands yet. Add some directions above!
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {commands.map((command, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-blue-500 text-white rounded-full text-sm font-medium"
+                      >
+                        {command}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Control Buttons */}
+            <div className="flex flex-wrap gap-3 justify-center mb-6">
+              <button
+                onClick={removeLastCommand}
+                disabled={isExecuting || commands.length === 0 || gameStatus !== 'idle'}
+                className="flex items-center px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                <FaUndo className="mr-2" />
+                Undo
+              </button>
+
+              <button
+                onClick={clearCommands}
+                disabled={isExecuting || gameStatus === 'running'}
+                className="flex items-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Clear All
+              </button>
+
+              <button
+                onClick={resetGame}
+                className="flex items-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Reset Game
+              </button>
+
+              {/* Reset Progress Button (for development/testing) */}
+              {(completedLevels.length > 0 && process.env.NODE_ENV === 'development') && (
+                <button
+                  onClick={resetProgress}
+                  className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-xs"
+                  title="Reset all level progress"
+                >
+                  🔄 Reset Progress
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Confetti effect */}
+        {showConfetti && (
+          <div className="absolute inset-0 pointer-events-none z-40 animate-confetti">
+            {[...Array(validDifficulty === 'master' ? 100 : 50)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-3 rounded-full"
+                style={{
+                  backgroundColor: validDifficulty === 'master' 
+                    ? ['#FFD700', '#FF69B4', '#00FF00', '#4169E1', '#FF4500', '#9400D3', '#FF1493'][i % 7]
+                    : ['#FFD700', '#FF69B4', '#00FF00', '#4169E1'][i % 4],
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animation: `confetti-fall ${1 + Math.random() * 3}s linear forwards`,
+                  animationDelay: `${Math.random() * 2}s`
+                }}
+              />
+            ))}
+            {/* Extra celebration elements for game completion */}
+            {validDifficulty === 'master' && [
+              ...Array(20).fill(0).map((_, i) => (
+                <div
+                  key={`star-${i}`}
+                  className="absolute text-2xl animate-pulse"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animation: `star-twinkle ${2 + Math.random() * 2}s ease-in-out infinite`,
+                    animationDelay: `${Math.random() * 2}s`
+                  }}
+                >
+                  ⭐
+                </div>
+              ))
+            ]}
+          </div>
         )}
-      </div>
 
+        {/* Next Level Prompt */}
+        {showNextLevelPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-8 rounded-xl shadow-2xl max-w-md w-full mx-auto transform scale-in-center`}>
+              <h3 className="text-2xl font-bold mb-4 text-center">🎉 Level Complete!</h3>
+              <p className="text-lg mb-6 text-center">
+                Ready to take on the next challenge?
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button
+                  onClick={handleNextLevel}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex-1 sm:flex-none"
+                >
+                  Next Level →
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfetti(false);
+                    setShowNextLevelPrompt(false);
+                  }}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium flex-1 sm:flex-none"
+                >
+                  Stay Here
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Game Complete Celebration Modal */}
+        {showGameComplete && (
+          <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 bg-opacity-95 flex items-center justify-center z-50 p-4">
+            <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-10 rounded-2xl shadow-2xl max-w-lg w-full mx-auto transform scale-in-center border-4 border-yellow-400 relative overflow-hidden`}>
+              {/* Animated background elements */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-200 via-pink-200 to-purple-200 opacity-10 animate-pulse"></div>
+              
+              {/* Trophy and celebration content */}
+              <div className="relative z-10 text-center">
+                <div className="text-6xl mb-4 animate-bounce">🏆</div>
+                <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-red-500 to-purple-600 bg-clip-text text-transparent">
+                  GAME COMPLETE!
+                </h2>
+                <div className="text-lg mb-4 flex justify-center items-center gap-2">
+                  <span>🎉</span>
+                  <span className="font-semibold">MAZE MASTER ACHIEVED!</span>
+                  <span>🎉</span>
+                </div>
+                
+                <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'} mb-6`}>
+                  <p className="text-lg font-semibold mb-2">🌟 Congratulations! 🌟</p>
+                  <p className="text-sm mb-2">
+                    You've successfully completed all {levelOrder.length} levels of the Robot Maze Navigator!
+                  </p>
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                    You are now officially a <strong>Maze Navigation Expert!</strong>
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+                  <div className={`p-3 rounded-lg ${isDark ? 'bg-green-900/30' : 'bg-green-100'}`}>
+                    <div className="text-green-600 dark:text-green-400 font-semibold">Levels Completed</div>
+                    <div className="text-2xl font-bold">{levelOrder.length}/5</div>
+                  </div>
+                  <div className={`p-3 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
+                    <div className="text-blue-600 dark:text-blue-400 font-semibold">Final Score</div>
+                    <div className="text-2xl font-bold">{score}</div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <button
+                    onClick={handleGameComplete}
+                    className="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 transition-all duration-300 font-medium flex-1 sm:flex-none transform hover:scale-105"
+                  >
+                    🔄 Play Again
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowConfetti(false);
+                      setShowGameComplete(false);
+                    }}
+                    className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-lg hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 font-medium flex-1 sm:flex-none transform hover:scale-105"
+                  >
+                    🎯 Stay & Explore
+                  </button>
+                </div>
+
+                {/* Achievement badges */}
+                <div className="mt-6 flex justify-center gap-2">
+                  <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">🥇 CHAMPION</span>
+                  <span className="px-3 py-1 bg-purple-500 text-white rounded-full text-xs font-bold">🧠 GENIUS</span>
+                  <span className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs font-bold">🤖 ROBOT WHISPERER</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       {/* Status Messages */}
       {gameStatus === 'completed' && (
         <div className={`p-4 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'} mb-4`}>
@@ -581,7 +705,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
               {validDifficulty !== 'master' && (
                 <div className={`text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
                   <p className="mb-1">
-                    🎉 Level {Object.keys(mazes).indexOf(validDifficulty) + 1} completed! 
+                    🎉 Level {Object.keys(mazes).indexOf(validDifficulty) + 1} completed!
                     {levelOrder.indexOf(validDifficulty) < levelOrder.length - 1 && (
                       <span className="font-semibold"> Next level unlocked!</span>
                     )}
@@ -600,7 +724,6 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
           </div>
         </div>
       )}
-
       {gameStatus === 'failed' && (
         <div className={`p-4 rounded-lg border-l-4 border-red-500 ${isDark ? 'bg-red-900/20' : 'bg-red-50'} mb-4`}>
           <div className="flex items-center">
@@ -616,24 +739,23 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
           </div>
         </div>
       )}
-
-      {/* Instructions */}
-      <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-          How to Play:
-        </h3>
-        <ul className={`text-sm space-y-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-          <li>• Click the arrow buttons to add movement commands</li>
-          <li>• Guide the robot 🤖 to the target 🎯</li>
-          <li>• Avoid walls 🧱 - hitting them will fail the mission</li>
-          <li>• Use fewer commands and complete faster for higher scores</li>
-          <li>• Complete each level to unlock the next challenge</li>
-          <li>• Maximum commands allowed: {currentMaze.maxCommands}</li>
-          <li>• Progress is saved automatically across sessions</li>
-        </ul>
+        {/* Instructions */}
+        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'} mb-6`}>
+          <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+            How to Play:
+          </h3>
+          <ul className={`text-sm space-y-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            <li>• Click the arrow buttons to add movement commands</li>
+            <li>• Guide the robot 🤖 to the target 🎯</li>
+            <li>• Avoid walls 🧱 - hitting them will fail the mission</li>
+            <li>• Use fewer commands and complete faster for higher scores</li>
+            <li>• Complete each level to unlock the next challenge</li>
+            <li>• Maximum commands allowed: {currentMaze.maxCommands}</li>
+            <li>• Progress is saved automatically across sessions</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
 };
-
-export default MazeActivity; 
+export default MazeActivity;

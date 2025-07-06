@@ -4,10 +4,10 @@ import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import apiService from '../services/apiService';
-import { 
-  FaArrowLeft, 
-  FaCheck, 
-  FaTimes, 
+import {
+  FaArrowLeft,
+  FaCheck,
+  FaTimes,
   FaCalendarAlt,
   FaUsers,
   FaSave,
@@ -21,7 +21,7 @@ const Register = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
-  
+
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
@@ -53,30 +53,30 @@ const Register = () => {
         console.log('📋 Full classes response:', classesResponse.data);
         const classes = classesResponse.data.classes || [];
         console.log(`📚 Found ${classes.length} classes for teacher ${user.id}:`, classes);
-        
+
         if (classes.length === 0) {
           console.log('⚠️ No classes assigned to teacher, trying attendance API as fallback...');
-          
+
           // Try to get students from attendance API even without assigned classes
           try {
             const attendanceResponse = await apiService.attendance.getByClass(selectedDate);
             console.log('🔍 Attendance fallback response:', attendanceResponse.data);
-            
+
             if (attendanceResponse.data.success && attendanceResponse.data.students && attendanceResponse.data.students.length > 0) {
               console.log(`✅ Found ${attendanceResponse.data.students.length} students in attendance API for teacher ${user.id}`);
-              
+
               // Create a virtual class from attendance data
               const virtualClass = {
                 id: attendanceResponse.data.classId || 1,
                 name: attendanceResponse.data.className || 'My Class',
                 student_count: attendanceResponse.data.totalStudents || attendanceResponse.data.students.length
               };
-              
+
               setTeacherClasses([virtualClass]);
               setTeacherClass(virtualClass);
               setClassName(virtualClass.name);
               setSelectedClassId(virtualClass.id);
-              
+
               // Map students from attendance API
               const attendanceStudents = attendanceResponse.data.students.map(student => ({
                 id: student.id,
@@ -84,7 +84,7 @@ const Register = () => {
                 gender: student.gender || 'unknown',
                 avatar: student.gender === 'female' ? '👧' : student.gender === 'male' ? '👦' : '👤'
               }));
-              
+
               console.log('👥 Using attendance students:', attendanceStudents);
               setStudents(attendanceStudents);
               await loadAttendanceForDate(virtualClass.id, selectedDate, attendanceStudents);
@@ -96,7 +96,7 @@ const Register = () => {
           } catch (attendanceError) {
             console.error('❌ Error checking attendance API fallback:', attendanceError);
           }
-          
+
           setError('No classes or students assigned to this teacher');
           setIsLoading(false);
           return;
@@ -104,9 +104,9 @@ const Register = () => {
 
         // Store all teacher's classes
         setTeacherClasses(classes);
-        
+
         // Use the first class as default or previously selected class
-        const currentClass = selectedClassId 
+        const currentClass = selectedClassId
           ? classes.find(c => c.id === selectedClassId) || classes[0]
           : classes[0];
         setTeacherClass(currentClass);
@@ -121,11 +121,11 @@ const Register = () => {
         console.log('🔍 Students API URL called:', `/api/classes/${currentClass.id}/children`);
         console.log('🔍 Students response headers:', studentsResponse.headers);
         console.log('🔍 Raw students data structure:', JSON.stringify(studentsResponse.data, null, 2));
-        
+
         const classStudents = studentsResponse.data.children || [];
         console.log('👥 Class students array:', classStudents);
         console.log('📊 Number of students found:', classStudents.length);
-        
+
         // If no students found in classes API, try to get them from attendance API
         if (classStudents.length === 0) {
           console.log('⚠️ No students found in classes API, trying attendance API...');
@@ -147,19 +147,19 @@ const Register = () => {
             console.error('Error fetching from attendance API:', error);
           }
         }
-        
+
         // Use students from classes API if available
         const studentsWithAvatars = classStudents.map(student => ({
           ...student,
           avatar: student.gender === 'female' ? '👧' : student.gender === 'male' ? '👦' : '👤'
         }));
-        
+
         console.log('✨ Students with avatars:', studentsWithAvatars);
         setStudents(studentsWithAvatars);
 
         // Load existing attendance for the selected date
         await loadAttendanceForDate(currentClass.id, selectedDate, studentsWithAvatars);
-        
+
       } catch (error) {
         console.error('Error loading class data:', error);
         setError(error.response?.data?.message || 'Failed to load class data');
@@ -182,21 +182,21 @@ const Register = () => {
   // Load attendance for a specific date using the live backend API
   const loadAttendanceForDate = async (classId, date, classStudents) => {
     console.log(`📋 Loading attendance for class ${classId} on ${date}`);
-    
+
     try {
       // Use the live backend API to get attendance data
       const response = await apiService.attendance.getByClass(date);
       const attendanceData = response.data;
-      
+
       console.log('🔍 Attendance API response:', attendanceData);
-      
+
       if (attendanceData.success && attendanceData.students) {
         // Create attendance object from API response
         const attendanceMap = {};
         attendanceData.students.forEach(student => {
           attendanceMap[student.id] = student.attendance_status || 'present';
         });
-        
+
         console.log('✅ Loaded attendance from live API:', attendanceMap);
         setAttendance(attendanceMap);
         return;
@@ -205,13 +205,13 @@ const Register = () => {
       console.error('Error loading attendance from API:', error);
       console.log('⚠️ Falling back to default attendance');
     }
-    
+
     // Fallback: Initialize with default 'present' status
     const defaultAttendance = {};
     classStudents.forEach(student => {
       defaultAttendance[student.id] = 'present';
     });
-    
+
     console.log('🆕 Using default attendance as fallback');
     setAttendance(defaultAttendance);
   };
@@ -223,29 +223,29 @@ const Register = () => {
     try {
       setIsLoading(true);
       setSelectedClassId(parseInt(classId));
-      
+
       // Find the selected class
       const selectedClass = teacherClasses.find(cls => cls.id === parseInt(classId));
       if (!selectedClass) return;
-      
+
       setTeacherClass(selectedClass);
       setClassName(selectedClass.name);
-      
+
       // Get students in the selected class
       const studentsResponse = await apiService.classes.getChildren(selectedClass.id);
       const classStudents = studentsResponse.data.children || [];
-      
+
       // Add avatar based on gender or use default
       const studentsWithAvatars = classStudents.map(student => ({
         ...student,
         avatar: student.gender === 'female' ? '👧' : student.gender === 'male' ? '👦' : '👤'
       }));
-      
+
       setStudents(studentsWithAvatars);
-      
+
       // Load attendance for the current date and new class
       await loadAttendanceForDate(selectedClass.id, selectedDate, studentsWithAvatars);
-      
+
     } catch (error) {
       console.error('Error changing class:', error);
       toast.error('Failed to load class data');
@@ -283,18 +283,18 @@ const Register = () => {
       // Save attendance using the live bulk mark API
       const response = await apiService.attendance.bulkMark(selectedDate, attendanceRecords);
       console.log('✅ Attendance saved successfully:', response.data);
-      
+
       const presentCount = Object.values(attendance).filter(status => status === 'present').length;
       const absentCount = Object.values(attendance).filter(status => status === 'absent').length;
       const lateCount = Object.values(attendance).filter(status => status === 'late').length;
-      
+
       toast.success(
         `Attendance saved! ${presentCount} present, ${absentCount} absent, ${lateCount} late`
       );
-      
+
       // Reload attendance data to reflect saved changes
       await loadAttendanceForDate(teacherClass.id, selectedDate, students);
-      
+
     } catch (error) {
       console.error('Error saving attendance:', error);
       const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to save attendance';
@@ -309,7 +309,7 @@ const Register = () => {
     const present = Object.values(attendance).filter(status => status === 'present').length;
     const absent = Object.values(attendance).filter(status => status === 'absent').length;
     const late = Object.values(attendance).filter(status => status === 'late').length;
-    
+
     return { total, present, absent, late };
   };
 
@@ -373,77 +373,73 @@ const Register = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-32`}>
-      {/* Header */}
-      <div className={`p-4 border-b sticky top-0 z-10 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className={`inline-flex items-center px-3 py-2 rounded-lg transition-colors ${
-              isDark 
-                ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            }`}
-          >
-            <FaArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </button>
-          
-          <div className="text-center">
-            <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Class Register
-            </h1>
-            {teacherClasses.length > 1 ? (
-              <div className="flex items-center justify-center mt-2">
-                <select
-                  value={selectedClassId || ''}
-                  onChange={(e) => handleClassChange(e.target.value)}
-                  className={`px-3 py-1 rounded-lg border text-sm ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                >
-                  {teacherClasses.map(cls => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </option>
-                  ))}
-                </select>
-                <FaChevronDown className={`w-3 h-3 ml-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-              </div>
-            ) : (
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {className}
-              </p>
-            )}
-          </div>
-          
-          <button
-            onClick={handleSaveAttendance}
-            disabled={isSaving}
-            className={`inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
-              isSaving
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {isSaving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <FaSave className="w-4 h-4 mr-2" />
-                Save
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+    <div className={`min-h-screen mt-20 rounded-lg ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-4`}>
+      <div className="p-4 space-y-6 pb-4">
+        <div className={`p-4 border-b rounded-xl sticky top-0 z-10 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`inline-flex items-center px-3 py-2 rounded-lg transition-colors ${isDark
+                  ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+            >
+              <FaArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </button>
 
-      <div className="p-4 space-y-6 pb-32">
+            <div className="text-center">
+              <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Class Register
+              </h1>
+              {teacherClasses.length > 1 ? (
+                <div className="flex items-center justify-center mt-2">
+                  <select
+                    value={selectedClassId || ''}
+                    onChange={(e) => handleClassChange(e.target.value)}
+                    className={`px-3 py-1 rounded-lg border text-sm ${isDark
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                  >
+                    {teacherClasses.map(cls => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name}
+                      </option>
+                    ))}
+                  </select>
+                  <FaChevronDown className={`w-3 h-3 ml-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                </div>
+              ) : (
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {className}
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={handleSaveAttendance}
+              disabled={isSaving}
+              className={`inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${isSaving
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+            >
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FaSave className="w-4 h-4 mr-2" />
+                  Save
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* Date Selection */}
         <div className={`p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center justify-between">
@@ -462,11 +458,10 @@ const Register = () => {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className={`px-3 py-2 rounded-lg border ${
-                isDark 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
+              className={`px-3 py-2 rounded-lg border ${isDark
+                  ? 'bg-gray-700 border-gray-600 text-white'
                   : 'bg-white border-gray-300 text-gray-900'
-              }`}
+                }`}
             />
           </div>
         </div>
@@ -540,15 +535,14 @@ const Register = () => {
               Tap on students to mark their attendance status
             </p>
           </div>
-          
+
           <div className="p-4">
             <div className="grid grid-cols-1 gap-3">
               {students.map((student) => (
                 <div
                   key={student.id}
-                  className={`p-4 rounded-lg border transition-all ${
-                    isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                  }`}
+                  className={`p-4 rounded-lg border transition-all ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -562,43 +556,40 @@ const Register = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex space-x-2">
                       <button
                         onClick={() => markAttendance(student.id, 'present')}
-                        className={`p-2 rounded-lg transition-colors ${
-                          attendance[student.id] === 'present'
+                        className={`p-2 rounded-lg transition-colors ${attendance[student.id] === 'present'
                             ? 'bg-green-600 text-white'
                             : isDark
                               ? 'bg-gray-600 text-gray-300 hover:bg-green-600 hover:text-white'
                               : 'bg-gray-200 text-gray-600 hover:bg-green-600 hover:text-white'
-                        }`}
+                          }`}
                       >
                         <FaCheck className="w-4 h-4" />
                       </button>
-                      
+
                       <button
                         onClick={() => markAttendance(student.id, 'late')}
-                        className={`p-2 rounded-lg transition-colors ${
-                          attendance[student.id] === 'late'
+                        className={`p-2 rounded-lg transition-colors ${attendance[student.id] === 'late'
                             ? 'bg-yellow-600 text-white'
                             : isDark
                               ? 'bg-gray-600 text-gray-300 hover:bg-yellow-600 hover:text-white'
                               : 'bg-gray-200 text-gray-600 hover:bg-yellow-600 hover:text-white'
-                        }`}
+                          }`}
                       >
                         <FaClock className="w-4 h-4" />
                       </button>
-                      
+
                       <button
                         onClick={() => markAttendance(student.id, 'absent')}
-                        className={`p-2 rounded-lg transition-colors ${
-                          attendance[student.id] === 'absent'
+                        className={`p-2 rounded-lg transition-colors ${attendance[student.id] === 'absent'
                             ? 'bg-red-600 text-white'
                             : isDark
                               ? 'bg-gray-600 text-gray-300 hover:bg-red-600 hover:text-white'
                               : 'bg-gray-200 text-gray-600 hover:bg-red-600 hover:text-white'
-                        }`}
+                          }`}
                       >
                         <FaTimes className="w-4 h-4" />
                       </button>

@@ -38,7 +38,7 @@ function App() {
   };
   return (
     <AuthProvider>
-      <div className="app">
+      <div className="app scroll-smooth scrollbar-no-scrollbar">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Layout />}>

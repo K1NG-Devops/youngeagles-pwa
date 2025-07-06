@@ -3,13 +3,15 @@ import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/apiService';
 import { toast } from 'react-toastify';
 import { useTheme } from '../hooks/useTheme';
-import { FaChild, FaCalendarAlt, FaUser, FaPhone } from 'react-icons/fa';
+import { FaChild, FaCalendarAlt, FaUser, FaArrowLeft, FaPhone } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const Children = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const [children, setChildren] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchChildren = async () => {
@@ -79,12 +81,22 @@ const Children = () => {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-6`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
-        {/* Header */}
-        <div className={`p-6 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+      <div className="max-w-6xl mx-auto px-2 sm:px-6 space-y-6">
+        {/* Header */}       
+        <div className={`p-2 mt-18 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center justify-between">
+             <button
+                      onClick={() => navigate('/dashboard')}
+                      className={`inline-flex px-2 items-center py-2 rounded-lg transition-colors ${isDark
+                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                    >
+                      <FaArrowLeft className="w-4 h-4 mr-2" />
+                      Back to Dashboard
+                    </button>
             <div>
-              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <h2 className={`text-2xl mr-8 font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {user?.role === 'parent' ? 'My Children' : 'All Children'}
               </h2>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>

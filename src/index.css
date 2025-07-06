@@ -1,5 +1,163 @@
+/* Hide scrollbar for the entire app */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
 @import 'tailwindcss';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom animations for confetti */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Maze game styles */
+.scale-in-center {
+  animation: scale-in-center 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes scale-in-center {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Game board styles */
+.maze-grid {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin: 0 auto;
+  max-width: 400px;
+  min-width: 280px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.maze-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.maze-cell-empty {
+  background-color: #ffffff;
+}
+
+.maze-cell-wall {
+  background-color: #4a5568;
+  transform: scale(0.95);
+  position: relative;
+}
+
+.maze-cell-wall::before {
+  content: '🧱';
+  position: absolute;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.maze-cell-goal {
+  background-color: #48bb78;
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+}
+
+.maze-cell-robot {
+  background-color: #4299e1;
+  color: white;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 8px rgba(66, 153, 225, 0.6);
+  z-index: 10;
+  position: relative;
+}
+
+.dark .maze-cell-empty {
+  background-color: #2d3748;
+}
+
+.dark .maze-cell-wall {
+  background-color: #1a202c;
+}
+
+.dark .maze-cell-wall::before {
+  opacity: 0.9;
+}
+
+.dark .maze-cell-goal {
+  background-color: #2f855a;
+  box-shadow: 0 0 10px rgba(47, 133, 90, 0.5);
+}
+
+.dark .maze-cell-robot {
+  background-color: #2b6cb0;
+  box-shadow: 0 0 8px rgba(43, 108, 176, 0.6);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Game completion celebration animations */
+@keyframes star-twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
+}
+
+@keyframes celebration-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
+
