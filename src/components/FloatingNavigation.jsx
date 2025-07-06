@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaRobot, FaBars, FaTimes, FaGripVertical } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const FloatingNavigation = () => {
   const { user } = useAuth();
@@ -49,7 +49,7 @@ const FloatingNavigation = () => {
     localStorage.setItem('floatingNavPosition', JSON.stringify(position));
   }, [position]);
 
-  const toggleMenu = () => setIsExpanded(!isExpanded);
+const toggleMenu = () => setIsExpanded(prev => !prev);
 
   const handleMouseDown = (e) => {
     if (e.target.closest('.nav-item-button')) return; // Don't drag when clicking nav items
@@ -134,22 +134,34 @@ const FloatingNavigation = () => {
     setIsDragging(false);
   };
 
-  // Add event listeners for drag functionality
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchend', handleTouchEnd);
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', handleTouchEnd);
-      };
+useEffect(() => {
+  const handleClickOutside = event => {
+    if (isExpanded && dragRef.current && !dragRef.current.contains(event.target)) {
+      setIsExpanded(false);
     }
-  }, [isDragging, dragOffset]);
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, [isExpanded]);
+
+// Add event listeners for drag functionality
+useEffect(() => {
+  if (isDragging) {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }
+}, [isDragging, dragOffset]);
 
   return (
     <>

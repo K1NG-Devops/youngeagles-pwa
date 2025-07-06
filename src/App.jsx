@@ -1,7 +1,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-// Theme is handled by useTheme hook, no provider needed
+import { ThemeProvider } from './contexts/ThemeContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -20,6 +21,7 @@ import PaymentProofs from './pages/PaymentProofs';
 import Settings from './pages/Settings';
 import Activities from './pages/Activities';
 import Register from './pages/Register';
+import Checkout from './pages/Checkout';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './contexts/AuthContext';
 
@@ -37,9 +39,11 @@ function App() {
     return <Children />;
   };
   return (
-    <AuthProvider>
-      <div className="app scroll-smooth scrollbar-no-scrollbar">
-        <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <SubscriptionProvider>
+          <div className="app scroll-smooth scrollbar-no-scrollbar">
+            <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
@@ -111,10 +115,17 @@ function App() {
                 <Register />
               </PrivateRoute>
             } />
+            <Route path="checkout" element={
+              <PrivateRoute>
+                <Checkout />
+              </PrivateRoute>
+            } />
           </Route>
-        </Routes>
-      </div>
-    </AuthProvider>
+          </Routes>
+          </div>
+        </SubscriptionProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

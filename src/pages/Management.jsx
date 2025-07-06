@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
 import { FaCreditCard, FaUpload, FaFileInvoice, FaHistory, FaShieldAlt, FaStar, FaCrown } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { useNavigate } from 'react-router-dom';
 
 const Management = () => {
   const { isDark } = useTheme();
+  const { subscription, getCurrentPlan, getDaysRemaining, plans } = useSubscription();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('subscription');
 
-  // Subscription data - would be fetched from API in production
-  const [subscriptionInfo] = useState({
-    plan: 'Premium',
-    status: 'Active',
-    nextBilling: '2025-08-02',
-    amount: 'R199/month',
-    features: ['Unlimited homework tracking', 'Priority support', 'Advanced analytics', 'File uploads up to 50MB']
-  });
+  // Get current subscription info
+  const currentPlan = getCurrentPlan();
+  const daysRemaining = getDaysRemaining();
+  const subscriptionInfo = {
+    plan: currentPlan?.name || 'Basic',
+    status: subscription?.status === 'active' ? 'Active' : subscription?.status === 'trial' ? 'Trial' : 'Inactive',
+    nextBilling: subscription?.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A',
+    amount: `R${currentPlan?.price}/${currentPlan?.period}`,
+    features: [
+      `Up to ${currentPlan?.features.maxChildren === -1 ? 'unlimited' : currentPlan?.features.maxChildren} children`,
+      `${currentPlan?.features.maxFileSize}MB file uploads`,
+      `${currentPlan?.features.storage}MB storage`,
+      currentPlan?.features.messaging ? 'Parent-teacher messaging' : 'Basic communication',
+      currentPlan?.features.analytics === 'advanced' ? 'Advanced analytics' : 'Basic progress reports'
+    ]
+  };
 
   const tabs = [
     { id: 'subscription', label: 'Subscription', icon: FaCrown },
@@ -24,30 +36,6 @@ const Management = () => {
     { id: 'history', label: 'History', icon: FaHistory }
   ];
 
-  const plans = [
-    {
-      name: 'Basic',
-      price: 'R99',
-      period: 'month',
-      features: ['Up to 2 children', 'Basic homework tracking', 'Email support', '10MB file uploads'],
-      current: false
-    },
-    {
-      name: 'Premium',
-      price: 'R199',
-      period: 'month',
-      features: ['Up to 5 children', 'Advanced homework tracking', 'Priority support', '50MB file uploads', 'Progress analytics'],
-      current: true,
-      popular: true
-    },
-    {
-      name: 'Family',
-      price: 'R299',
-      period: 'month',
-      features: ['Unlimited children', 'All premium features', '24/7 phone support', '100MB file uploads', 'Custom reports'],
-      current: false
-    }
-  ];
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -64,8 +52,8 @@ const Management = () => {
         <h3 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Current Subscription</h3>
         <div className={`rounded-lg p-4 border ${
           isDark 
-            ? 'bg-blue-900/20 border-blue-700/30' 
-            : 'bg-blue-50 border-blue-200'
+            ? 'bg-purple-900/20 border-purple-700/30' 
+            : 'bg-purple-50 border-purple-200'
         }`}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
@@ -76,7 +64,7 @@ const Management = () => {
               </span>
             </div>
             <div className="text-right">
-              <div className={`font-bold text-xl ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{subscriptionInfo.amount}</div>
+              <div className={`font-bold text-xl ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>{subscriptionInfo.amount}</div>
               <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Next billing: {subscriptionInfo.nextBilling}</div>
             </div>
           </div>
@@ -89,61 +77,109 @@ const Management = () => {
             ))}
           </div>
         </div>
+
+        {/* Usage Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+              {subscription?.usage?.children || 0}/{currentPlan?.features.maxChildren === -1 ? '∞' : currentPlan?.features.maxChildren}
+            </div>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Children Added</div>
+          </div>
+          <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`text-2xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+              {subscription?.usage?.storage || 0}MB
+            </div>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Storage Used ({currentPlan?.features.storage}MB limit)
+            </div>
+          </div>
+          <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`text-2xl font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>{daysRemaining} days</div>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Days Remaining</div>
+          </div>
+        </div>
       </div>
 
       {/* Available Plans */}
       <div className={`rounded-lg p-6 shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
         <h3 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Change Plan</h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          {plans.map((plan, index) => (
-            <div key={index} className={`border rounded-lg p-4 relative transition-all ${
-              plan.current 
-                ? isDark 
-                  ? 'border-blue-400 bg-blue-900/20' 
-                  : 'border-blue-500 bg-blue-50'
-                : isDark 
-                  ? 'border-gray-600 bg-gray-700/50' 
-                  : 'border-gray-200 bg-white'
-            } ${plan.popular ? 'ring-2 ring-blue-500' : ''}`}>
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    Most Popular
-                  </span>
+        <div className="grid md:grid-cols-3 gap-6">
+          {Object.values(plans).map((plan, index) => {
+            const isCurrentPlan = plan.id === currentPlan?.id;
+            const colorClasses = isCurrentPlan 
+              ? isDark ? 'border-purple-400 bg-purple-900/20' : 'border-purple-500 bg-purple-50'
+              : isDark ? 'border-gray-600 bg-gray-700/50 hover:border-purple-500' : 'border-gray-200 bg-white hover:border-purple-300';
+            
+            return (
+              <div key={index} className={`border rounded-xl p-6 relative transition-all transform hover:scale-105 ${
+                colorClasses
+              } ${plan.popular ? 'ring-2 ring-purple-500 shadow-lg' : 'shadow-md'}`}>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 rounded-full text-xs font-medium shadow-lg">
+                      ⭐ Most Popular
+                    </span>
+                  </div>
+                )}
+                
+                <div className="text-center mb-6">
+                  <h4 className={`font-bold text-xl mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{plan.name}</h4>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{plan.description}</p>
+                  <div className="mb-4">
+                    <span className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>R{plan.price}</span>
+                    <span className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>/{plan.period}</span>
+                  </div>
                 </div>
-              )}
-              <div className="text-center mb-4">
-                <h4 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{plan.name}</h4>
-                <div className="mt-2">
-                  <span className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{plan.price}</span>
-                  <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>/{plan.period}</span>
+
+                {/* Features */}
+                <div className="mb-6">
+                  <h5 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>What's included:</h5>
+                  <ul className="space-y-2">
+                    <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <FaStar className="text-green-500 text-xs mt-1 flex-shrink-0" />
+                      <span>Up to {plan.features.maxChildren === -1 ? 'unlimited' : plan.features.maxChildren} children</span>
+                    </li>
+                    <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <FaStar className="text-green-500 text-xs mt-1 flex-shrink-0" />
+                      <span>{plan.features.maxFileSize}MB file uploads</span>
+                    </li>
+                    <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <FaStar className="text-green-500 text-xs mt-1 flex-shrink-0" />
+                      <span>{plan.features.storage}MB total storage</span>
+                    </li>
+                    <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <FaStar className="text-green-500 text-xs mt-1 flex-shrink-0" />
+                      <span>{plan.features.messaging ? 'Parent-teacher messaging' : 'Basic communication'}</span>
+                    </li>
+                    <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <FaStar className="text-green-500 text-xs mt-1 flex-shrink-0" />
+                      <span>{plan.features.analytics === 'advanced' ? 'Advanced analytics' : plan.features.analytics === 'enterprise' ? 'Enterprise analytics' : 'Basic analytics'}</span>
+                    </li>
+                  </ul>
                 </div>
+
+
+                <button 
+                  className={`w-full py-3 px-4 rounded-lg font-medium transition-all transform hover:scale-105 ${
+                    isCurrentPlan
+                      ? isDark 
+                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                        : 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
+                  }`}
+                  disabled={isCurrentPlan}
+                  onClick={() => {
+                    if (!isCurrentPlan) {
+                      navigate(`/checkout?plan=${plan.id}`);
+                    }
+                  }}
+                >
+                  {isCurrentPlan ? '✅ Current Plan' : `Upgrade to ${plan.name}`}
+                </button>
               </div>
-              <ul className="space-y-2 mb-4">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className={`flex items-center space-x-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    <FaStar className="text-yellow-400 text-xs" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <button 
-                className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-                  plan.current
-                    ? isDark 
-                      ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                      : 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                    : isDark
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-                disabled={plan.current}
-                onClick={() => toast.info(`Upgrading to ${plan.name} plan...`)}
-              >
-                {plan.current ? 'Current Plan' : `Upgrade to ${plan.name}`}
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

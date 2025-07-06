@@ -2,16 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/apiService';
 import { toast } from 'react-toastify';
-import { useTheme } from '../hooks/useTheme';
-import { FaChild, FaCalendarAlt, FaUser, FaArrowLeft, FaPhone } from 'react-icons/fa';
+import { useTheme } from '../contexts/ThemeContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { FaChild, FaCalendarAlt, FaUser, FaArrowLeft, FaPhone, FaPlus, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import FeatureGuard, { useFeatureAccess } from '../components/FeatureGuard';
 
 const Children = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const { getCurrentPlan, canAddChild } = useSubscription();
+  const { checkChildLimit } = useFeatureAccess();
   const [children, setChildren] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  
+  const currentPlan = getCurrentPlan();
+  const maxChildren = currentPlan?.features.maxChildren;
 
   useEffect(() => {
     const fetchChildren = async () => {
@@ -65,14 +72,21 @@ const Children = () => {
             }
           </p>
           {user?.role !== 'parent' && (
-            <button 
-              onClick={() => toast.info('Add child feature coming soon!')}
-              className={`mt-4 px-6 py-3 rounded-lg font-medium transition-colors ${
-                isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'
-              }`}
-            >
-              Add First Child
-            </button>
+            <FeatureGuard feature="maxChildren" showUpgrade={true} blockAccess={false}>
+              <button 
+                onClick={() => {
+                  if (checkChildLimit()) {
+                    toast.info('Add child feature coming soon!');
+                  }
+                }}
+                className={`mt-4 px-6 py-3 rounded-lg font-medium transition-colors ${
+                  isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                <FaPlus className="inline mr-2" />
+                Add First Child
+              </button>
+            </FeatureGuard>
           )}
         </div>
       </div>
@@ -103,9 +117,42 @@ const Children = () => {
                 Total: {children.length} {children.length === 1 ? 'child' : 'children'}
               </p>
             </div>
-            <div className={`px-4 py-2 rounded-lg ${isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
-              <FaChild className="inline mr-2" />
-              {children.length}
+            <div className="flex items-center space-x-4">
+              <div className={`px-4 py-2 rounded-lg ${isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
+                <FaChild className="inline mr-2" />
+                {children.length}
+                {maxChildren !== -1 && (
+                  <span className="text-xs ml-1">/ {maxChildren}</span>
+                )}
+              </div>
+              
+              {user?.role !== 'parent' && (
+                <button 
+                  onClick={() => {
+                    if (checkChildLimit()) {
+                      toast.info('Add child feature coming soon!');
+                    }
+                  }}
+                  disabled={!canAddChild()}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center ${
+                    canAddChild()
+                      ? isDark ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  {canAddChild() ? (
+                    <>
+                      <FaPlus className="w-4 h-4 mr-2" />
+                      Add Child
+                    </>
+                  ) : (
+                    <>
+                      <FaLock className="w-4 h-4 mr-2" />
+                      Limit Reached
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

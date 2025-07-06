@@ -6,7 +6,7 @@ import SideNavigation from './SideNavigation';
 import TopNavigation from './TopNavigation';
 import FloatingNavigation from './FloatingNavigation';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Layout = () => {
   const location = useLocation();

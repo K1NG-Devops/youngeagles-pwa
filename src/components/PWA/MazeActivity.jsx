@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaRobot, FaUndo, FaPlay, FaCheckCircle } from 'react-icons/fa';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../contexts/ThemeContext';
 const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
   const { isDark } = useTheme();
   const [commands, setCommands] = useState([]);
@@ -449,7 +449,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
                   <button
                     onClick={() => addCommand('up')}
                     disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-                    className="p-4 text-xl bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 text-xl bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
                     ↑
                   </button>
@@ -458,7 +458,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
                   <button
                     onClick={() => addCommand('left')}
                     disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-                    className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
                     ←
                   </button>
@@ -466,7 +466,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
                   <button
                     onClick={() => addCommand('right')}
                     disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-                    className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
                     →
                   </button>
@@ -475,7 +475,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
                   <button
                     onClick={() => addCommand('down')}
                     disabled={isExecuting || commands.length >= currentMaze.maxCommands || gameStatus !== 'idle'}
-                    className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
                     ↓
                   </button>
@@ -514,7 +514,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
               <button
                 onClick={removeLastCommand}
                 disabled={isExecuting || commands.length === 0 || gameStatus !== 'idle'}
-                className="flex items-center px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 <FaUndo className="mr-2" />
                 Undo
@@ -523,7 +523,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
               <button
                 onClick={clearCommands}
                 disabled={isExecuting || gameStatus === 'running'}
-                className="flex items-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 Clear All
               </button>
@@ -588,8 +588,8 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
 
         {/* Next Level Prompt */}
         {showNextLevelPrompt && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-8 rounded-xl shadow-2xl max-w-md w-full mx-auto transform scale-in-center`}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+            <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-8 rounded-xl scale-in-center shadow-lg relative overflow-hidden`}>
               <h3 className="text-2xl font-bold mb-4 text-center">🎉 Level Complete!</h3>
               <p className="text-lg mb-6 text-center">
                 Ready to take on the next challenge?

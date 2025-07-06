@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaCog, FaSignOutAlt, FaUserCircle, FaChevronDown, FaQuestionCircle, FaInfoCircle, FaCreditCard, FaMoon, FaSun } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const UserDropdown = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
