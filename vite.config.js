@@ -9,7 +9,7 @@ export default defineConfig({
     // Ensure environment variables are available in browser
     'process.env': {}
   },
-  envPrefix: 'REACT_APP_',
+  envPrefix: 'VITE_',
   plugins: [
     react(),
     tailwindcss(),
