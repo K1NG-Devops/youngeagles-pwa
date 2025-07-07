@@ -2,7 +2,7 @@ import apiService from './apiService';
 
 class PushNotificationService {
   constructor() {
-    this.vapidPublicKey = import.meta.env.REACT_APP_VAPID_PUBLIC_KEY;
+    this.vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     this.subscription = null;
     this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
   }
