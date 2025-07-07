@@ -481,6 +481,42 @@ const TeacherDashboard = () => {
           </div>
         </div>
 
+        {/* Lesson Library Summary */}
+        <div className={`p-6 rounded-xl shadow-sm border mb-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>📚 CAPS-Aligned Lesson Library</h3>
+            <button
+              onClick={() => setShowLessonLibrary(true)}
+              className={`text-sm font-medium ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+            >
+              View All →
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+              <div className={`text-2xl font-bold ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>16</div>
+              <div className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Total Lessons</div>
+            </div>
+            <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+              <div className={`text-2xl font-bold ${isDark ? 'text-green-300' : 'text-green-800'}`}>24+</div>
+              <div className={`text-xs ${isDark ? 'text-green-400' : 'text-green-600'}`}>Worksheets</div>
+            </div>
+            <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
+              <div className={`text-2xl font-bold ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>5</div>
+              <div className={`text-xs ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Subjects</div>
+            </div>
+            <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-orange-900/20' : 'bg-orange-50'}`}>
+              <div className={`text-2xl font-bold ${isDark ? 'text-orange-300' : 'text-orange-800'}`}>✓</div>
+              <div className={`text-xs ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>Ready-Made</div>
+            </div>
+          </div>
+          <div className={`mt-4 p-3 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+            <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-800'}`}>
+              ✅ All lessons include: step-by-step instructions, downloadable worksheets, assessment tools, and parent guidance
+            </p>
+          </div>
+        </div>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Create Homework Assignment */}

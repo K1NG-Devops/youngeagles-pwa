@@ -30,11 +30,14 @@ export const SubscriptionProvider = ({ children }) => {
         maxFileSize: 10, // MB
         storage: 50, // MB
         support: 'email-48h',
-        analytics: 'basic',
+        analytics: false, // No analytics
         messaging: false,
         prioritySupport: false,
         customReports: false,
-        apiAccess: false
+        apiAccess: false,
+        aiParentAssistant: false,
+        aiInsights: false,
+        aiRequestsPerMonth: 0
       },
       description: 'Perfect for small families just getting started'
     },
@@ -53,9 +56,12 @@ export const SubscriptionProvider = ({ children }) => {
         messaging: true,
         prioritySupport: true,
         customReports: false,
-        apiAccess: false
+        apiAccess: false,
+        aiParentAssistant: true,
+        aiInsights: true,
+        aiRequestsPerMonth: 100 // 100 AI requests per month
       },
-      description: 'Most popular choice for growing families',
+      description: 'Most popular choice for growing families with AI assistance',
       popular: true
     },
     family: {
@@ -73,9 +79,12 @@ export const SubscriptionProvider = ({ children }) => {
         messaging: true,
         prioritySupport: true,
         customReports: true,
-        apiAccess: true
+        apiAccess: true,
+        aiParentAssistant: true,
+        aiInsights: true,
+        aiRequestsPerMonth: 500 // 500 AI requests per month
       },
-      description: 'Complete solution for large families and educators'
+      description: 'Complete solution for large families and educators with premium AI features'
     }
   };
 
@@ -197,6 +206,36 @@ export const SubscriptionProvider = ({ children }) => {
     return fileSizeInMB <= maxFileSize && (currentStorage + fileSizeInMB) <= maxStorage;
   };
 
+  // AI Feature helpers
+  const hasAIParentAssistant = () => {
+    return hasFeature('aiParentAssistant');
+  };
+
+  const hasAIInsights = () => {
+    return hasFeature('aiInsights');
+  };
+
+  const getAIRequestsRemaining = () => {
+    const monthlyLimit = getFeatureLimit('aiRequestsPerMonth');
+    const currentUsage = subscription?.usage?.aiRequestsThisMonth || 0;
+    return Math.max(0, monthlyLimit - currentUsage);
+  };
+
+  const canMakeAIRequest = () => {
+    const monthlyLimit = getFeatureLimit('aiRequestsPerMonth');
+    if (monthlyLimit === 0) return false; // Basic plan has no AI
+    
+    const currentUsage = subscription?.usage?.aiRequestsThisMonth || 0;
+    return currentUsage < monthlyLimit;
+  };
+
+  const incrementAIUsage = () => {
+    const currentUsage = subscription?.usage?.aiRequestsThisMonth || 0;
+    updateUsage({
+      aiRequestsThisMonth: currentUsage + 1
+    });
+  };
+
   const updateUsage = (usage) => {
     const updatedSub = {
       ...subscription,
@@ -223,7 +262,47 @@ export const SubscriptionProvider = ({ children }) => {
   };
 
   const isSubscriptionActive = () => {
+    if (!subscription) return false;
+    
+    // Check if subscription is expired
+    if (subscription.endDate) {
+      const endDate = new Date(subscription.endDate);
+      const now = new Date();
+      
+      if (now > endDate) {
+        // Subscription has expired
+        if (subscription.status === 'trial') {
+          // Trial expired - update status
+          const expiredSub = {
+            ...subscription,
+            status: 'trial_expired'
+          };
+          updateSubscription(expiredSub);
+          return false;
+        } else if (subscription.status === 'active') {
+          // Paid subscription expired - update status
+          const expiredSub = {
+            ...subscription,
+            status: 'expired'
+          };
+          updateSubscription(expiredSub);
+          return false;
+        }
+        return false;
+      }
+    }
+    
     return subscription?.status === 'active' || subscription?.status === 'trial';
+  };
+
+  const isTrialExpired = () => {
+    if (!subscription) return false;
+    return subscription.status === 'trial_expired';
+  };
+
+  const isSubscriptionExpired = () => {
+    if (!subscription) return false;
+    return subscription.status === 'expired' || subscription.status === 'trial_expired';
   };
 
   const value = {
@@ -240,7 +319,15 @@ export const SubscriptionProvider = ({ children }) => {
     getCurrentPlan,
     getDaysRemaining,
     isSubscriptionActive,
-    updateSubscription
+    isTrialExpired,
+    isSubscriptionExpired,
+    updateSubscription,
+    // AI Features
+    hasAIParentAssistant,
+    hasAIInsights,
+    getAIRequestsRemaining,
+    canMakeAIRequest,
+    incrementAIUsage
   };
 
   return (

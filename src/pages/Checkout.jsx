@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaCreditCard, FaUniversity, FaMobileAlt, FaLock, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
+import { FaCreditCard, FaUniversity, FaMobileAlt, FaLock, FaCheckCircle, FaArrowLeft, FaSpinner, FaTimes } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import payfastService from '../services/payfastService';
 
 const Checkout = () => {
   const { isDark } = useTheme();
@@ -14,9 +15,15 @@ const Checkout = () => {
   const [searchParams] = useSearchParams();
   const planId = searchParams.get('plan') || 'basic';
   
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('payfast');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    // User details for PayFast
+    firstName: user?.first_name || user?.firstName || '',
+    lastName: user?.last_name || user?.lastName || '',
+    email: user?.email || '',
+    
+    // Legacy card fields (for future card-only payments)
     cardNumber: '',
     expiryDate: '',
     cvv: '',
@@ -25,8 +32,7 @@ const Checkout = () => {
     accountNumber: '',
     branchCode: '',
     accountType: 'current',
-    phoneNumber: '',
-    email: user?.email || ''
+    phoneNumber: ''
   });
 
   const selectedPlan = plans[planId];
@@ -39,25 +45,38 @@ const Checkout = () => {
 
   const paymentMethods = [
     {
+      id: 'payfast',
+      name: 'PayFast (Secure Payment)',
+      icon: FaLock,
+      description: 'All major cards, EFT, instant transfers',
+      popular: true,
+      recommended: true
+    },
+    {
       id: 'card',
-      name: 'Credit/Debit Card',
+      name: 'Credit/Debit Card (Direct)',
       icon: FaCreditCard,
       description: 'Visa, Mastercard, American Express',
-      popular: true
+      popular: false,
+      disabled: true, // Disable for now, use PayFast instead
+      comingSoon: true
     },
     {
       id: 'eft',
       name: 'Bank Transfer (EFT)',
       icon: FaUniversity,
       description: 'Direct bank transfer',
-      popular: false
+      popular: false,
+      disabled: true,
+      comingSoon: true
     },
     {
       id: 'mobile',
       name: 'Mobile Money',
       icon: FaMobileAlt,
       description: 'Coming soon',
-      disabled: true
+      disabled: true,
+      comingSoon: true
     }
   ];
 
@@ -115,7 +134,17 @@ const Checkout = () => {
   };
 
   const validateForm = () => {
-    if (paymentMethod === 'card') {
+    if (paymentMethod === 'payfast') {
+      const { firstName, lastName, email } = formData;
+      if (!firstName || !lastName || !email) {
+        toast.error('Please fill in all required details');
+        return false;
+      }
+      if (!email.includes('@')) {
+        toast.error('Please enter a valid email address');
+        return false;
+      }
+    } else if (paymentMethod === 'card') {
       const { cardNumber, expiryDate, cvv, cardholderName } = formData;
       if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
         toast.error('Please fill in all card details');
@@ -147,37 +176,52 @@ const Checkout = () => {
     setLoading(true);
     
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In production, you'd send payment data to your backend
-      const paymentData = {
-        planId,
-        amount: selectedPlan.price,
-        currency: selectedPlan.currency,
-        method: paymentMethod,
-        userDetails: {
-          name: user.name,
-          email: user.email
-        }
-      };
-      
-      console.log('Processing payment:', paymentData);
-      
-      // Upgrade the subscription
-      const result = await upgradePlan(planId);
-      
-      if (result.success) {
-        toast.success('Payment successful! Welcome to your new plan!');
-        navigate('/manage?upgraded=true');
+      if (paymentMethod === 'payfast') {
+        // Use PayFast for payment processing
+        const subscriptionData = {
+          userId: user.id,
+          user: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email
+          },
+          plan: selectedPlan,
+          metadata: {
+            source: 'checkout_page',
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+          }
+        };
+
+        console.log('Processing PayFast payment for:', {
+          user: subscriptionData.user,
+          plan: selectedPlan.name,
+          amount: selectedPlan.price
+        });
+
+        // Process payment through PayFast
+        await payfastService.processPayment(subscriptionData);
+        
+        // The page will redirect to PayFast, so we don't need to do anything else here
+        // Payment completion will be handled by the success/cancel pages
+        
       } else {
-        throw new Error(result.error?.message || 'Payment failed');
+        // Legacy payment processing (for other methods)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const result = await upgradePlan(planId);
+        
+        if (result.success) {
+          toast.success('Payment successful! Welcome to your new plan!');
+          navigate('/management?upgraded=true');
+        } else {
+          throw new Error(result.error?.message || 'Payment failed');
+        }
       }
       
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Payment failed. Please try again.');
-    } finally {
+      toast.error(`Payment failed: ${error.message}`);
       setLoading(false);
     }
   };
@@ -191,15 +235,27 @@ const Checkout = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate('/manage')}
-            className={`inline-flex items-center mb-4 text-sm transition-colors ${
-              isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <FaArrowLeft className="w-4 h-4 mr-2" />
-            Back to Account Management
-          </button>
+          <div className="flex justify-between items-start mb-4">
+            <button
+              onClick={() => navigate('/manage')}
+              className={`inline-flex items-center text-sm transition-colors ${
+                isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FaArrowLeft className="w-4 h-4 mr-2" />
+              Back to Account Management
+            </button>
+            
+            <button
+              onClick={() => navigate('/manage')}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+              title="Close checkout"
+            >
+              <FaTimes className="w-5 h-5" />
+            </button>
+          </div>
           
           <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Complete Your Purchase
@@ -416,25 +472,39 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full mt-6 py-3 px-4 rounded-lg font-medium transition-colors ${
-                  loading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
-                } text-white`}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Processing...
-                  </div>
-                ) : (
-                  `Pay R${selectedPlan.price} / ${selectedPlan.period}`
-                )}
-              </button>
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => navigate('/manage')}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                    isDark
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                  }`}
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                    loading
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                  } text-white`}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    `Pay R${selectedPlan.price} / ${selectedPlan.period}`
+                  )}
+                </button>
+              </div>
 
               {/* Security Notice */}
               <div className={`mt-4 flex items-center justify-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>

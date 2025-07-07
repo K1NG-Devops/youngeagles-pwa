@@ -16,6 +16,13 @@ const FloatingNavigation = () => {
   });
   const dragRef = useRef(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragStartTime, setDragStartTime] = useState(null);
+  const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
+  const [isClickDetected, setIsClickDetected] = useState(false);
+  const [dragDelayTimer, setDragDelayTimer] = useState(null);
+  const [hasActuallyMoved, setHasActuallyMoved] = useState(false);
+  const dragDelayMs = 150; // 150ms delay to differentiate between click and drag
+  const dragThreshold = 5; // 5px movement threshold
   
   // Define navigation items based on user role
   const getNavItems = () => {
@@ -49,12 +56,25 @@ const FloatingNavigation = () => {
     localStorage.setItem('floatingNavPosition', JSON.stringify(position));
   }, [position]);
 
-const toggleMenu = () => setIsExpanded(prev => !prev);
+  const toggleMenu = () => setIsExpanded(prev => !prev);
 
   const handleMouseDown = (e) => {
-    if (e.target.closest('.nav-item-button')) return; // Don't drag when clicking nav items
+    // Allow dragging on the main FAB button, but not on expanded nav items
+    const navLink = e.target.closest('a[href]');
+    if (navLink) return; // Don't drag when clicking nav links
+    
     e.preventDefault();
-    setIsDragging(true);
+    
+    // Clear any existing timer
+    if (dragDelayTimer) {
+      clearTimeout(dragDelayTimer);
+    }
+    
+    // Store initial mouse position and time
+    setInitialMousePos({ x: e.clientX, y: e.clientY });
+    setDragStartTime(Date.now());
+    setIsClickDetected(true);
+    setHasActuallyMoved(false);
     
     const rect = dragRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -64,11 +84,39 @@ const toggleMenu = () => setIsExpanded(prev => !prev);
       x: e.clientX - centerX,
       y: e.clientY - centerY
     });
+    
+    // Set up delay timer to enable dragging after delay
+    const timer = setTimeout(() => {
+      setIsDragging(true);
+      setIsClickDetected(false);
+    }, dragDelayMs);
+    
+    setDragDelayTimer(timer);
   };
 
   const handleMouseMove = (e) => {
+    // Check if we should start dragging based on movement threshold
+    if (isClickDetected && !isDragging) {
+      const deltaX = Math.abs(e.clientX - initialMousePos.x);
+      const deltaY = Math.abs(e.clientY - initialMousePos.y);
+      
+      // If movement exceeds threshold, start dragging immediately
+      if (deltaX > dragThreshold || deltaY > dragThreshold) {
+        if (dragDelayTimer) {
+          clearTimeout(dragDelayTimer);
+          setDragDelayTimer(null);
+        }
+        setIsDragging(true);
+        setIsClickDetected(false);
+      }
+      return;
+    }
+    
     if (!isDragging) return;
     e.preventDefault();
+    
+    // Mark that actual movement occurred
+    setHasActuallyMoved(true);
     
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -90,15 +138,45 @@ const toggleMenu = () => setIsExpanded(prev => !prev);
   };
 
   const handleMouseUp = () => {
+    // Clear the drag delay timer
+    if (dragDelayTimer) {
+      clearTimeout(dragDelayTimer);
+      setDragDelayTimer(null);
+    }
+    
+    // If it was a quick click (timer didn't activate drag mode), toggle menu
+    if (isClickDetected && !isDragging) {
+      toggleMenu();
+    }
+    // If drag mode was activated but no actual movement occurred, it's a long press
+    // In this case, do nothing (don't toggle menu)
+    // If drag mode was activated AND movement occurred, it was a successful drag
+    // In this case, also do nothing (position was already updated during movement)
+    
     setIsDragging(false);
+    setIsClickDetected(false);
+    setHasActuallyMoved(false);
   };
 
   const handleTouchStart = (e) => {
-    if (e.target.closest('.nav-item-button')) return;
+    // Allow dragging on the main FAB button, but not on expanded nav items
+    const navLink = e.target.closest('a[href]');
+    if (navLink) return; // Don't drag when clicking nav links
+    
     e.preventDefault();
-    setIsDragging(true);
+    
+    // Clear any existing timer
+    if (dragDelayTimer) {
+      clearTimeout(dragDelayTimer);
+    }
     
     const touch = e.touches[0];
+    // Store initial touch position and time
+    setInitialMousePos({ x: touch.clientX, y: touch.clientY });
+    setDragStartTime(Date.now());
+    setIsClickDetected(true);
+    setHasActuallyMoved(false);
+    
     const rect = dragRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -107,13 +185,42 @@ const toggleMenu = () => setIsExpanded(prev => !prev);
       x: touch.clientX - centerX,
       y: touch.clientY - centerY
     });
+    
+    // Set up delay timer to enable dragging after delay
+    const timer = setTimeout(() => {
+      setIsDragging(true);
+      setIsClickDetected(false);
+    }, dragDelayMs);
+    
+    setDragDelayTimer(timer);
   };
 
   const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    
+    // Check if we should start dragging based on movement threshold
+    if (isClickDetected && !isDragging) {
+      const deltaX = Math.abs(touch.clientX - initialMousePos.x);
+      const deltaY = Math.abs(touch.clientY - initialMousePos.y);
+      
+      // If movement exceeds threshold, start dragging immediately
+      if (deltaX > dragThreshold || deltaY > dragThreshold) {
+        if (dragDelayTimer) {
+          clearTimeout(dragDelayTimer);
+          setDragDelayTimer(null);
+        }
+        setIsDragging(true);
+        setIsClickDetected(false);
+      }
+      return;
+    }
+    
     if (!isDragging) return;
     e.preventDefault();
     
-    const touch = e.touches[0];
+    // Mark that actual movement occurred
+    setHasActuallyMoved(true);
+    
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const buttonSize = 56;
@@ -131,52 +238,70 @@ const toggleMenu = () => setIsExpanded(prev => !prev);
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-useEffect(() => {
-  const handleClickOutside = event => {
-    if (isExpanded && dragRef.current && !dragRef.current.contains(event.target)) {
-      setIsExpanded(false);
+    // Clear the drag delay timer
+    if (dragDelayTimer) {
+      clearTimeout(dragDelayTimer);
+      setDragDelayTimer(null);
     }
+    
+    // If it was a quick tap (timer didn't activate drag mode), toggle menu
+    if (isClickDetected && !isDragging) {
+      toggleMenu();
+    }
+    // If drag mode was activated but no actual movement occurred, it's a long press
+    // In this case, do nothing (don't toggle menu)
+    // If drag mode was activated AND movement occurred, it was a successful drag
+    // In this case, also do nothing (position was already updated during movement)
+    
+    setIsDragging(false);
+    setIsClickDetected(false);
+    setHasActuallyMoved(false);
   };
 
-  document.addEventListener('mousedown', handleClickOutside);
-
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, [isExpanded]);
-
-// Add event listeners for drag functionality
-useEffect(() => {
-  if (isDragging) {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (isExpanded && dragRef.current && !dragRef.current.contains(event.target)) {
+        setIsExpanded(false);
+      }
     };
-  }
-}, [isDragging, dragOffset]);
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isExpanded]);
+
+  // Add event listeners for drag functionality
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isDragging, dragOffset]);
 
   return (
     <>
       {/* Overlay */}
       {isExpanded && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-40"
+          className="fixed inset-0 bg-black bg-opacity-30 z-50"
           onClick={toggleMenu}
+          style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
         />
       )}
 
       {/* Floating Navigation Items */}
       <div 
         ref={dragRef}
-        className="fixed z-50 select-none"
+        className="fixed z-[60] select-none"
         style={{ 
           bottom: `${position.bottom}px`, 
           right: `${position.right}px`,
@@ -228,17 +353,22 @@ useEffect(() => {
             className={`nav-item-button w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 relative ${
               isExpanded 
                 ? 'bg-red-500 rotate-45' 
-                : isDark 
-                  ? 'bg-blue-600 hover:bg-blue-700' 
-                  : 'bg-blue-500 hover:bg-blue-600'
+                : isDragging
+                  ? 'bg-blue-700 scale-110'
+                  : isDark 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-blue-500 hover:bg-blue-600'
             }`}
+            style={{ pointerEvents: 'auto' }}
           >
             {isExpanded ? (
               <FaTimes className="text-white text-xl" />
             ) : (
               <div className="flex flex-col items-center">
                 <FaBars className="text-white text-lg mb-0.5" />
-                <FaGripVertical className="text-white text-xs opacity-60" />
+                <FaGripVertical className={`text-white text-xs transition-opacity ${
+                  isDragging ? 'opacity-100' : 'opacity-60'
+                }`} />
               </div>
             )}
           </button>

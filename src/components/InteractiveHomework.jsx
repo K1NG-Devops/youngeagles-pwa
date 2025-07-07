@@ -244,7 +244,7 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
           </div>
           
           {/* Question mark */}
-          <div className={`text-4xl font-bold text-purple-500`}>
+          <div className={'text-4xl font-bold text-purple-500'}>
             ?
           </div>
         </div>
@@ -445,8 +445,8 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
           <div className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             That's {percentage}%! 
             {percentage >= 80 ? ' Excellent work! 🌟' : 
-             percentage >= 60 ? ' Good job! Keep practicing! 😊' : 
-             ' Great effort! 💪'}
+              percentage >= 60 ? ' Good job! Keep practicing! 😊' : 
+                ' Great effort! 💪'}
           </div>
           
           {/* Submission Status */}
@@ -454,43 +454,43 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
             hasBeenSubmitted && !submissionError
               ? isDark ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'
               : submissionError
-              ? isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'
-              : isDark ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'
+                ? isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'
+                : isDark ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'
           }`}>
             <div className="flex items-center justify-center">
               <div className={`mr-3 ${
                 hasBeenSubmitted && !submissionError ? 'text-green-500' 
-                : submissionError ? 'text-red-500'
-                : 'text-blue-500'
+                  : submissionError ? 'text-red-500'
+                    : 'text-blue-500'
               }`}>
                 {hasBeenSubmitted && !submissionError ? '✅' 
-                 : submissionError ? '❌'
-                 : isSubmitting ? '⏳' : '📤'}
+                  : submissionError ? '❌'
+                    : isSubmitting ? '⏳' : '📤'}
               </div>
               <div>
                 <p className={`font-semibold ${
                   hasBeenSubmitted && !submissionError
                     ? isDark ? 'text-green-400' : 'text-green-800'
                     : submissionError
-                    ? isDark ? 'text-red-400' : 'text-red-800'
-                    : isDark ? 'text-blue-400' : 'text-blue-800'
+                      ? isDark ? 'text-red-400' : 'text-red-800'
+                      : isDark ? 'text-blue-400' : 'text-blue-800'
                 }`}>
                   {hasBeenSubmitted && !submissionError ? 'Homework Submitted Successfully!' 
-                   : submissionError ? 'Submission Failed'
-                   : isSubmitting ? 'Submitting homework...' : 'Submitting homework...'}
+                    : submissionError ? 'Submission Failed'
+                      : isSubmitting ? 'Submitting homework...' : 'Submitting homework...'}
                 </p>
                 <p className={`text-sm ${
                   hasBeenSubmitted && !submissionError
                     ? isDark ? 'text-green-300' : 'text-green-700'
                     : submissionError
-                    ? isDark ? 'text-red-300' : 'text-red-700'
-                    : isDark ? 'text-blue-300' : 'text-blue-700'
+                      ? isDark ? 'text-red-300' : 'text-red-700'
+                      : isDark ? 'text-blue-300' : 'text-blue-700'
                 }`}>
                   {hasBeenSubmitted && !submissionError
                     ? `Your score of ${percentage}% has been recorded and sent to your teacher.`
                     : submissionError
-                    ? 'Your homework was completed but could not be submitted. Please contact your teacher.'
-                    : 'Your answers and score are being sent to your teacher...'}
+                      ? 'Your homework was completed but could not be submitted. Please contact your teacher.'
+                      : 'Your answers and score are being sent to your teacher...'}
                 </p>
               </div>
             </div>
@@ -548,8 +548,8 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
           <div className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             Final Score: {percentage}%! 
             {percentage >= 80 ? ' Excellent work! 🌟' : 
-             percentage >= 60 ? ' Good job! 😊' : 
-             ' Great effort! 💪'}
+              percentage >= 60 ? ' Good job! 😊' : 
+                ' Great effort! 💪'}
           </div>
           
           <div className={`rounded-lg p-4 border ${

@@ -36,88 +36,88 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
   const homeworkLibrary = [
     {
       id: 1,
-      title: "Counting and Number Recognition 1-10",
-      subject: "Mathematics",
-      ageGroup: "2-3",
-      difficulty: "easy",
-      description: "Interactive counting exercises with numbers 1-10 using colorful objects and visual aids.",
+      title: 'Counting and Number Recognition 1-10',
+      subject: 'Mathematics',
+      ageGroup: '2-3',
+      difficulty: 'easy',
+      description: 'Interactive counting exercises with numbers 1-10 using colorful objects and visual aids.',
       estimatedDuration: 15,
       prerequisites: null,
       unlocked: true
     },
     {
       id: 2,
-      title: "Basic Shape Recognition",
-      subject: "Mathematics",
-      ageGroup: "2-3",
-      difficulty: "easy",
-      description: "Identify and name basic shapes: circle, square, triangle, and rectangle.",
+      title: 'Basic Shape Recognition',
+      subject: 'Mathematics',
+      ageGroup: '2-3',
+      difficulty: 'easy',
+      description: 'Identify and name basic shapes: circle, square, triangle, and rectangle.',
       estimatedDuration: 20,
       prerequisites: null,
       unlocked: true
     },
     {
       id: 3,
-      title: "Letter Recognition A-E",
-      subject: "Language",
-      ageGroup: "2-3",
-      difficulty: "medium",
-      description: "Introduction to the first five letters of the alphabet with sound recognition.",
+      title: 'Letter Recognition A-E',
+      subject: 'Language',
+      ageGroup: '2-3',
+      difficulty: 'medium',
+      description: 'Introduction to the first five letters of the alphabet with sound recognition.',
       estimatedDuration: 25,
       prerequisites: null,
       unlocked: true
     },
     {
       id: 4,
-      title: "Colors and Patterns",
-      subject: "Art & Creativity",
-      ageGroup: "2-3",
-      difficulty: "easy",
-      description: "Learn primary colors and simple patterns through creative activities.",
+      title: 'Colors and Patterns',
+      subject: 'Art & Creativity',
+      ageGroup: '2-3',
+      difficulty: 'easy',
+      description: 'Learn primary colors and simple patterns through creative activities.',
       estimatedDuration: 30,
       prerequisites: null,
       unlocked: true
     },
     {
       id: 5,
-      title: "Counting 11-20",
-      subject: "Mathematics",
-      ageGroup: "4-6",
-      difficulty: "medium",
-      description: "Advanced counting exercises with teen numbers and simple addition.",
+      title: 'Counting 11-20',
+      subject: 'Mathematics',
+      ageGroup: '4-6',
+      difficulty: 'medium',
+      description: 'Advanced counting exercises with teen numbers and simple addition.',
       estimatedDuration: 25,
       prerequisites: [1],
       unlocked: false
     },
     {
       id: 6,
-      title: "Letter Recognition F-J",
-      subject: "Language",
-      ageGroup: "4-6",
-      difficulty: "medium",
-      description: "Continue alphabet learning with letters F through J.",
+      title: 'Letter Recognition F-J',
+      subject: 'Language',
+      ageGroup: '4-6',
+      difficulty: 'medium',
+      description: 'Continue alphabet learning with letters F through J.',
       estimatedDuration: 30,
       prerequisites: [3],
       unlocked: false
     },
     {
       id: 7,
-      title: "Simple Word Formation",
-      subject: "Language",
-      ageGroup: "4-6",
-      difficulty: "hard",
-      description: "Combine letters to form simple 3-letter words.",
+      title: 'Simple Word Formation',
+      subject: 'Language',
+      ageGroup: '4-6',
+      difficulty: 'hard',
+      description: 'Combine letters to form simple 3-letter words.',
       estimatedDuration: 35,
       prerequisites: [3, 6],
       unlocked: false
     },
     {
       id: 8,
-      title: "Basic Addition 1-5",
-      subject: "Mathematics",
-      ageGroup: "4-6",
-      difficulty: "hard",
-      description: "Introduction to addition concepts using visual aids and manipulatives.",
+      title: 'Basic Addition 1-5',
+      subject: 'Mathematics',
+      ageGroup: '4-6',
+      difficulty: 'hard',
+      description: 'Introduction to addition concepts using visual aids and manipulatives.',
       estimatedDuration: 40,
       prerequisites: [1, 5],
       unlocked: false
@@ -296,7 +296,7 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
 
   if (isLoading && availableChildren.length === 0) {
     return (
-      <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
+      <div className={'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'}>
         <div className={`p-8 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex items-center space-x-3">
             <FaSpinner className="animate-spin text-blue-500" />
@@ -617,7 +617,7 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center`}
+            className={'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center'}
           >
             {isLoading ? (
               <>

@@ -5,6 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   base: '/',
+  define: {
+    // Ensure environment variables are available in browser
+    'process.env': {}
+  },
+  envPrefix: 'REACT_APP_',
   plugins: [
     react(),
     tailwindcss(),

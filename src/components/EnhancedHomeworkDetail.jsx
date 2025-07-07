@@ -104,8 +104,8 @@ const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
                   homework.difficulty === 'easy' 
                     ? isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-800'
                     : homework.difficulty === 'medium'
-                    ? isDark ? 'bg-yellow-900/20 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                    : isDark ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-800'
+                      ? isDark ? 'bg-yellow-900/20 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
+                      : isDark ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-800'
                 }`}>
                   {homework.difficulty.charAt(0).toUpperCase() + homework.difficulty.slice(1)}
                 </div>

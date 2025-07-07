@@ -99,16 +99,16 @@ const Children = () => {
         {/* Header */}       
         <div className={`p-2 mt-18 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center justify-between">
-             <button
-                      onClick={() => navigate('/dashboard')}
-                      className={`inline-flex px-2 items-center py-2 rounded-lg transition-colors ${isDark
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                    >
-                      <FaArrowLeft className="w-4 h-4 mr-2" />
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`inline-flex px-2 items-center py-2 rounded-lg transition-colors ${isDark
+                ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <FaArrowLeft className="w-4 h-4 mr-2" />
                       Back to Dashboard
-                    </button>
+            </button>
             <div>
               <h2 className={`text-2xl mr-8 font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {user?.role === 'parent' ? 'My Children' : 'All Children'}

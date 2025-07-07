@@ -1,15 +1,34 @@
-import React, { useState } from 'react';
-import { FaCreditCard, FaUpload, FaFileInvoice, FaHistory, FaShieldAlt, FaStar, FaCrown } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaCreditCard, FaUpload, FaFileInvoice, FaHistory, FaShieldAlt, FaStar, FaCrown, FaPaperPlane, FaEnvelope, FaReceipt, FaUsers } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import apiService from '../services/apiService';
 
 const Management = () => {
   const { isDark } = useTheme();
-  const { subscription, getCurrentPlan, getDaysRemaining, plans } = useSubscription();
+  const { user } = useAuth();
+  const { subscription, getCurrentPlan, getDaysRemaining, plans, updateUsage } = useSubscription();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('subscription');
+  const [actualChildrenCount, setActualChildrenCount] = useState(0);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true);
+  
+  // Invoice/Receipt functionality state
+  const [invoiceData, setInvoiceData] = useState({
+    recipients: [],
+    subject: '',
+    message: '',
+    invoiceType: 'invoice', // 'invoice' or 'receipt'
+    amount: '',
+    dueDate: '',
+    items: [{ description: '', quantity: 1, price: 0 }]
+  });
+  const [allUsers, setAllUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [isSendingInvoice, setIsSendingInvoice] = useState(false);
 
   // Get current subscription info
   const currentPlan = getCurrentPlan();
@@ -33,8 +52,42 @@ const Management = () => {
     { id: 'payments', label: 'Payments', icon: FaCreditCard },
     { id: 'proofs', label: 'Payment Proofs', icon: FaUpload },
     { id: 'invoices', label: 'Invoices', icon: FaFileInvoice },
+    ...(user?.role === 'admin' ? [{ id: 'send-invoices', label: 'Send Invoices/Receipts', icon: FaPaperPlane }] : []),
     { id: 'history', label: 'History', icon: FaHistory }
   ];
+
+  // Fetch actual children count and sync with subscription usage
+  useEffect(() => {
+    const fetchAndSyncChildrenCount = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoadingChildren(true);
+        let response;
+        
+        if (user.role === 'parent') {
+          response = await apiService.children.getByParent(user.id);
+        } else {
+          response = await apiService.children.getAll();
+        }
+        
+        const childrenCount = response.data.children?.length || 0;
+        setActualChildrenCount(childrenCount);
+        
+        // Sync with subscription usage if different
+        if (subscription && subscription.usage.children !== childrenCount) {
+          updateUsage({ children: childrenCount });
+        }
+      } catch (error) {
+        console.error('Error fetching children for usage sync:', error);
+        // Don't show error toast as this is background sync
+      } finally {
+        setIsLoadingChildren(false);
+      }
+    };
+
+    fetchAndSyncChildrenCount();
+  }, [user, subscription, updateUsage]);
 
 
   const handleFileUpload = (event) => {
@@ -44,6 +97,116 @@ const Management = () => {
       toast.success(`Payment proof "${file.name}" uploaded successfully!`);
     }
   };
+
+  // Load all users for invoice/receipt functionality
+  const loadAllUsers = async () => {
+    if (user?.role !== 'admin') return;
+    
+    try {
+      setIsLoadingUsers(true);
+      const response = await apiService.users.getAll();
+      setAllUsers(response.data.users || []);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Handle invoice/receipt form changes
+  const handleInvoiceChange = (field, value) => {
+    setInvoiceData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Add new item to invoice
+  const addInvoiceItem = () => {
+    setInvoiceData(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, price: 0 }]
+    }));
+  };
+
+  // Remove item from invoice
+  const removeInvoiceItem = (index) => {
+    setInvoiceData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update invoice item
+  const updateInvoiceItem = (index, field, value) => {
+    setInvoiceData(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  // Calculate total amount
+  const calculateTotal = () => {
+    return invoiceData.items.reduce((total, item) => {
+      return total + (item.quantity * item.price);
+    }, 0).toFixed(2);
+  };
+
+  // Send invoice/receipt
+  const sendInvoiceReceipt = async () => {
+    if (!invoiceData.recipients.length) {
+      toast.error('Please select at least one recipient');
+      return;
+    }
+
+    if (!invoiceData.subject.trim()) {
+      toast.error('Please enter a subject');
+      return;
+    }
+
+    try {
+      setIsSendingInvoice(true);
+      
+      const invoicePayload = {
+        ...invoiceData,
+        totalAmount: calculateTotal(),
+        sentBy: user.id,
+        sentAt: new Date().toISOString()
+      };
+
+      // TODO: Replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      
+      toast.success(`${invoiceData.invoiceType === 'invoice' ? 'Invoice' : 'Receipt'} sent successfully to ${invoiceData.recipients.length} recipient(s)!`);
+      
+      // Reset form
+      setInvoiceData({
+        recipients: [],
+        subject: '',
+        message: '',
+        invoiceType: 'invoice',
+        amount: '',
+        dueDate: '',
+        items: [{ description: '', quantity: 1, price: 0 }]
+      });
+      
+    } catch (error) {
+      console.error('Error sending invoice/receipt:', error);
+      toast.error('Failed to send invoice/receipt');
+    } finally {
+      setIsSendingInvoice(false);
+    }
+  };
+
+  // Load users when admin accesses invoice tab
+  useEffect(() => {
+    if (activeTab === 'send-invoices' && user?.role === 'admin') {
+      loadAllUsers();
+    }
+  }, [activeTab, user]);
 
   const renderSubscriptionTab = () => (
     <div className="space-y-6">
@@ -82,7 +245,11 @@ const Management = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
             <div className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-              {subscription?.usage?.children || 0}/{currentPlan?.features.maxChildren === -1 ? '∞' : currentPlan?.features.maxChildren}
+              {isLoadingChildren ? (
+                <div className="animate-pulse">-</div>
+              ) : (
+                `${actualChildrenCount}/${currentPlan?.features.maxChildren === -1 ? '∞' : currentPlan?.features.maxChildren}`
+              )}
             </div>
             <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Children Added</div>
           </div>
@@ -247,6 +414,262 @@ const Management = () => {
     </div>
   );
 
+  const renderSendInvoicesTab = () => (
+    <div className="space-y-6">
+      {/* Invoice/Receipt Type Selection */}
+      <div className={`rounded-lg p-6 shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Send Invoice/Receipt</h3>
+        
+        {/* Type Selection */}
+        <div className="mb-6">
+          <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+            Document Type
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {['invoice', 'receipt'].map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => handleInvoiceChange('invoiceType', type)}
+                className={`px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 ${
+                  invoiceData.invoiceType === type
+                    ? isDark
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                      : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : isDark
+                      ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border-2 border-gray-600'
+                      : 'bg-gray-100/50 text-gray-600 hover:bg-gray-200/50 border-2 border-gray-200'
+                }`}
+                disabled={isSendingInvoice}
+              >
+                {type === 'invoice' ? '📄 Invoice' : '🧾 Receipt'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Recipients */}
+        <div className="mb-6">
+          <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+            Recipients *
+          </label>
+          {isLoadingUsers ? (
+            <div className={`p-4 rounded-lg text-center ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Loading users...</p>
+            </div>
+          ) : (
+            <div className={`max-h-40 overflow-y-auto border rounded-lg ${isDark ? 'border-gray-600 bg-gray-700/30' : 'border-gray-300 bg-gray-50'}`}>
+              {allUsers.map((user) => (
+                <label key={user.id} className={`flex items-center p-3 hover:bg-opacity-50 cursor-pointer transition-colors ${
+                  isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={invoiceData.recipients.includes(user.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        handleInvoiceChange('recipients', [...invoiceData.recipients, user.id]);
+                      } else {
+                        handleInvoiceChange('recipients', invoiceData.recipients.filter(id => id !== user.id));
+                      }
+                    }}
+                    className="mr-3 rounded"
+                    disabled={isSendingInvoice}
+                  />
+                  <div>
+                    <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{user.name}</div>
+                    <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{user.email} ({user.role})</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Subject */}
+        <div className="mb-6">
+          <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+            Subject *
+          </label>
+          <input
+            type="text"
+            value={invoiceData.subject}
+            onChange={(e) => handleInvoiceChange('subject', e.target.value)}
+            placeholder={`Enter ${invoiceData.invoiceType} subject`}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+              isDark 
+                ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
+            disabled={isSendingInvoice}
+          />
+        </div>
+
+        {/* Items */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-3">
+            <label className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+              Items/Services
+            </label>
+            <button
+              type="button"
+              onClick={addInvoiceItem}
+              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                isDark 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+              disabled={isSendingInvoice}
+            >
+              + Add Item
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {invoiceData.items.map((item, index) => (
+              <div key={index} className={`p-4 border rounded-lg ${isDark ? 'border-gray-600 bg-gray-700/30' : 'border-gray-300 bg-gray-50'}`}>
+                <div className="grid grid-cols-12 gap-3 items-center">
+                  <div className="col-span-5">
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => updateInvoiceItem(index, 'description', e.target.value)}
+                      placeholder="Item description"
+                      className={`w-full px-3 py-2 border rounded focus:ring-1 focus:ring-blue-500 text-sm ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                      disabled={isSendingInvoice}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateInvoiceItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                      placeholder="Qty"
+                      min="1"
+                      className={`w-full px-3 py-2 border rounded focus:ring-1 focus:ring-blue-500 text-sm ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                      disabled={isSendingInvoice}
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <input
+                      type="number"
+                      value={item.price}
+                      onChange={(e) => updateInvoiceItem(index, 'price', parseFloat(e.target.value) || 0)}
+                      placeholder="Price (R)"
+                      step="0.01"
+                      min="0"
+                      className={`w-full px-3 py-2 border rounded focus:ring-1 focus:ring-blue-500 text-sm ${
+                        isDark 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
+                      disabled={isSendingInvoice}
+                    />
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      R{(item.quantity * item.price).toFixed(2)}
+                    </div>
+                    {invoiceData.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeInvoiceItem(index)}
+                        className="text-red-500 hover:text-red-700 text-xs mt-1"
+                        disabled={isSendingInvoice}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Total */}
+          <div className={`mt-4 p-4 rounded-lg text-right ${isDark ? 'bg-blue-900/20 border border-blue-700/30' : 'bg-blue-50 border border-blue-200'}`}>
+            <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Total: R{calculateTotal()}
+            </div>
+          </div>
+        </div>
+
+        {/* Due Date (for invoices only) */}
+        {invoiceData.invoiceType === 'invoice' && (
+          <div className="mb-6">
+            <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+              Due Date
+            </label>
+            <input
+              type="date"
+              value={invoiceData.dueDate}
+              onChange={(e) => handleInvoiceChange('dueDate', e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                isDark 
+                  ? 'bg-gray-700/50 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+              disabled={isSendingInvoice}
+            />
+          </div>
+        )}
+
+        {/* Message */}
+        <div className="mb-6">
+          <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+            Additional Message (Optional)
+          </label>
+          <textarea
+            value={invoiceData.message}
+            onChange={(e) => handleInvoiceChange('message', e.target.value)}
+            placeholder="Add any additional notes or instructions..."
+            rows={4}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none ${
+              isDark 
+                ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
+            disabled={isSendingInvoice}
+          />
+        </div>
+
+        {/* Send Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={sendInvoiceReceipt}
+            disabled={isSendingInvoice || !invoiceData.recipients.length || !invoiceData.subject.trim()}
+            className={`px-6 py-3 rounded-lg font-medium flex items-center space-x-2 transition-all transform hover:scale-105 ${
+              isSendingInvoice || !invoiceData.recipients.length || !invoiceData.subject.trim()
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
+            }`}
+          >
+            {isSendingInvoice ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Sending...</span>
+              </>
+            ) : (
+              <>
+                <FaPaperPlane />
+                <span>Send {invoiceData.invoiceType === 'invoice' ? 'Invoice' : 'Receipt'}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderComingSoonTab = () => (
     <div className={`rounded-lg p-6 shadow-lg text-center py-12 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
       <FaShieldAlt className={`mx-auto text-6xl mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
@@ -266,34 +689,37 @@ const Management = () => {
 
         {/* Tabs */}
         <div className={`border-b mb-6 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          <nav className="flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? isDark 
-                        ? 'border-blue-400 text-blue-400'
-                        : 'border-blue-500 text-blue-600'
-                      : isDark
-                        ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          <div className="overflow-x-auto scrollbar-hide">
+            <nav className="flex space-x-8 min-w-max">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? isDark 
+                          ? 'border-blue-400 text-blue-400'
+                          : 'border-blue-500 text-blue-600'
+                        : isDark
+                          ? 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'subscription' && renderSubscriptionTab()}
         {activeTab === 'proofs' && renderPaymentProofsTab()}
+        {activeTab === 'send-invoices' && renderSendInvoicesTab()}
         {['payments', 'invoices', 'history'].includes(activeTab) && renderComingSoonTab()}
       </div>
     </div>

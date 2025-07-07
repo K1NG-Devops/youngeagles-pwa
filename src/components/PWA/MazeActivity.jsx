@@ -196,20 +196,20 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       const newPos = { ...currentPos };
       // Calculate new position based on command
       switch (command) {
-        case 'up':
-          newPos.y = Math.max(0, currentPos.y - 1);
-          break;
-        case 'down':
-          newPos.y = Math.min(currentMaze.size - 1, currentPos.y + 1);
-          break;
-        case 'left':
-          newPos.x = Math.max(0, currentPos.x - 1);
-          break;
-        case 'right':
-          newPos.x = Math.min(currentMaze.size - 1, currentPos.x + 1);
-          break;
-        default:
-          break;
+      case 'up':
+        newPos.y = Math.max(0, currentPos.y - 1);
+        break;
+      case 'down':
+        newPos.y = Math.min(currentMaze.size - 1, currentPos.y + 1);
+        break;
+      case 'left':
+        newPos.x = Math.max(0, currentPos.x - 1);
+        break;
+      case 'right':
+        newPos.x = Math.min(currentMaze.size - 1, currentPos.x + 1);
+        break;
+      default:
+        break;
       }
       // Check if robot hits a wall
       if (currentMaze.grid[newPos.y][newPos.x] === 1) {
@@ -338,11 +338,11 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
             🤖 Robot Maze Navigator
           </h2>
           <div className={`inline-flex items-center px-4 py-2 rounded-lg mb-2 ${validDifficulty === 'easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-              validDifficulty === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-                validDifficulty === 'hard' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
-                  validDifficulty === 'expert' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
-                    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-            }`}>
+            validDifficulty === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+              validDifficulty === 'hard' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
+                validDifficulty === 'expert' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                  'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+          }`}>
             <span className="font-semibold">Level {Object.keys(mazes).indexOf(validDifficulty) + 1}: {currentMaze.name}</span>
             {validDifficulty === 'easy' && <span className="ml-2">⭐</span>}
             {validDifficulty === 'medium' && <span className="ml-2">⭐⭐</span>}
@@ -370,17 +370,17 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
                 <div
                   key={level}
                   className={`w-3 h-3 rounded-full ${completedLevels.includes(level)
-                      ? 'bg-green-500'
-                      : level === validDifficulty
-                        ? 'bg-blue-500'
-                        : isLevelUnlocked(level)
-                          ? isDark ? 'bg-gray-600' : 'bg-gray-300'
-                          : isDark ? 'bg-gray-800' : 'bg-gray-200'
-                    }`}
+                    ? 'bg-green-500'
+                    : level === validDifficulty
+                      ? 'bg-blue-500'
+                      : isLevelUnlocked(level)
+                        ? isDark ? 'bg-gray-600' : 'bg-gray-300'
+                        : isDark ? 'bg-gray-800' : 'bg-gray-200'
+                  }`}
                   title={`Level ${index + 1}: ${mazes[level].name} ${completedLevels.includes(level) ? '(Completed)' :
-                      level === difficulty ? '(Current)' :
-                        isLevelUnlocked(level) ? '(Available)' : '(Locked)'
-                    }`}
+                    level === difficulty ? '(Current)' :
+                      isLevelUnlocked(level) ? '(Available)' : '(Locked)'
+                  }`}
                 />
               ))}
             </div>
@@ -683,62 +683,62 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
             </div>
           </div>
         )}
-      {/* Status Messages */}
-      {gameStatus === 'completed' && (
-        <div className={`p-4 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'} mb-4`}>
-          <div className="flex items-center">
-            <FaCheckCircle className="text-green-500 mr-3" />
-            <div className="flex-1">
-              <h4 className={`font-bold ${isDark ? 'text-green-300' : 'text-green-800'}`}>
+        {/* Status Messages */}
+        {gameStatus === 'completed' && (
+          <div className={`p-4 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'} mb-4`}>
+            <div className="flex items-center">
+              <FaCheckCircle className="text-green-500 mr-3" />
+              <div className="flex-1">
+                <h4 className={`font-bold ${isDark ? 'text-green-300' : 'text-green-800'}`}>
                 🎉 Level {Object.keys(mazes).indexOf(validDifficulty) + 1} Complete!
-              </h4>
-              <div className={`${isDark ? 'text-green-400' : 'text-green-700'} mb-2`}>
-                <p className="font-semibold">Final Score: {score} points</p>
-                <div className="text-sm grid grid-cols-2 gap-2 mt-1">
-                  <span>⏱️ Time: {formatTime(timeElapsed)}</span>
-                  <span>🎯 Commands: {commands.length}/{currentMaze.maxCommands}</span>
-                  <span>🔄 Attempts: {attempts}</span>
-                  <span>📊 Efficiency: {Math.round((currentMaze.maxCommands - commands.length) / currentMaze.maxCommands * 100)}%</span>
+                </h4>
+                <div className={`${isDark ? 'text-green-400' : 'text-green-700'} mb-2`}>
+                  <p className="font-semibold">Final Score: {score} points</p>
+                  <div className="text-sm grid grid-cols-2 gap-2 mt-1">
+                    <span>⏱️ Time: {formatTime(timeElapsed)}</span>
+                    <span>🎯 Commands: {commands.length}/{currentMaze.maxCommands}</span>
+                    <span>🔄 Attempts: {attempts}</span>
+                    <span>📊 Efficiency: {Math.round((currentMaze.maxCommands - commands.length) / currentMaze.maxCommands * 100)}%</span>
+                  </div>
                 </div>
-              </div>
-              {/* Level progression hint */}
-              {validDifficulty !== 'master' && (
-                <div className={`text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
-                  <p className="mb-1">
+                {/* Level progression hint */}
+                {validDifficulty !== 'master' && (
+                  <div className={`text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
+                    <p className="mb-1">
                     🎉 Level {Object.keys(mazes).indexOf(validDifficulty) + 1} completed!
+                      {levelOrder.indexOf(validDifficulty) < levelOrder.length - 1 && (
+                        <span className="font-semibold"> Next level unlocked!</span>
+                      )}
+                    </p>
                     {levelOrder.indexOf(validDifficulty) < levelOrder.length - 1 && (
-                      <span className="font-semibold"> Next level unlocked!</span>
+                      <p>💡 Ready for the next challenge? Try Level {Object.keys(mazes).indexOf(validDifficulty) + 2}!</p>
                     )}
-                  </p>
-                  {levelOrder.indexOf(validDifficulty) < levelOrder.length - 1 && (
-                    <p>💡 Ready for the next challenge? Try Level {Object.keys(mazes).indexOf(validDifficulty) + 2}!</p>
-                  )}
-                </div>
-              )}
-              {validDifficulty === 'master' && (
-                <p className={`text-sm font-bold ${isDark ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                  </div>
+                )}
+                {validDifficulty === 'master' && (
+                  <p className={`text-sm font-bold ${isDark ? 'text-yellow-300' : 'text-yellow-600'}`}>
                   🏆 MASTER LEVEL CONQUERED! You've completed all {levelOrder.length} levels! You're a maze navigation expert!
-                </p>
-              )}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      {gameStatus === 'failed' && (
-        <div className={`p-4 rounded-lg border-l-4 border-red-500 ${isDark ? 'bg-red-900/20' : 'bg-red-50'} mb-4`}>
-          <div className="flex items-center">
-            <div className="text-red-500 mr-3">⚠️</div>
-            <div>
-              <h4 className={`font-bold ${isDark ? 'text-red-300' : 'text-red-800'}`}>
+        )}
+        {gameStatus === 'failed' && (
+          <div className={`p-4 rounded-lg border-l-4 border-red-500 ${isDark ? 'bg-red-900/20' : 'bg-red-50'} mb-4`}>
+            <div className="flex items-center">
+              <div className="text-red-500 mr-3">⚠️</div>
+              <div>
+                <h4 className={`font-bold ${isDark ? 'text-red-300' : 'text-red-800'}`}>
                 Oops! The robot hit a wall or didn't reach the target.
-              </h4>
-              <p className={`${isDark ? 'text-red-400' : 'text-red-700'}`}>
+                </h4>
+                <p className={`${isDark ? 'text-red-400' : 'text-red-700'}`}>
                 Try adjusting your commands and run again!
-              </p>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
         {/* Instructions */}
         <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'} mb-6`}>
           <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>

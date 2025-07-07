@@ -400,7 +400,7 @@ const apiService = {
     // Get payment history
     getHistory: () => apiClient.get('/api/payments/history'),
     
-  // Get payment statistics
+    // Get payment statistics
     getStats: () => apiClient.get('/api/payments/stats')
   },
 

@@ -6,6 +6,7 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 
 import Children from './pages/Children';
@@ -21,8 +22,13 @@ import PaymentProofs from './pages/PaymentProofs';
 import Settings from './pages/Settings';
 import Activities from './pages/Activities';
 import Register from './pages/Register';
+import ClassRegister from './pages/ClassRegister';
 import Checkout from './pages/Checkout';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel';
+import CuratedLessonLibrary from './components/CuratedLessonLibrary';
 import PrivateRoute from './components/PrivateRoute';
+import SubscriptionExpiredModal from './components/SubscriptionExpiredModal';
 import { useAuth } from './contexts/AuthContext';
 
 
@@ -43,85 +49,110 @@ function App() {
       <AuthProvider>
         <SubscriptionProvider>
           <div className="app scroll-smooth scrollbar-no-scrollbar">
+            <SubscriptionExpiredModal />
             <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="login" element={<Login />} />
+              {/* Public Routes */}
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Home />} />
+                <Route path="login" element={<Login />} />
+                <Route path="signup" element={<Signup />} />
               
-            {/* Private Routes */}
-            <Route path="dashboard" element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            } />
-            <Route path="children" element={
-              <PrivateRoute>
-                <ChildrenRoute />
-              </PrivateRoute>
-            } />
-            <Route path="classes" element={
-              <PrivateRoute>
-                <Classes />
-              </PrivateRoute>
-            } />
-            <Route path="homework" element={
-              <PrivateRoute>
-                <Homework />
-              </PrivateRoute>
-            } />
-            <Route path="homework/:homeworkId/details" element={
-              <PrivateRoute>
-                <HomeworkDetails />
-              </PrivateRoute>
-            } />
-            <Route path="events" element={
-              <PrivateRoute>
-                <Events />
-              </PrivateRoute>
-            } />
-            <Route path="activities" element={
-              <PrivateRoute>
-                <Activities />
-              </PrivateRoute>
-            } />
-            <Route path="notifications" element={
-              <PrivateRoute>
-                <Notifications />
-              </PrivateRoute>
-            } />
-            <Route path="submit-work" element={
-              <PrivateRoute>
-                <SubmitWork />
-              </PrivateRoute>
-            } />
-            <Route path="manage" element={
-              <PrivateRoute>
-                <Management />
-              </PrivateRoute>
-            } />
-            <Route path="payment-proofs" element={
-              <PrivateRoute>
-                <PaymentProofs />
-              </PrivateRoute>
-            } />
-            <Route path="settings" element={
-              <PrivateRoute>
-                <Settings />
-              </PrivateRoute>
-            } />
-            <Route path="register" element={
-              <PrivateRoute>
-                <Register />
-              </PrivateRoute>
-            } />
-            <Route path="checkout" element={
-              <PrivateRoute>
-                <Checkout />
-              </PrivateRoute>
-            } />
-          </Route>
-          </Routes>
+                {/* Private Routes */}
+                <Route path="dashboard" element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                } />
+                <Route path="children" element={
+                  <PrivateRoute>
+                    <ChildrenRoute />
+                  </PrivateRoute>
+                } />
+                <Route path="classes" element={
+                  <PrivateRoute>
+                    <Classes />
+                  </PrivateRoute>
+                } />
+                <Route path="homework" element={
+                  <PrivateRoute>
+                    <Homework />
+                  </PrivateRoute>
+                } />
+                <Route path="homework/:homeworkId/details" element={
+                  <PrivateRoute>
+                    <HomeworkDetails />
+                  </PrivateRoute>
+                } />
+                <Route path="events" element={
+                  <PrivateRoute>
+                    <Events />
+                  </PrivateRoute>
+                } />
+                <Route path="activities" element={
+                  <PrivateRoute>
+                    <Activities />
+                  </PrivateRoute>
+                } />
+                <Route path="notifications" element={
+                  <PrivateRoute>
+                    <Notifications />
+                  </PrivateRoute>
+                } />
+                <Route path="submit-work" element={
+                  <PrivateRoute>
+                    <SubmitWork />
+                  </PrivateRoute>
+                } />
+                <Route path="management" element={
+                  <PrivateRoute>
+                    <Management />
+                  </PrivateRoute>
+                } />
+                <Route path="manage" element={
+                  <PrivateRoute>
+                    <Management />
+                  </PrivateRoute>
+                } />
+                <Route path="payment-proofs" element={
+                  <PrivateRoute>
+                    <PaymentProofs />
+                  </PrivateRoute>
+                } />
+                <Route path="settings" element={
+                  <PrivateRoute>
+                    <Settings />
+                  </PrivateRoute>
+                } />
+                <Route path="curated-lessons" element={
+                  <PrivateRoute>
+                    <CuratedLessonLibrary />
+                  </PrivateRoute>
+                } />
+                <Route path="class-register" element={
+                  <PrivateRoute>
+                    <ClassRegister />
+                  </PrivateRoute>
+                } />
+                <Route path="register" element={<Register />} />
+                <Route path="checkout" element={
+                  <PrivateRoute>
+                    <Checkout />
+                  </PrivateRoute>
+                } />
+            
+                {/* Payment Routes - These need to be accessible even if not fully authenticated */}
+                <Route path="payment/success" element={
+                  <PrivateRoute>
+                    <PaymentSuccess />
+                  </PrivateRoute>
+                } />
+                <Route path="payment/cancel" element={
+                  <PrivateRoute>
+                    <PaymentCancel />
+                  </PrivateRoute>
+                } />
+              </Route>
+            </Routes>
           </div>
         </SubscriptionProvider>
       </AuthProvider>

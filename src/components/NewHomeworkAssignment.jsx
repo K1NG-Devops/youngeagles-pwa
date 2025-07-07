@@ -31,95 +31,239 @@ const NewHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
   const [availableChildren, setAvailableChildren] = useState([]);
   const [classes, setClasses] = useState([]);
 
-  // CAPS-aligned homework library
+  // Complete CAPS-aligned homework library
   const homeworkLibrary = [
     {
       id: 1,
-      title: "Counting and Number Recognition 1-10",
-      subject: "Mathematics",
-      ageGroup: "2-3",
-      difficulty: "easy",
-      description: "Interactive counting exercises with numbers 1-10 using colorful objects and visual aids.",
-      estimatedDuration: 15,
+      title: 'Counting and Number Recognition 1-10',
+      subject: 'Mathematics',
+      ageGroup: '2-3',
+      difficulty: 'easy',
+      description: 'Complete counting homework with interactive exercises, number tracing, and real-world counting activities.',
+      estimatedDuration: 20,
       prerequisites: null,
-      unlocked: true
+      unlocked: true,
+      materials: [
+        'Number cards 1-10 (provided)',
+        'Counting worksheet (downloadable)',
+        'Small objects for counting (toys, blocks)',
+        'Crayons for number coloring'
+      ],
+      activities: [
+        'Count objects from 1-10 around the house',
+        'Trace numbers 1-10 on worksheet',
+        'Match quantity dots to correct numbers',
+        'Practice writing numbers 1-5'
+      ],
+      worksheets: [
+        'Number_Tracing_1-10.pdf',
+        'Counting_Objects_Worksheet.pdf',
+        'Number_Matching_Activity.pdf'
+      ],
+      parentInstructions: 'Help your child count everyday objects. Practice numbers during daily routines like counting steps or toys.'
     },
     {
       id: 2,
-      title: "Basic Shape Recognition",
-      subject: "Mathematics",
-      ageGroup: "2-3",
-      difficulty: "easy",
-      description: "Identify and name basic shapes: circle, square, triangle, and rectangle.",
-      estimatedDuration: 20,
+      title: 'Basic Shape Recognition & Sorting',
+      subject: 'Mathematics',
+      ageGroup: '2-3',
+      difficulty: 'easy',
+      description: 'Interactive shape learning with household object sorting, shape tracing, and creative shape art.',
+      estimatedDuration: 25,
       prerequisites: null,
-      unlocked: true
+      unlocked: true,
+      materials: [
+        'Shape cards (circle, square, triangle, rectangle)',
+        'Shape sorting worksheet (downloadable)',
+        'Household objects of different shapes',
+        'Safety scissors for cutting shapes'
+      ],
+      activities: [
+        'Find shapes around your home',
+        'Sort objects by their shapes',
+        'Trace shapes on worksheet',
+        'Create shape art using cut-out shapes'
+      ],
+      worksheets: [
+        'Shape_Recognition_Cards.pdf',
+        'Shape_Sorting_Activity.pdf',
+        'Shape_Tracing_Practice.pdf'
+      ],
+      parentInstructions: "Point out shapes during daily activities. Use shape vocabulary: 'The plate is round like a circle.'"
     },
     {
       id: 3,
-      title: "Letter Recognition A-E",
-      subject: "Language",
-      ageGroup: "2-3",
-      difficulty: "medium",
-      description: "Introduction to the first five letters of the alphabet with sound recognition.",
-      estimatedDuration: 25,
+      title: 'Letter Recognition A-E with Phonics',
+      subject: 'Language',
+      ageGroup: '2-3',
+      difficulty: 'medium',
+      description: 'Complete phonics homework covering letters A-E with sound practice, letter formation, and object identification.',
+      estimatedDuration: 30,
       prerequisites: null,
-      unlocked: true
+      unlocked: true,
+      materials: [
+        'Letter cards A-E (provided)',
+        'Phonics worksheet pack (downloadable)',
+        'Mirror for sound practice',
+        'Objects starting with A, B, C, D, E'
+      ],
+      activities: [
+        'Practice letter sounds /a/, /b/, /c/, /d/, /e/',
+        'Trace letters A-E correctly',
+        'Find objects starting with each letter',
+        'Complete letter-sound matching worksheet'
+      ],
+      worksheets: [
+        'Letter_Tracing_A-E.pdf',
+        'Phonics_Sound_Practice.pdf',
+        'Letter_Object_Matching.pdf'
+      ],
+      parentInstructions: "Practice letter sounds daily. Emphasize the first sound in words: 'Apple starts with /a/.'"
     },
     {
       id: 4,
-      title: "Colors and Patterns",
-      subject: "Art & Creativity",
-      ageGroup: "2-3",
-      difficulty: "easy",
-      description: "Learn primary colors and simple patterns through creative activities.",
-      estimatedDuration: 30,
+      title: 'Colors, Patterns & Creative Art',
+      subject: 'Art & Creativity',
+      ageGroup: '2-3',
+      difficulty: 'easy',
+      description: 'Art-based homework exploring primary colors, simple patterns, and creative expression through various mediums.',
+      estimatedDuration: 35,
       prerequisites: null,
-      unlocked: true
+      unlocked: true,
+      materials: [
+        'Primary color paints or crayons',
+        'Pattern worksheet (downloadable)',
+        'Paper for art projects',
+        'Household items for pattern making'
+      ],
+      activities: [
+        'Name and use primary colors (red, blue, yellow)',
+        'Create AB patterns with colors or objects',
+        'Make rainbow art using all colors',
+        'Color mixing experiment (optional)'
+      ],
+      worksheets: [
+        'Color_Identification_Sheet.pdf',
+        'Pattern_Practice_Activities.pdf',
+        'Creative_Art_Templates.pdf'
+      ],
+      parentInstructions: 'Let your child explore colors freely. Talk about colors you see together throughout the day.'
     },
     {
       id: 5,
-      title: "Counting 11-20",
-      subject: "Mathematics",
-      ageGroup: "4-6",
-      difficulty: "medium",
-      description: "Advanced counting exercises with teen numbers and simple addition.",
-      estimatedDuration: 25,
+      title: 'Advanced Counting 11-20 & Teen Numbers',
+      subject: 'Mathematics',
+      ageGroup: '4-6',
+      difficulty: 'medium',
+      description: 'Extended counting homework focusing on teen numbers, quantity recognition, and basic addition concepts.',
+      estimatedDuration: 30,
       prerequisites: [1],
-      unlocked: false
+      unlocked: true,
+      materials: [
+        'Number cards 11-20 (provided)',
+        'Teen numbers worksheet (downloadable)',
+        'Counting manipulatives (beans, buttons)',
+        'Number line poster'
+      ],
+      activities: [
+        'Count objects from 11-20 accurately',
+        'Recognize and write teen numbers',
+        'Practice number order 1-20',
+        'Simple addition within 10'
+      ],
+      worksheets: [
+        'Teen_Numbers_Practice.pdf',
+        'Advanced_Counting_Activities.pdf',
+        'Number_Line_Exercises.pdf'
+      ],
+      parentInstructions: 'Use a number line for practice. Count steps, toys, or snacks to reinforce teen numbers.'
     },
     {
       id: 6,
-      title: "Letter Recognition F-J",
-      subject: "Language",
-      ageGroup: "4-6",
-      difficulty: "medium",
-      description: "Continue alphabet learning with letters F through J.",
-      estimatedDuration: 30,
+      title: 'Letter Recognition F-J & Word Building',
+      subject: 'Language',
+      ageGroup: '4-6',
+      difficulty: 'medium',
+      description: 'Advanced phonics homework extending alphabet knowledge with letters F-J and beginning word formation.',
+      estimatedDuration: 35,
       prerequisites: [3],
-      unlocked: false
+      unlocked: true,
+      materials: [
+        'Letter cards F-J (provided)',
+        'Word building worksheet (downloadable)',
+        'Letter tiles or magnetic letters',
+        'Simple picture books'
+      ],
+      activities: [
+        'Master letter sounds /f/, /g/, /h/, /i/, /j/',
+        'Practice proper letter formation F-J',
+        'Build simple CVC words (cat, bat, hat)',
+        'Identify letters in simple books'
+      ],
+      worksheets: [
+        'Letters_F-J_Practice.pdf',
+        'Word_Building_Activities.pdf',
+        'Letter_Recognition_Games.pdf'
+      ],
+      parentInstructions: 'Read together daily. Point out letters F-J in books and environmental print.'
     },
     {
       id: 7,
-      title: "Simple Word Formation",
-      subject: "Language",
-      ageGroup: "4-6",
-      difficulty: "hard",
-      description: "Combine letters to form simple 3-letter words.",
-      estimatedDuration: 35,
+      title: 'Simple Word Formation & Reading',
+      subject: 'Language',
+      ageGroup: '4-6',
+      difficulty: 'hard',
+      description: 'Beginning reading homework combining letters to form words, sight word practice, and simple sentence reading.',
+      estimatedDuration: 40,
       prerequisites: [3, 6],
-      unlocked: false
+      unlocked: true,
+      materials: [
+        'Word cards and letter tiles (provided)',
+        'Beginning reader worksheet (downloadable)',
+        'Sight word flashcards',
+        'Simple reading books'
+      ],
+      activities: [
+        'Build and read 3-letter words (CVC pattern)',
+        'Practice common sight words (I, see, go)',
+        'Read simple sentences aloud',
+        'Complete word family activities (-at, -an)'
+      ],
+      worksheets: [
+        'CVC_Word_Building.pdf',
+        'Sight_Word_Practice.pdf',
+        'Simple_Sentence_Reading.pdf'
+      ],
+      parentInstructions: 'Practice word families daily. Celebrate reading success! Sound out words together.'
     },
     {
       id: 8,
-      title: "Basic Addition 1-5",
-      subject: "Mathematics",
-      ageGroup: "4-6",
-      difficulty: "hard",
-      description: "Introduction to addition concepts using visual aids and manipulatives.",
-      estimatedDuration: 40,
+      title: 'Basic Addition & Number Concepts',
+      subject: 'Mathematics',
+      ageGroup: '4-6',
+      difficulty: 'hard',
+      description: 'Introduction to addition concepts using visual aids, manipulatives, and real-world problem solving.',
+      estimatedDuration: 45,
       prerequisites: [1, 5],
-      unlocked: false
+      unlocked: true,
+      materials: [
+        'Addition cards and counters (provided)',
+        'Math worksheet pack (downloadable)',
+        'Small objects for adding (buttons, toys)',
+        'Number line for visual support'
+      ],
+      activities: [
+        'Solve addition problems within 5 (2+1=3)',
+        'Use objects to demonstrate addition',
+        'Practice addition with fingers',
+        'Word problems with pictures'
+      ],
+      worksheets: [
+        'Basic_Addition_Practice.pdf',
+        'Visual_Addition_Activities.pdf',
+        'Math_Word_Problems.pdf'
+      ],
+      parentInstructions: "Use everyday situations for math: 'You have 2 apples, I give you 1 more. How many now?'"
     }
   ];
 
@@ -365,7 +509,7 @@ const NewHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
 
   if (isLoading && availableChildren.length === 0) {
     return (
-      <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
+      <div className={'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'}>
         <div className={`p-8 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex items-center space-x-3">
             <FaSpinner className="animate-spin text-blue-500" />
@@ -428,13 +572,15 @@ const NewHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
 
           {/* Assignment Preview */}
           {selectedAssignment && (
-            <div className={`rounded-lg p-4 border ${
+            <div className={`rounded-lg p-6 border ${
               isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
             }`}>
-              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Assignment Preview
+              <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                📋 Assignment Preview
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+              
+              {/* Basic Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="flex items-center">
                   <FaTags className={`mr-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
                   <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -454,18 +600,87 @@ const NewHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
                   </span>
                 </div>
               </div>
-              <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+
+              {/* Description */}
+              <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {selectedAssignment.description}
               </p>
-              <div className="mt-2">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+
+              {/* Difficulty Badge */}
+              <div className="mb-4">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                   selectedAssignment.difficulty === 'easy' ? 'bg-green-200 text-green-800' :
-                  selectedAssignment.difficulty === 'medium' ? 'bg-yellow-200 text-yellow-800' :
-                  'bg-red-200 text-red-800'
+                    selectedAssignment.difficulty === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                      'bg-red-200 text-red-800'
                 }`}>
-                  {selectedAssignment.difficulty.toUpperCase()}
+                  {selectedAssignment.difficulty.toUpperCase()} LEVEL
                 </span>
               </div>
+
+              {/* Materials Needed */}
+              {selectedAssignment.materials && (
+                <div className="mb-4">
+                  <h4 className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    📦 Materials Included:
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {selectedAssignment.materials.map((material, index) => (
+                      <div key={index} className={`flex items-center text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <span className="text-green-500 mr-2">•</span>
+                        {material}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Activities */}
+              {selectedAssignment.activities && (
+                <div className="mb-4">
+                  <h4 className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    🎯 Student Activities:
+                  </h4>
+                  <div className="space-y-1">
+                    {selectedAssignment.activities.map((activity, index) => (
+                      <div key={index} className={`flex items-start text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <span className="text-blue-500 mr-2 mt-1">{index + 1}.</span>
+                        <span>{activity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Worksheets */}
+              {selectedAssignment.worksheets && (
+                <div className="mb-4">
+                  <h4 className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    📄 Downloadable Worksheets:
+                  </h4>
+                  <div className="space-y-1">
+                    {selectedAssignment.worksheets.map((worksheet, index) => (
+                      <div key={index} className={`flex items-center text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <FaFileAlt className="mr-2 text-purple-500" />
+                        {worksheet}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Parent Instructions */}
+              {selectedAssignment.parentInstructions && (
+                <div className={`p-3 rounded-lg mt-4 border-l-4 border-blue-500 ${
+                  isDark ? 'bg-blue-900/20' : 'bg-blue-50'
+                }`}>
+                  <h4 className={`text-sm font-semibold mb-1 ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>
+                    👨‍👩‍👧‍👦 Parent Guidance:
+                  </h4>
+                  <p className={`text-xs ${isDark ? 'text-blue-200' : 'text-blue-700'}`}>
+                    {selectedAssignment.parentInstructions}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -648,7 +863,7 @@ const NewHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center`}
+            className={'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center'}
           >
             {isLoading ? (
               <>
