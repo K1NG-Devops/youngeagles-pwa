@@ -206,6 +206,14 @@ const apiService = {
   // Health check
   healthCheck: () => apiClient.get('/health'),
 
+  // Push notification endpoints
+  push: {
+    getVapidPublicKey: () => apiClient.get('/api/push/vapid-public-key'),
+    subscribe: (subscription) => apiClient.post('/api/push/subscribe', subscription),
+    unsubscribe: (endpoint) => apiClient.post('/api/push/unsubscribe', { endpoint }),
+    sendNotification: (notificationData) => apiClient.post('/api/push/send', notificationData)
+  },
+
   // Auth endpoints
   auth: {
     parentLogin: (credentials) => apiClient.post('/api/auth/parent-login', credentials),
