@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaRobot, FaBars, FaTimes, FaUser, FaCog } from 'react-icons/fa';
+import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaChild, FaBars, FaTimes, FaUser, FaCog, FaUsers, FaBullhorn, FaBookOpen, FaChalkboardTeacher } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 
@@ -18,18 +18,26 @@ const SideNavigation = () => {
     if (user?.role === 'parent') {
       return [
         ...baseItems,
-        { path: '/homework', icon: FaGraduationCap, label: 'Homework' },
-        { path: '/activities', icon: FaRobot, label: 'Activities' },
+        { path: '/children', icon: FaChild, label: 'My Children' },
+        { path: '/activities', icon: FaGraduationCap, label: 'Activities' },
         { path: '/events', icon: FaCalendarAlt, label: 'Events' },
-        { path: '/notifications', icon: FaBell, label: 'Updates' }
+        { path: '/notifications', icon: FaBell, label: 'Announcements' }
       ];
-    } else {
-      // For teachers and admin
+    } else if (user?.role === 'teacher') {
       return [
         ...baseItems,
-        { path: '/homework', icon: FaGraduationCap, label: 'Homework' },
-        { path: '/activities', icon: FaRobot, label: 'Activities' },
+        { path: '/classes', icon: FaChalkboardTeacher, label: 'Classroom' },
+        { path: '/homework', icon: FaBookOpen, label: 'Assignments' },
         { path: '/events', icon: FaCalendarAlt, label: 'Events' }
+      ];
+    } else {
+      // For admin
+      return [
+        ...baseItems,
+        { path: '/management', icon: FaUsers, label: 'Program Management' },
+        { path: '/classes', icon: FaChalkboardTeacher, label: 'Classrooms' },
+        { path: '/events', icon: FaCalendarAlt, label: 'Events' },
+        { path: '/notifications', icon: FaBullhorn, label: 'Announcements' }
       ];
     }
   };

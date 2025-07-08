@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import apiService from '../services/apiService';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { 
   FaGraduationCap, 
   FaUsers, 
@@ -16,6 +17,7 @@ import Header from '../components/Header';
 const Classes = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [classChildren, setClassChildren] = useState([]);
@@ -100,57 +102,8 @@ const Classes = () => {
   const handleViewClassChildren = async (classId, className) => {
     try {
       setIsLoadingChildren(true);
-      setSelectedClass(className);
-      console.log(`🎓 Fetching children for class ${classId} (${className})`);
-      
-      const response = await apiService.classes.getChildren(classId);
-      console.log('📚 Class children response:', response.data);
-      
-      const children = response.data.children || response.data || [];
-      setClassChildren(children);
-      
-      if (children.length === 0) {
-        toast.info(`No children found in ${className}`);
-      } else {
-        toast.success(`Found ${children.length} children in ${className}`);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching class children:', error);
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to load class children';
-      toast.error(errorMsg);
-      
-      // Mock data for demo purposes if API fails
-      if (error.response?.status === 404 || error.code === 'ECONNREFUSED') {
-        console.log('🔧 Using mock data for class children');
-        const mockChildren = [
-          {
-            id: 1,
-            first_name: 'John',
-            last_name: 'Doe',
-            age: 8,
-            parent_name: 'Jane Doe',
-            emergency_contact: '+27 123 456 789'
-          },
-          {
-            id: 2,
-            first_name: 'Sarah',
-            last_name: 'Smith',
-            age: 9,
-            parent_name: 'Mike Smith',
-            emergency_contact: '+27 987 654 321'
-          },
-          {
-            id: 3,
-            first_name: 'David',
-            last_name: 'Johnson',
-            age: 7,
-            parent_name: 'Lisa Johnson',
-            emergency_contact: '+27 555 123 456'
-          }
-        ];
-        setClassChildren(mockChildren);
-        toast.info(`Using demo data - ${mockChildren.length} sample children`);
-      }
+      // Navigate to the children view of the class
+      navigate(`/classes/${classId}/children`);
     } finally {
       setIsLoadingChildren(false);
     }
@@ -176,23 +129,8 @@ const Classes = () => {
     };
 
     // For now, show a detailed toast message
-    toast.info(
-      `📋 Class Details:\n` +
-      `Name: ${details.name}\n` +
-      `Teacher: ${details.teacher}\n` +
-      `Students: ${details.studentCount}/${details.capacity}\n` +
-      `Age Group: ${details.ageGroup}`,
-      {
-        autoClose: 6000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      }
-    );
-
-    // TODO: In the future, this could navigate to a detailed class page
-    // navigate(`/classes/${classItem.id}/details`);
+    // Navigate to the detailed class page
+    navigate(`/classes/${classItem.id}/details`);
   };
 
   if (isLoading) {
@@ -396,4 +334,5 @@ const Classes = () => {
   );
 };
 
-export default Classes; 
+export default Classes;
+

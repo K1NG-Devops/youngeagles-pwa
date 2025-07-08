@@ -89,6 +89,16 @@ function App() {
                       <Classes />
                     </PrivateRoute>
                   } />
+                  <Route path="classes/:classId/children" element={
+                    <PrivateRoute>
+                      <Children />
+                    </PrivateRoute>
+                  } />
+                  <Route path="classes/:classId/details" element={
+                    <PrivateRoute>
+                      <Classes />
+                    </PrivateRoute>
+                  } />
                   <Route path="homework" element={
                     <PrivateRoute>
                       <Homework />

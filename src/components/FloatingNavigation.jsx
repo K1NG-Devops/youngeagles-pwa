@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaRobot, FaBars, FaTimes, FaGripVertical } from 'react-icons/fa';
+import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaChild, FaBars, FaTimes, FaGripVertical, FaUsers, FaBullhorn, FaBookOpen, FaChalkboardTeacher } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -33,31 +33,30 @@ const FloatingNavigation = () => {
     if (user?.role === 'parent' || user?.userType === 'parent') {
       return [
         ...baseItems,
-        { path: '/homework', icon: FaGraduationCap, label: 'Homework', color: 'bg-green-500' },
-        { path: '/activities', icon: FaRobot, label: 'Activities', color: 'bg-purple-500' },
+        { path: '/children', icon: FaChild, label: 'My Children', color: 'bg-green-500' },
+        { path: '/activities', icon: FaGraduationCap, label: 'Activities', color: 'bg-purple-500' },
         { path: '/events', icon: FaCalendarAlt, label: 'Events', color: 'bg-orange-500' },
-        { path: '/notifications', icon: FaBell, label: 'Updates', color: 'bg-red-500' }
+        { path: '/notifications', icon: FaBell, label: 'Announcements', color: 'bg-red-500' }
       ];
     } else if (user?.role === 'teacher' || user?.userType === 'teacher') {
       // For teachers
       return [
         ...baseItems,
-        { path: '/homework', icon: FaGraduationCap, label: 'Homework', color: 'bg-green-500' },
-        { path: '/classes', icon: FaGraduationCap, label: 'Classes', color: 'bg-indigo-500' },
+        { path: '/classes', icon: FaChalkboardTeacher, label: 'Classroom', color: 'bg-green-500' },
+        { path: '/homework', icon: FaBookOpen, label: 'Assignments', color: 'bg-indigo-500' },
         { path: '/events', icon: FaCalendarAlt, label: 'Events', color: 'bg-orange-500' }
       ];
     } else if (user?.role === 'admin' || user?.userType === 'admin') {
       // For admin
       return [
         ...baseItems,
-        { path: '/management', icon: FaGraduationCap, label: 'Management', color: 'bg-green-500' },
-        { path: '/admin-payment-review', icon: FaRobot, label: 'Payments', color: 'bg-purple-500' },
-        { path: '/classes', icon: FaCalendarAlt, label: 'Classes', color: 'bg-orange-500' }
+        { path: '/management', icon: FaUsers, label: 'Program Management', color: 'bg-green-500' },
+        { path: '/notifications', icon: FaBullhorn, label: 'Announcements', color: 'bg-purple-500' },
+        { path: '/classes', icon: FaChalkboardTeacher, label: 'Classrooms', color: 'bg-orange-500' }
       ];
-    } else {
-      // Default fallback
-      return baseItems;
-    }
+    } 
+    // Default fallback
+    return baseItems;
   };
 
   const navItems = getNavItems();

@@ -638,8 +638,8 @@ const TeacherDashboard = () => {
             <div className="text-center text-white">
               <FaUsers className="text-2xl mx-auto mb-2" />
               <div className="text-lg font-bold">{stats.students}</div>
-              <div className="text-xs opacity-90">Students</div>
-              <div className="text-xs opacity-75 mt-1">Manage students</div>
+              <div className="text-xs opacity-90">Children</div>
+              <div className="text-xs opacity-75 mt-1">View Children</div>
             </div>
           </Link>
 
@@ -695,7 +695,7 @@ const TeacherDashboard = () => {
                       </p>
                     </div>
                     <Link
-                      to={`/classes/${classItem.id}`}
+                      to={`/classes`}
                       className={`text-sm font-medium ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
                     >
                       View Details →
