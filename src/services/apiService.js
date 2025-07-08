@@ -395,6 +395,18 @@ const apiService = {
     // Get payment proofs for parent
     getProofs: () => apiClient.get('/api/payments/proofs/parent'),
     
+    // Get all payment proofs for admin
+    getAllProofs: () => apiClient.get('/api/payments/proofs/admin'),
+    
+    // Review payment proof (admin only) - using the correct backend endpoint
+    reviewProof: (proofId, data) => apiClient.post(`/api/payments/proofs/${proofId}/review`, data),
+    
+    // Approve payment proof (admin only) - wrapper for review with approved status
+    approveProof: (proofId) => apiClient.post(`/api/payments/proofs/${proofId}/review`, { status: 'approved', admin_notes: 'Approved by admin' }),
+    
+    // Reject payment proof (admin only) - wrapper for review with rejected status
+    rejectProof: (proofId, data) => apiClient.post(`/api/payments/proofs/${proofId}/review`, { status: 'rejected', admin_notes: data.reason || 'Rejected by admin' }),
+    
     // Submit payment proof
     submitProof: (formData) => apiClient.post('/api/payments/proof', formData, {
       headers: {
@@ -409,7 +421,37 @@ const apiService = {
     getHistory: () => apiClient.get('/api/payments/history'),
     
     // Get payment statistics
-    getStats: () => apiClient.get('/api/payments/stats')
+    getStats: () => apiClient.get('/api/payments/stats'),
+    
+    // Get payment summary for parent (approved payments only)
+    getSummary: () => apiClient.get('/api/payments/summary/parent'),
+    
+    // Get payment summary for admin (approved payments only)
+    getAdminSummary: () => apiClient.get('/api/payments/summary/admin'),
+    
+    // Delete rejected payment proof
+    deleteRejectedProof: (proofId) => apiClient.delete(`/api/payments/proofs/${proofId}`)
+  },
+
+  // Users endpoints (admin only)
+  users: {
+    // Get all users (admin only)
+    getAll: () => apiClient.get('/api/users'),
+    
+    // Get user by ID
+    getById: (userId) => apiClient.get(`/api/users/${userId}`),
+    
+    // Create new user
+    create: (userData) => apiClient.post('/api/users', userData),
+    
+    // Update user
+    update: (userId, userData) => apiClient.put(`/api/users/${userId}`, userData),
+    
+    // Delete user
+    delete: (userId) => apiClient.delete(`/api/users/${userId}`),
+    
+    // Get admin dashboard stats (includes pendingApprovals)
+    getStats: () => apiClient.get('/api/users/stats/overview')
   },
 
   // AI endpoints

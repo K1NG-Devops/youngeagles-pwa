@@ -52,7 +52,7 @@ const Management = () => {
     { id: 'payments', label: 'Payments', icon: FaCreditCard },
     { id: 'proofs', label: 'Payment Proofs', icon: FaUpload },
     { id: 'invoices', label: 'Invoices', icon: FaFileInvoice },
-    ...(user?.role === 'admin' ? [{ id: 'send-invoices', label: 'Send Invoices/Receipts', icon: FaPaperPlane }] : []),
+    ...((user?.role === 'admin' || user?.userType === 'admin') ? [{ id: 'send-invoices', label: 'Send Invoices/Receipts', icon: FaPaperPlane }] : []),
     { id: 'history', label: 'History', icon: FaHistory }
   ];
 
@@ -100,7 +100,7 @@ const Management = () => {
 
   // Load all users for invoice/receipt functionality
   const loadAllUsers = async () => {
-    if (user?.role !== 'admin') return;
+    if (user?.role !== 'admin' && user?.userType !== 'admin') return;
     
     try {
       setIsLoadingUsers(true);
@@ -203,7 +203,7 @@ const Management = () => {
 
   // Load users when admin accesses invoice tab
   useEffect(() => {
-    if (activeTab === 'send-invoices' && user?.role === 'admin') {
+    if (activeTab === 'send-invoices' && (user?.role === 'admin' || user?.userType === 'admin')) {
       loadAllUsers();
     }
   }, [activeTab, user]);

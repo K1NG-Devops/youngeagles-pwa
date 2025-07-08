@@ -21,7 +21,7 @@ const FloatingNavigation = () => {
   const [isClickDetected, setIsClickDetected] = useState(false);
   const [dragDelayTimer, setDragDelayTimer] = useState(null);
   const [hasActuallyMoved, setHasActuallyMoved] = useState(false);
-  const dragDelayMs = 150; // 150ms delay to differentiate between click and drag
+  const dragDelayMs = 50; // 50ms delay to differentiate between click and drag
   const dragThreshold = 5; // 5px movement threshold
   
   // Define navigation items based on user role
@@ -30,7 +30,7 @@ const FloatingNavigation = () => {
       { path: '/dashboard', icon: FaHome, label: 'Dashboard', color: 'bg-blue-500' }
     ];
 
-    if (user?.role === 'parent') {
+    if (user?.role === 'parent' || user?.userType === 'parent') {
       return [
         ...baseItems,
         { path: '/homework', icon: FaGraduationCap, label: 'Homework', color: 'bg-green-500' },
@@ -38,14 +38,25 @@ const FloatingNavigation = () => {
         { path: '/events', icon: FaCalendarAlt, label: 'Events', color: 'bg-orange-500' },
         { path: '/notifications', icon: FaBell, label: 'Updates', color: 'bg-red-500' }
       ];
-    } else {
-      // For teachers and admin
+    } else if (user?.role === 'teacher' || user?.userType === 'teacher') {
+      // For teachers
       return [
         ...baseItems,
         { path: '/homework', icon: FaGraduationCap, label: 'Homework', color: 'bg-green-500' },
-        { path: '/activities', icon: FaRobot, label: 'Activities', color: 'bg-purple-500' },
+        { path: '/classes', icon: FaGraduationCap, label: 'Classes', color: 'bg-indigo-500' },
         { path: '/events', icon: FaCalendarAlt, label: 'Events', color: 'bg-orange-500' }
       ];
+    } else if (user?.role === 'admin' || user?.userType === 'admin') {
+      // For admin
+      return [
+        ...baseItems,
+        { path: '/management', icon: FaGraduationCap, label: 'Management', color: 'bg-green-500' },
+        { path: '/admin-payment-review', icon: FaRobot, label: 'Payments', color: 'bg-purple-500' },
+        { path: '/classes', icon: FaCalendarAlt, label: 'Classes', color: 'bg-orange-500' }
+      ];
+    } else {
+      // Default fallback
+      return baseItems;
     }
   };
 

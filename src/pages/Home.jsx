@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { BannerAd } from '../components/ads';
 import { 
   FaGraduationCap, 
   FaBookOpen, 
@@ -158,6 +159,9 @@ const Home = () => {
             ))}
           </div>
         </div>
+        
+        {/* Ad Section */}
+        <BannerAd className="mt-16" />
       </div>
 
       {/* CTA Section */}

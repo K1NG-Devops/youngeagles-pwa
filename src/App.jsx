@@ -19,6 +19,7 @@ import Events from './pages/Events';
 import Notifications from './pages/Notifications';
 import Management from './pages/Management';
 import PaymentProofs from './pages/PaymentProofs';
+import AdminPaymentReview from './pages/AdminPaymentReview';
 import Settings from './pages/Settings';
 import Activities from './pages/Activities';
 import Register from './pages/Register';
@@ -29,6 +30,7 @@ import PaymentCancel from './pages/PaymentCancel';
 import CuratedLessonLibrary from './components/CuratedLessonLibrary';
 import PrivateRoute from './components/PrivateRoute';
 import SubscriptionExpiredModal from './components/SubscriptionExpiredModal';
+import AdSenseScript from './components/AdSenseScript';
 import { useAuth } from './contexts/AuthContext';
 
 
@@ -49,6 +51,7 @@ function App() {
       <AuthProvider>
         <SubscriptionProvider>
           <div className="app scroll-smooth scrollbar-no-scrollbar">
+            <AdSenseScript />
             <SubscriptionExpiredModal />
             <Routes>
               {/* Public Routes */}
@@ -116,6 +119,11 @@ function App() {
                 <Route path="payment-proofs" element={
                   <PrivateRoute>
                     <PaymentProofs />
+                  </PrivateRoute>
+                } />
+                <Route path="admin-payment-review" element={
+                  <PrivateRoute>
+                    <AdminPaymentReview />
                   </PrivateRoute>
                 } />
                 <Route path="settings" element={

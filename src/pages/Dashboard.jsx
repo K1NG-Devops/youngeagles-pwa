@@ -7,6 +7,7 @@ import { FaUser, FaBook, FaUpload, FaBrain, FaBell, FaArrowRight } from 'react-i
 import Header from '../components/Header';
 import { useTheme } from '../hooks/useTheme';
 import TeacherDashboard from './TeacherDashboard';
+import AdminDashboard from './AdminDashboard';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -133,6 +134,11 @@ const Dashboard = () => {
   // Route teachers to TeacherDashboard
   if (user?.role === 'teacher') {
     return <TeacherDashboard />;
+  }
+
+  // Route admins to AdminDashboard
+  if (user?.role === 'admin') {
+    return <AdminDashboard />;
   }
 
   return (

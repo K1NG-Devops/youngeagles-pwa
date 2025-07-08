@@ -12,7 +12,8 @@ import {
   FaMoneyBill, 
   FaArrowLeft,
   FaFileInvoice,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaTrash
 } from 'react-icons/fa';
 
 const PaymentProofs = () => {
@@ -21,8 +22,10 @@ const PaymentProofs = () => {
   const { isDark } = useTheme();
   const [children, setChildren] = useState([]);
   const [proofs, setProofs] = useState([]);
+  const [paymentSummary, setPaymentSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingProofId, setDeletingProofId] = useState(null);
   const [formData, setFormData] = useState({
     child_id: '',
     amount: '',
@@ -45,6 +48,14 @@ const PaymentProofs = () => {
         } catch (error) {
           console.error('Error loading payment proofs:', error);
           setProofs([]);
+        }
+        
+        // Load payment summary (approved payments only)
+        try {
+          const summaryResponse = await apiService.payments.getSummary();
+          setPaymentSummary(summaryResponse.data.summary);
+        } catch (error) {
+          console.error('Error loading payment summary:', error);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -103,6 +114,10 @@ const PaymentProofs = () => {
       try {
         const proofsResponse = await apiService.payments.getProofs();
         setProofs(proofsResponse.data.proofs || []);
+        
+        // Reload payment summary
+        const summaryResponse = await apiService.payments.getSummary();
+        setPaymentSummary(summaryResponse.data.summary);
       } catch (error) {
         console.error('Error reloading proofs:', error);
       }
@@ -142,6 +157,30 @@ const PaymentProofs = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+  
+  const handleDeleteRejectedProof = async (proofId) => {
+    if (!confirm('Are you sure you want to delete this rejected payment proof?')) {
+      return;
+    }
+    
+    try {
+      setDeletingProofId(proofId);
+      await apiService.payments.deleteRejectedProof(proofId);
+      toast.success('Rejected payment proof deleted successfully');
+      
+      // Reload proofs and summary
+      const proofsResponse = await apiService.payments.getProofs();
+      setProofs(proofsResponse.data.proofs || []);
+      
+      const summaryResponse = await apiService.payments.getSummary();
+      setPaymentSummary(summaryResponse.data.summary);
+    } catch (error) {
+      console.error('Error deleting rejected proof:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete rejected proof');
+    } finally {
+      setDeletingProofId(null);
+    }
   };
 
   if (isLoading) {
@@ -185,6 +224,53 @@ const PaymentProofs = () => {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 space-y-6 mt-6">
+        {/* Payment Summary */}
+        {paymentSummary && (
+          <div className={`rounded-2xl shadow-lg border backdrop-blur-sm ${isDark ? 'bg-gray-800/90 border-gray-700' : 'bg-white/90 border-gray-100'}`}>
+            <div className="p-6">
+              <div className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-4 rounded-xl mb-6">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <FaMoneyBill className="mr-3" />
+                  Payment Summary
+                </h2>
+                <p className="text-emerald-100 text-sm mt-1">
+                  Overview of your approved payments
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className={`p-4 rounded-xl border-2 ${isDark ? 'bg-emerald-900/20 border-emerald-800' : 'bg-emerald-50 border-emerald-200'}`}>
+                  <div className={`text-2xl font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                    R{paymentSummary.total_paid.toFixed(2)}
+                  </div>
+                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Total Paid (Approved)</div>
+                </div>
+                
+                <div className={`p-4 rounded-xl border-2 ${isDark ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'}`}>
+                  <div className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                    {paymentSummary.total_approved_payments}
+                  </div>
+                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Approved Payments</div>
+                </div>
+                
+                <div className={`p-4 rounded-xl border-2 ${isDark ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'}`}>
+                  <div className={`text-2xl font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                    {paymentSummary.pending_payments}
+                  </div>
+                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Pending Review</div>
+                </div>
+                
+                <div className={`p-4 rounded-xl border-2 ${isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'}`}>
+                  <div className={`text-2xl font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                    {paymentSummary.rejected_payments}
+                  </div>
+                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Rejected</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Submit New Payment Proof - Enhanced styling */}
         <div className={`rounded-2xl shadow-lg border backdrop-blur-sm ${isDark ? 'bg-gray-800/90 border-gray-700' : 'bg-white/90 border-gray-100'}`}>
           <div className="p-6">
@@ -421,10 +507,30 @@ const PaymentProofs = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex items-center space-x-2">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold capitalize border-2 ${getStatusColor(proof.status)}`}>
                           {proof.status || 'pending'}
                         </span>
+                        {proof.status === 'rejected' && (
+                          <button
+                            onClick={() => handleDeleteRejectedProof(proof.id)}
+                            disabled={deletingProofId === proof.id}
+                            className={`p-2 rounded-lg transition-all hover:scale-105 ${
+                              deletingProofId === proof.id
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : isDark
+                                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                                  : 'bg-red-500 hover:bg-red-600 text-white'
+                            }`}
+                            title="Delete rejected proof"
+                          >
+                            {deletingProofId === proof.id ? (
+                              <FaSpinner className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <FaTrash className="w-3 h-3" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                     

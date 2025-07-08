@@ -14,6 +14,8 @@ A minimal Progressive Web Application for the Young Eagles preschool management 
 - ✅ Protected routes
 - ✅ Children and Classes management
 - ✅ Bottom navigation for mobile
+- ✅ Google AdSense integration
+- ✅ Ad management system
 
 ## Installation
 
@@ -43,12 +45,22 @@ A minimal Progressive Web Application for the Young Eagles preschool management 
 ```
 src/
 ├── components/          # Reusable UI components
+│   ├── ads/            # Ad management components
+│   │   ├── index.js    # Ad components export
+│   │   ├── GoogleAdSense.jsx  # Core AdSense component
+│   │   ├── BannerAd.jsx       # Banner ad component
+│   │   └── SidebarAd.jsx      # Sidebar ad component
 │   ├── Header.jsx      # App header with user info
 │   ├── Layout.jsx      # Main layout wrapper
 │   ├── Navigation.jsx  # Bottom navigation
 │   └── PrivateRoute.jsx # Protected route wrapper
 ├── contexts/           # React Context providers
 │   └── AuthContext.jsx # Authentication state management
+├── hooks/              # Custom React hooks
+│   └── useAdSense.js   # AdSense management hook
+├── config/             # Configuration files
+│   ├── adsense-config.js  # AdSense configuration
+│   └── admob-config.js    # AdMob configuration
 ├── pages/              # Page components
 │   ├── Home.jsx        # Landing page
 │   ├── Login.jsx       # Login form
@@ -160,6 +172,37 @@ npm run preview
 - Role-based access control
 - Secure token storage
 
+## Ads Module
+
+The PWA includes a comprehensive ads management system with Google AdSense integration:
+
+### Features
+- Google AdSense integration
+- Multiple ad formats (banner, sidebar, display)
+- Test mode for development
+- Responsive ad components
+- Custom hook for ad management
+- Error handling and fallbacks
+
+### Quick Usage
+```javascript
+import { BannerAd, SidebarAd, useAdSense } from './components/ads';
+
+// Simple banner ad
+<BannerAd />
+
+// Using the hook
+const { isAdSenseLoaded, shouldDisplayAds } = useAdSense();
+```
+
+### Configuration
+1. Update `src/config/adsense-config.js` with your AdSense publisher ID
+2. Add ad slots from your AdSense dashboard
+3. Set `TEST_MODE: false` for production
+
+### Documentation
+For detailed documentation, see [`docs/ADS_MODULE.md`](docs/ADS_MODULE.md)
+
 ## Contributing
 
 This is a minimal version focused on core functionality. Future enhancements can include:
@@ -170,6 +213,8 @@ This is a minimal version focused on core functionality. Future enhancements can
 - Advanced reporting
 - File uploads
 - Calendar integration
+- Ad performance analytics
+- A/B testing for ad placements
 
 ## License
 
