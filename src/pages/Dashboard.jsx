@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { FaUser, FaBook, FaUpload, FaBrain, FaBell, FaArrowRight } from 'react-icons/fa';
 import Header from '../components/Header';
 import { useTheme } from '../hooks/useTheme';
+import { YoungEaglesMainDisplay } from '../components/ads';
 import TeacherDashboard from './TeacherDashboard';
 import AdminDashboard from './AdminDashboard';
 
@@ -158,6 +159,13 @@ const Dashboard = () => {
               <p className="text-blue-100 text-sm md:text-base">Track your child's learning progress and stay connected</p>
             </div>
           </div>
+          
+          {/* YoungEagles Ad */}
+          <YoungEaglesMainDisplay 
+            className="mb-6"
+            style={{ maxWidth: '100%' }}
+          />
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {/* Left Column - Main Actions */}

@@ -26,6 +26,7 @@ import ParentCommunicationPanel from '../components/ParentCommunicationPanel';
 import AdvancedHomeworkAssignment from '../components/AdvancedHomeworkAssignment';
 import NewHomeworkAssignment from '../components/NewHomeworkAssignment';
 import Header from '../components/Header';
+import { YoungEaglesMainDisplay } from '../components/ads';
 
 // Hooks and Services
 import { useAuth } from '../contexts/AuthContext';
@@ -398,6 +399,12 @@ const TeacherDashboard = () => {
             )}
           </div>
         </div>
+        
+        {/* YoungEagles Ad */}
+        <YoungEaglesMainDisplay 
+          className="mb-6"
+          style={{ maxWidth: '100%' }}
+        />
         
         {/* AI Grading Status Banner */}
         {aiGradingStatus === 'processing' && (
