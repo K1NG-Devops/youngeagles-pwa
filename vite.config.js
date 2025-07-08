@@ -68,6 +68,30 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 365
               }
             }
+          },
+          {
+            urlPattern: /^https:\/\/pagead2\.googlesyndication\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'google-ads-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
+              },
+              networkTimeoutSeconds: 3
+            }
+          },
+          {
+            urlPattern: /^https:\/\/googleads\.g\.doubleclick\.net\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'doubleclick-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
+              },
+              networkTimeoutSeconds: 3
+            }
           }
         ]
       }
@@ -99,13 +123,19 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true,
         // Reduced aggressiveness to prevent React internals corruption
-        passes: 1
+        passes: 1,
+        // Optimize for faster parsing
+        pure_funcs: ['console.log', 'console.warn'],
+        unsafe_arrows: false
       },
       mangle: {
         // Disable safari10 mangling which can be too aggressive
         safari10: false,
         // Preserve React internals and common properties
         reserved: ['isElement', 'createElement', 'Component', 'PureComponent']
+      },
+      format: {
+        comments: false
       }
     },
     rollupOptions: {
@@ -166,7 +196,11 @@ export default defineConfig({
       }
     },
     target: 'esnext',
-    chunkSizeWarningLimit: 500,
-    assetsInlineLimit: 4096
+    chunkSizeWarningLimit: 1000,
+    assetsInlineLimit: 4096,
+    // Optimize for faster loading
+    reportCompressedSize: false,
+    // Enable CSS code splitting for better caching
+    cssCodeSplit: true
   }
 }) 
