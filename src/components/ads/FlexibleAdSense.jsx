@@ -1,10 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
-const YoungEaglesMainDisplay = ({ 
+const FlexibleAdSense = ({ 
   className = "",
   style = {},
   disabled = false,
-  adType = 'banner' // 'banner', 'sidebar', or 'footer'
+  adType = 'banner', // 'banner', 'sidebar', 'footer'
+  format = 'auto', // 'auto', 'rectangle', 'vertical', 'horizontal'
+  responsive = true,
+  showPlaceholder = true
 }) => {
   const adRef = useRef(null);
   
@@ -43,27 +46,37 @@ const YoungEaglesMainDisplay = ({
   // Don't render if ads are disabled or missing required config
   if (!adsEnabled || disabled || !publisherId || !adSlot) {
     // Show placeholder in test mode or development
-    if (testMode || import.meta.env.DEV) {
+    if ((testMode || import.meta.env.DEV) && showPlaceholder) {
+      const placeholderHeight = format === 'vertical' ? '600px' : format === 'horizontal' ? '90px' : '250px';
+      
       return (
-        <div className={`youngeagles-ad-container ${className}`} style={style}>
+        <div className={`adsense-container ${className}`} style={style}>
           <div 
             style={{ 
-              minHeight: '200px', 
-              backgroundColor: '#f3f4f6', 
-              border: '2px dashed #d1d5db',
+              minHeight: placeholderHeight,
+              backgroundColor: '#f8fafc', 
+              border: '2px dashed #cbd5e1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: '8px',
+              margin: '10px 0',
               ...style 
             }}
           >
-            <div style={{ textAlign: 'center', color: '#6b7280' }}>
-              <p>📢 AdSense Placeholder</p>
-              <p style={{ fontSize: '12px' }}>Ad will appear here when live</p>
-              {!adsEnabled && <p style={{ fontSize: '10px' }}>Ads disabled in config</p>}
-              {!publisherId && <p style={{ fontSize: '10px' }}>Publisher ID missing</p>}
-              {!adSlot && <p style={{ fontSize: '10px' }}>Ad slot missing</p>}
+            <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
+              <p style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'bold' }}>
+                📢 AdSense {adType.charAt(0).toUpperCase() + adType.slice(1)} Ad
+              </p>
+              <p style={{ margin: '5px 0', fontSize: '12px' }}>
+                Real ads will appear here when deployed
+              </p>
+              {!adsEnabled && <p style={{ fontSize: '10px', color: '#ef4444' }}>❌ Ads disabled in config</p>}
+              {!publisherId && <p style={{ fontSize: '10px', color: '#ef4444' }}>❌ Publisher ID missing</p>}
+              {!adSlot && <p style={{ fontSize: '10px', color: '#ef4444' }}>❌ Ad slot missing</p>}
+              <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '10px' }}>
+                Slot: {adSlot || 'Not configured'}
+              </p>
             </div>
           </div>
         </div>
@@ -73,19 +86,18 @@ const YoungEaglesMainDisplay = ({
   }
 
   return (
-    <div className={`youngeagles-ad-container ${className}`} style={style}>
-      {/* YoungEagles-Main-Display */}
+    <div className={`adsense-container ${className}`} style={style}>
       <ins 
         ref={adRef}
         className="adsbygoogle"
-        style={{ display: 'block' }}
+        style={{ display: 'block', margin: '10px 0' }}
         data-ad-client={publisherId}
         data-ad-slot={adSlot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
+        data-ad-format={format}
+        data-full-width-responsive={responsive ? "true" : "false"}
       />
     </div>
   );
 };
 
-export default YoungEaglesMainDisplay;
+export default FlexibleAdSense;
