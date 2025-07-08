@@ -10,6 +10,7 @@ export { default as GoogleAdSense } from './GoogleAdSense';
 export { default as BannerAd } from './BannerAd';
 export { default as SidebarAd } from './SidebarAd';
 export { default as YoungEaglesMainDisplay } from './YoungEaglesMainDisplay';
+export { default as FlexibleAdSense } from './FlexibleAdSense';
 
 // Export hooks
 export { useAdSense } from '../../hooks/useAdSense';
