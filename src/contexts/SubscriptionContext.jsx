@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-toastify';
 
@@ -88,12 +88,7 @@ export const SubscriptionProvider = ({ children }) => {
     }
   };
 
-  // Load subscription data
-  useEffect(() => {
-    loadSubscription();
-  }, [user]);
-
-  const loadSubscription = () => {
+  const loadSubscription = useCallback(() => {
     setLoading(true);
     try {
       // In production, this would be an API call
@@ -121,7 +116,12 @@ export const SubscriptionProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Load subscription data
+  useEffect(() => {
+    loadSubscription();
+  }, [loadSubscription]);
 
   const updateSubscription = (newSub) => {
     setSubscription(newSub);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { 
   FaMoon, 
   FaSun, 
@@ -14,7 +15,12 @@ import {
   FaTrash,
   FaSync,
   FaInfo,
-  FaSave
+  FaSave,
+  FaQuestionCircle,
+  FaEnvelope,
+  FaFile,
+  FaUserShield,
+  FaExternalLinkAlt
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -441,6 +447,59 @@ const Settings = () => {
             <FaSync className="mr-2" />
             Reset to Default
           </button>
+        </div>
+
+        {/* Help & Support */}
+        <div className={`p-6 rounded-lg shadow-sm border mb-6 ${
+          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <h2 className={`text-xl font-semibold mb-4 flex items-center ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>
+            <FaQuestionCircle className="mr-3 text-blue-500" />
+            Help & Support
+          </h2>
+          
+          <div className="space-y-3">
+            <Link
+              to="/contact"
+              className={`flex items-center justify-between p-4 rounded-lg border hover:bg-blue-50 transition-colors ${
+                isDark ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-center">
+                <FaEnvelope className="text-blue-500" />
+                <span className={`ml-3 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Contact Support</span>
+              </div>
+              <FaExternalLinkAlt className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+            </Link>
+            
+            <Link
+              to="/privacy-policy"
+              className={`flex items-center justify-between p-4 rounded-lg border hover:bg-blue-50 transition-colors ${
+                isDark ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-center">
+                <FaUserShield className="text-blue-500" />
+                <span className={`ml-3 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Privacy Policy</span>
+              </div>
+              <FaExternalLinkAlt className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+            </Link>
+
+            <Link
+              to="/terms-of-service"
+              className={`flex items-center justify-between p-4 rounded-lg border hover:bg-blue-50 transition-colors ${
+                isDark ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-center">
+                <FaFile className="text-blue-500" />
+                <span className={`ml-3 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Terms of Service</span>
+              </div>
+              <FaExternalLinkAlt className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+            </Link>
+          </div>
         </div>
 
         {/* App Info */}

@@ -384,12 +384,12 @@ const TeacherDashboard = () => {
       <Header />
       
       {/* Welcome Section */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-20 md:pb-28">
 
         <div className="bg-gradient-to-r text-center rounded-xl from-green-500 to-blue-600 text-white mt-20">
-          <div className="max-w-6xl mx-auto py-6">
-            <h2 className="text-xl font-bold mb-1">Welcome back, {user?.name}!</h2>
-            <p className="text-green-100 text-sm">Manage your classes and create engaging lessons</p>
+          <div className="max-w-6xl mx-auto py-6 px-4">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1">Welcome back, {user?.name}!</h2>
+            <p className="text-green-100 text-xs sm:text-sm">Manage your classes and create engaging lessons</p>
             {/* Display teacher's class name if they have one */}
             {classes.length > 0 && (
               <div className="mt-3 bg-white/10 rounded-lg p-3">
@@ -611,11 +611,11 @@ const TeacherDashboard = () => {
           </button>
         </div>
 
-        {/* Enhanced Feature Cards Grid */}
+        {/* Enhanced Feature Cards Grid - Teacher Specific */}
         <div className="grid grid-cols-2 gap-4">
           {/* Mark Register */}
           <Link
-            to="/register"
+            to="/class-register"
             className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md ${
               isDark ? 'bg-blue-800 border-blue-700 hover:bg-blue-750' : 'bg-blue-500 hover:bg-blue-600'
             }`}
@@ -639,7 +639,7 @@ const TeacherDashboard = () => {
               <FaUsers className="text-2xl mx-auto mb-2" />
               <div className="text-lg font-bold">{stats.students}</div>
               <div className="text-xs opacity-90">Students</div>
-              <div className="text-xs opacity-75 mt-1">View all students</div>
+              <div className="text-xs opacity-75 mt-1">Manage students</div>
             </div>
           </Link>
 
@@ -658,18 +658,18 @@ const TeacherDashboard = () => {
             </div>
           </Link>
 
-          {/* Progress Reports */}
+          {/* Activities */}
           <Link
-            to="/reports"
+            to="/activities"
             className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md ${
               isDark ? 'bg-orange-800 border-orange-700 hover:bg-orange-750' : 'bg-orange-500 hover:bg-orange-600'
             }`}
           >
             <div className="text-center text-white">
-              <FaChartLine className="text-2xl mx-auto mb-2" />
+              <FaRobot className="text-2xl mx-auto mb-2" />
               <div className="text-lg font-bold">{stats.completedAssignments}</div>
-              <div className="text-xs opacity-90">Reports</div>
-              <div className="text-xs opacity-75 mt-1">Progress tracking</div>
+              <div className="text-xs opacity-90">Activities</div>
+              <div className="text-xs opacity-75 mt-1">Interactive lessons</div>
             </div>
           </Link>
         </div>

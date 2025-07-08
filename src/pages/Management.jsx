@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaCreditCard, FaUpload, FaFileInvoice, FaHistory, FaShieldAlt, FaStar, FaCrown, FaPaperPlane, FaEnvelope, FaReceipt, FaUsers } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useTheme } from '../contexts/ThemeContext';
@@ -99,7 +99,7 @@ const Management = () => {
   };
 
   // Load all users for invoice/receipt functionality
-  const loadAllUsers = async () => {
+  const loadAllUsers = useCallback(async () => {
     if (user?.role !== 'admin' && user?.userType !== 'admin') return;
     
     try {
@@ -112,7 +112,7 @@ const Management = () => {
     } finally {
       setIsLoadingUsers(false);
     }
-  };
+  }, [user]);
 
   // Handle invoice/receipt form changes
   const handleInvoiceChange = (field, value) => {
@@ -206,7 +206,7 @@ const Management = () => {
     if (activeTab === 'send-invoices' && (user?.role === 'admin' || user?.userType === 'admin')) {
       loadAllUsers();
     }
-  }, [activeTab, user]);
+  }, [activeTab, user, loadAllUsers]);
 
   const renderSubscriptionTab = () => (
     <div className="space-y-6">
@@ -680,7 +680,7 @@ const Management = () => {
 
   return (
     <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pt-20 md:pt-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Account Management</h1>

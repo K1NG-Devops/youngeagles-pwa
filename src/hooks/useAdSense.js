@@ -94,6 +94,6 @@ export const useAdSense = () => {
     pushAd,
     isTestMode,
     getPublisherId,
-    shouldDisplayAds,
+    shouldDisplayAds
   };
 };

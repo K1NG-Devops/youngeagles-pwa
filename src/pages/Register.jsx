@@ -146,7 +146,7 @@ const Register = () => {
               { name: 'email', label: 'Email Address', type: 'email', icon: FaEnvelope },
               { name: 'phone', label: 'Phone Number', icon: FaPhone },
               { name: 'address', label: 'Home Address', icon: FaHome },
-              { name: 'workAddress', label: 'Work Address (Optional)', icon: FaBuilding },
+              { name: 'workAddress', label: 'Work Address (Optional)', icon: FaBuilding }
             ].map(({ name, label, type = 'text', icon: Icon }) => (
               <div key={name}>
                 <label className={`block text-sm font-semibold mb-3 ${

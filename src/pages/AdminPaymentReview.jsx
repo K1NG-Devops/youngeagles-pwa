@@ -43,7 +43,19 @@ const AdminPaymentReview = () => {
     dateTo: ''
   });
 
-  // Check if user is admin
+  // Always call hooks unconditionally
+  useEffect(() => {
+    // Only load payment proofs if user has admin privileges
+    if (user && (user.role === 'admin' || user.userType === 'admin')) {
+      loadPaymentProofs();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    filterProofs();
+  }, [paymentProofs, filters]);
+
+  // Check if user is admin after hooks are called
   if (!user || (user.role !== 'admin' && user.userType !== 'admin')) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -55,14 +67,6 @@ const AdminPaymentReview = () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    loadPaymentProofs();
-  }, []);
-
-  useEffect(() => {
-    filterProofs();
-  }, [paymentProofs, filters]);
 
   const loadPaymentProofs = async () => {
     try {
@@ -207,11 +211,11 @@ const AdminPaymentReview = () => {
       setPaymentProofs(prev => prev.map(proof => 
         proof.id === proofId 
           ? { 
-              ...proof, 
-              status: 'rejected', 
-              rejected_at: new Date().toISOString(),
-              rejection_reason: reason || 'No reason provided'
-            }
+            ...proof, 
+            status: 'rejected', 
+            rejected_at: new Date().toISOString(),
+            rejection_reason: reason || 'No reason provided'
+          }
           : proof
       ));
       
@@ -260,23 +264,23 @@ const AdminPaymentReview = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'approved':
-        return isDark ? 'text-green-400 bg-green-900/20 border-green-800' : 'text-green-600 bg-green-50 border-green-200';
-      case 'rejected':
-        return isDark ? 'text-red-400 bg-red-900/20 border-red-800' : 'text-red-600 bg-red-50 border-red-200';
-      default:
-        return isDark ? 'text-yellow-400 bg-yellow-900/20 border-yellow-800' : 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    case 'approved':
+      return isDark ? 'text-green-400 bg-green-900/20 border-green-800' : 'text-green-600 bg-green-50 border-green-200';
+    case 'rejected':
+      return isDark ? 'text-red-400 bg-red-900/20 border-red-800' : 'text-red-600 bg-red-50 border-red-200';
+    default:
+      return isDark ? 'text-yellow-400 bg-yellow-900/20 border-yellow-800' : 'text-yellow-600 bg-yellow-50 border-yellow-200';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'approved':
-        return <FaCheckCircle className="w-4 h-4" />;
-      case 'rejected':
-        return <FaTimesCircle className="w-4 h-4" />;
-      default:
-        return <FaSpinner className="w-4 h-4" />;
+    case 'approved':
+      return <FaCheckCircle className="w-4 h-4" />;
+    case 'rejected':
+      return <FaTimesCircle className="w-4 h-4" />;
+    default:
+      return <FaSpinner className="w-4 h-4" />;
     }
   };
 
@@ -687,7 +691,7 @@ const AdminPaymentReview = () => {
                     <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                       Rejection Reason
                     </label>
-                    <p className={`mt-1 text-red-600`}>
+                    <p className={'mt-1 text-red-600'}>
                       {selectedProof.rejection_reason}
                     </p>
                   </div>

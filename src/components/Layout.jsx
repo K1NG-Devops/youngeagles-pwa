@@ -5,6 +5,7 @@ import Navigation from './Navigation';
 import SideNavigation from './SideNavigation';
 import TopNavigation from './TopNavigation';
 import FloatingNavigation from './FloatingNavigation';
+import Footer from './Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -12,12 +13,15 @@ const Layout = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   const { isDark } = useTheme();
-  
+    
   // Hide navigation on login page
   const showNavigation = isAuthenticated && location.pathname !== '/login';
-  
+    
   // Show header only on pages that don't have their own header section
   const showGlobalHeader = isAuthenticated && location.pathname !== '/dashboard';
+    
+  // Show footer only on public pages
+  const showFooter = !isAuthenticated || ['/privacy-policy', '/terms-of-service', '/contact'].includes(location.pathname);
 
   // NAVIGATION STYLE CONFIGURATION
   // Change this value to switch navigation styles:
@@ -51,25 +55,28 @@ const Layout = () => {
     // Special handling for dashboard pages to go edge-to-edge
     const isFullWidth = location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard';
     
+    // Add bottom margin for fixed footer (footer height is ~70px)
+    const footerMargin = showFooter ? 'mb-20' : 'mb-4';
+    
     if (!showNavigation) {
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
+      return `min-h-full ${footerMargin}`;
     }
     
     switch (navigationStyle) {
     case 'side':
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
+      return `min-h-full ${footerMargin}`;
     case 'top':
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
+      return `min-h-full ${footerMargin}`;
     case 'floating':
-      return isFullWidth ? 'h-full pb-4 overflow-y-auto' : 'h-full pb-4 overflow-y-auto';
+      return `min-h-full ${footerMargin} pb-20`; // Extra padding for floating nav
     case 'bottom':
     default:
-      return isFullWidth ? 'h-full pb-20 overflow-y-auto' : 'h-full pb-20 overflow-y-auto';
+      return `min-h-full mb-28 ${footerMargin}`; // Extra margin for both bottom navigation and footer
     }
   };
 
   return (
-    <div className={`h-screen flex flex-col transition-colors ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Only show Header if not using top navigation */}
       {showGlobalHeader && navigationStyle !== 'top' && <Header />}
       
@@ -77,13 +84,13 @@ const Layout = () => {
       {navigationStyle === 'top' && showNavigation && <TopNavigation />}
       
       {/* Main content area with proper flex behavior */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1">
         <div className={getMainContentClasses()}>
           {/* Conditionally wrap content with max-width container */}
           {location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard' || location.pathname === '/activities' ? (
             <Outlet />
           ) : (
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <Outlet />
             </div>
           )}
@@ -92,6 +99,9 @@ const Layout = () => {
       
       {/* Render navigation based on style */}
       {renderNavigation()}
+      
+      {/* Render footer on public pages */}
+      {showFooter && <Footer />}
     </div>
   );
 };

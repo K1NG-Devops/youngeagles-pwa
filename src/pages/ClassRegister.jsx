@@ -170,14 +170,14 @@ const ClassRegister = () => {
     };
 
     loadClassData();
-  }, [user]);
+  }, [user, selectedClassId, selectedDate]);
 
   // Load attendance when date changes
   useEffect(() => {
     if (teacherClass && students.length > 0) {
       loadAttendanceForDate(teacherClass.id, selectedDate, students);
     }
-  }, [selectedDate, teacherClass, students.length]);
+  }, [selectedDate, students, teacherClass]);
 
   // Load attendance for a specific date using the live backend API
   const loadAttendanceForDate = async (classId, date, classStudents) => {

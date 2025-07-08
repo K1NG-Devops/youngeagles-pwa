@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { FaRobot, FaCalculator, FaPalette, FaShapes, FaSpellCheck, FaLeaf, FaArrowLeft, FaTrophy, FaUsers, FaUser, FaClipboardList } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import MazeActivity from '../components/PWA/MazeActivity';
@@ -9,6 +10,7 @@ import apiService from '../services/apiService';
 const Activities = () => {
   const { isDark } = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [completedActivities, setCompletedActivities] = useState([]);
   const [students, setStudents] = useState([]);
@@ -344,7 +346,7 @@ const Activities = () => {
       if (activity.id === 'maze-robot') {
         validateAndSetDifficulty(currentDifficulty);
       }
-    }, [activity.id]);
+    }, [activity.id, currentDifficulty]);
     
     if (!ActivityComponent) {
       return (
@@ -401,8 +403,23 @@ const Activities = () => {
   }
 
   return (
-    <div className={`min-h-screen py-6 mt-18 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen py-6 pt-24 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="w-full">
+        {/* Back Button */}
+        <div className="mb-4 px-4">
+          <button
+            onClick={() => navigate(-1)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-gray-300 hover:bg-gray-800 hover:text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </button>
+        </div>
+        
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-4">Interactive Activities Hub</h1>

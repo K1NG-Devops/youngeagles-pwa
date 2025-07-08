@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -7,31 +7,36 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-
-import Children from './pages/Children';
-import ParentProfile from './pages/ParentProfile';
-import Classes from './pages/Classes';
-import Homework from './pages/Homework';
-import HomeworkDetails from './pages/HomeworkDetails';
-import SubmitWork from './pages/SubmitWork';
-import Events from './pages/Events';
-import Notifications from './pages/Notifications';
-import Management from './pages/Management';
-import PaymentProofs from './pages/PaymentProofs';
-import AdminPaymentReview from './pages/AdminPaymentReview';
-import Settings from './pages/Settings';
-import Activities from './pages/Activities';
-import Register from './pages/Register';
-import ClassRegister from './pages/ClassRegister';
-import Checkout from './pages/Checkout';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentCancel from './pages/PaymentCancel';
-import CuratedLessonLibrary from './components/CuratedLessonLibrary';
+import { useAuth } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import SubscriptionExpiredModal from './components/SubscriptionExpiredModal';
 import AdSenseScript from './components/AdSenseScript';
-import { useAuth } from './contexts/AuthContext';
+import LoadingSpinner from './components/LoadingSpinner';
+
+// Lazy load components for better performance
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Children = React.lazy(() => import('./pages/Children'));
+const ParentProfile = React.lazy(() => import('./pages/ParentProfile'));
+const Classes = React.lazy(() => import('./pages/Classes'));
+const Homework = React.lazy(() => import('./pages/Homework'));
+const HomeworkDetails = React.lazy(() => import('./pages/HomeworkDetails'));
+const SubmitWork = React.lazy(() => import('./pages/SubmitWork'));
+const Events = React.lazy(() => import('./pages/Events'));
+const Notifications = React.lazy(() => import('./pages/Notifications'));
+const Management = React.lazy(() => import('./pages/Management'));
+const PaymentProofs = React.lazy(() => import('./pages/PaymentProofs'));
+const AdminPaymentReview = React.lazy(() => import('./pages/AdminPaymentReview'));
+const Settings = React.lazy(() => import('./pages/Settings'));
+const Activities = React.lazy(() => import('./pages/Activities'));
+const Register = React.lazy(() => import('./pages/Register'));
+const ClassRegister = React.lazy(() => import('./pages/ClassRegister'));
+const Checkout = React.lazy(() => import('./pages/Checkout'));
+const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess'));
+const PaymentCancel = React.lazy(() => import('./pages/PaymentCancel'));
+const CuratedLessonLibrary = React.lazy(() => import('./components/CuratedLessonLibrary'));
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = React.lazy(() => import('./pages/TermsOfService'));
+const Contact = React.lazy(() => import('./pages/Contact'));
 
 
 
@@ -53,114 +58,123 @@ function App() {
           <div className="app scroll-smooth scrollbar-no-scrollbar">
             <AdSenseScript />
             <SubscriptionExpiredModal />
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="login" element={<Login />} />
-                <Route path="signup" element={<Signup />} />
-              
-                {/* Private Routes */}
-                <Route path="dashboard" element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                } />
-                <Route path="children" element={
-                  <PrivateRoute>
-                    <ChildrenRoute />
-                  </PrivateRoute>
-                } />
-                <Route path="classes" element={
-                  <PrivateRoute>
-                    <Classes />
-                  </PrivateRoute>
-                } />
-                <Route path="homework" element={
-                  <PrivateRoute>
-                    <Homework />
-                  </PrivateRoute>
-                } />
-                <Route path="homework/:homeworkId/details" element={
-                  <PrivateRoute>
-                    <HomeworkDetails />
-                  </PrivateRoute>
-                } />
-                <Route path="events" element={
-                  <PrivateRoute>
-                    <Events />
-                  </PrivateRoute>
-                } />
-                <Route path="activities" element={
-                  <PrivateRoute>
-                    <Activities />
-                  </PrivateRoute>
-                } />
-                <Route path="notifications" element={
-                  <PrivateRoute>
-                    <Notifications />
-                  </PrivateRoute>
-                } />
-                <Route path="submit-work" element={
-                  <PrivateRoute>
-                    <SubmitWork />
-                  </PrivateRoute>
-                } />
-                <Route path="management" element={
-                  <PrivateRoute>
-                    <Management />
-                  </PrivateRoute>
-                } />
-                <Route path="manage" element={
-                  <PrivateRoute>
-                    <Management />
-                  </PrivateRoute>
-                } />
-                <Route path="payment-proofs" element={
-                  <PrivateRoute>
-                    <PaymentProofs />
-                  </PrivateRoute>
-                } />
-                <Route path="admin-payment-review" element={
-                  <PrivateRoute>
-                    <AdminPaymentReview />
-                  </PrivateRoute>
-                } />
-                <Route path="settings" element={
-                  <PrivateRoute>
-                    <Settings />
-                  </PrivateRoute>
-                } />
-                <Route path="curated-lessons" element={
-                  <PrivateRoute>
-                    <CuratedLessonLibrary />
-                  </PrivateRoute>
-                } />
-                <Route path="class-register" element={
-                  <PrivateRoute>
-                    <ClassRegister />
-                  </PrivateRoute>
-                } />
-                <Route path="register" element={<Register />} />
-                <Route path="checkout" element={
-                  <PrivateRoute>
-                    <Checkout />
-                  </PrivateRoute>
-                } />
+            <Suspense fallback={<LoadingSpinner text="Loading page..." />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="login" element={<Login />} />
+                  <Route path="signup" element={<Signup />} />
+                
+                  {/* Legal and Contact Pages */}
+                  <Route path="privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="terms-of-service" element={<TermsOfService />} />
+                  <Route path="contact" element={<Contact />} />
+                  <Route path="about" element={<Contact />} />
+                  <Route path="help" element={<Contact />} />
+
+                  {/* Private Routes */}
+                  <Route path="dashboard" element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  } />
+                  <Route path="children" element={
+                    <PrivateRoute>
+                      <ChildrenRoute />
+                    </PrivateRoute>
+                  } />
+                  <Route path="classes" element={
+                    <PrivateRoute>
+                      <Classes />
+                    </PrivateRoute>
+                  } />
+                  <Route path="homework" element={
+                    <PrivateRoute>
+                      <Homework />
+                    </PrivateRoute>
+                  } />
+                  <Route path="homework/:homeworkId/details" element={
+                    <PrivateRoute>
+                      <HomeworkDetails />
+                    </PrivateRoute>
+                  } />
+                  <Route path="events" element={
+                    <PrivateRoute>
+                      <Events />
+                    </PrivateRoute>
+                  } />
+                  <Route path="activities" element={
+                    <PrivateRoute>
+                      <Activities />
+                    </PrivateRoute>
+                  } />
+                  <Route path="notifications" element={
+                    <PrivateRoute>
+                      <Notifications />
+                    </PrivateRoute>
+                  } />
+                  <Route path="submit-work" element={
+                    <PrivateRoute>
+                      <SubmitWork />
+                    </PrivateRoute>
+                  } />
+                  <Route path="management" element={
+                    <PrivateRoute>
+                      <Management />
+                    </PrivateRoute>
+                  } />
+                  <Route path="manage" element={
+                    <PrivateRoute>
+                      <Management />
+                    </PrivateRoute>
+                  } />
+                  <Route path="payment-proofs" element={
+                    <PrivateRoute>
+                      <PaymentProofs />
+                    </PrivateRoute>
+                  } />
+                  <Route path="admin-payment-review" element={
+                    <PrivateRoute>
+                      <AdminPaymentReview />
+                    </PrivateRoute>
+                  } />
+                  <Route path="settings" element={
+                    <PrivateRoute>
+                      <Settings />
+                    </PrivateRoute>
+                  } />
+                  <Route path="curated-lessons" element={
+                    <PrivateRoute>
+                      <CuratedLessonLibrary />
+                    </PrivateRoute>
+                  } />
+                  <Route path="class-register" element={
+                    <PrivateRoute>
+                      <ClassRegister />
+                    </PrivateRoute>
+                  } />
+                  <Route path="register" element={<Register />} />
+                  <Route path="checkout" element={
+                    <PrivateRoute>
+                      <Checkout />
+                    </PrivateRoute>
+                  } />
             
-                {/* Payment Routes - These need to be accessible even if not fully authenticated */}
-                <Route path="payment/success" element={
-                  <PrivateRoute>
-                    <PaymentSuccess />
-                  </PrivateRoute>
-                } />
-                <Route path="payment/cancel" element={
-                  <PrivateRoute>
-                    <PaymentCancel />
-                  </PrivateRoute>
-                } />
-              </Route>
-            </Routes>
+                  {/* Payment Routes - These need to be accessible even if not fully authenticated */}
+                  <Route path="payment/success" element={
+                    <PrivateRoute>
+                      <PaymentSuccess />
+                    </PrivateRoute>
+                  } />
+                  <Route path="payment/cancel" element={
+                    <PrivateRoute>
+                      <PaymentCancel />
+                    </PrivateRoute>
+                  } />
+                </Route>
+              </Routes>
+            </Suspense>
           </div>
         </SubscriptionProvider>
       </AuthProvider>

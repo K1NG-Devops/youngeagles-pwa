@@ -11,7 +11,7 @@ export const ADMOB_CONFIG = {
   
   // Ad Unit IDs
   AD_UNITS: {
-    APP_OPEN: 'ca-app-pub-2808416461095370/5230123792',
+    APP_OPEN: 'ca-app-pub-2808416461095370/5230123792'
     // Add more ad units here as you create them
     // BANNER: 'ca-app-pub-2808416461095370/XXXXXXXXXX',
     // INTERSTITIAL: 'ca-app-pub-2808416461095370/XXXXXXXXXX',
@@ -23,7 +23,7 @@ export const ADMOB_CONFIG = {
     APP_OPEN: 'ca-app-pub-3940256099942544/5662855259',
     BANNER: 'ca-app-pub-3940256099942544/6300978111',
     INTERSTITIAL: 'ca-app-pub-3940256099942544/1033173712',
-    REWARDED: 'ca-app-pub-3940256099942544/5224354917',
+    REWARDED: 'ca-app-pub-3940256099942544/5224354917'
   }
 };
 

@@ -146,7 +146,7 @@ const Dashboard = () => {
       <Header />
       
       {/* Main Content Container */}
-      <div className="pt-20 pb-4">
+      <div className="pt-24 pb-4">
         {/* Welcome Section */}
         
 

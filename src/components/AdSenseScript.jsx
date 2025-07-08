@@ -11,7 +11,7 @@ const AdSenseScript = () => {
     }
 
     // Check if script is already loaded
-    if (document.querySelector(`script[src*="pagead2.googlesyndication.com"]`)) {
+    if (document.querySelector('script[src*="pagead2.googlesyndication.com"]')) {
       console.log('AdSense: Script already loaded');
       return;
     }
@@ -34,7 +34,7 @@ const AdSenseScript = () => {
 
     return () => {
       // Cleanup if component unmounts
-      const existingScript = document.querySelector(`script[src*="pagead2.googlesyndication.com"]`);
+      const existingScript = document.querySelector('script[src*="pagead2.googlesyndication.com"]');
       if (existingScript) {
         existingScript.remove();
       }

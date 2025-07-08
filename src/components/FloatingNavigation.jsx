@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaRobot, FaBars, FaTimes, FaGripVertical } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -67,7 +67,7 @@ const FloatingNavigation = () => {
     localStorage.setItem('floatingNavPosition', JSON.stringify(position));
   }, [position]);
 
-  const toggleMenu = () => setIsExpanded(prev => !prev);
+  const toggleMenu = useCallback(() => setIsExpanded(prev => !prev), []);
 
   const handleMouseDown = (e) => {
     // Allow dragging on the main FAB button, but not on expanded nav items
@@ -105,7 +105,7 @@ const FloatingNavigation = () => {
     setDragDelayTimer(timer);
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = useCallback((e) => {
     // Check if we should start dragging based on movement threshold
     if (isClickDetected && !isDragging) {
       const deltaX = Math.abs(e.clientX - initialMousePos.x);
@@ -146,9 +146,9 @@ const FloatingNavigation = () => {
     const right = viewportWidth - left - buttonSize / 2;
     
     setPosition({ bottom, right });
-  };
+  }, [isClickDetected, isDragging, initialMousePos.x, initialMousePos.y, dragThreshold, dragDelayTimer, dragOffset.x, dragOffset.y]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     // Clear the drag delay timer
     if (dragDelayTimer) {
       clearTimeout(dragDelayTimer);
@@ -167,7 +167,7 @@ const FloatingNavigation = () => {
     setIsDragging(false);
     setIsClickDetected(false);
     setHasActuallyMoved(false);
-  };
+  }, [dragDelayTimer, isClickDetected, isDragging, toggleMenu]);
 
   const handleTouchStart = (e) => {
     // Allow dragging on the main FAB button, but not on expanded nav items
@@ -206,7 +206,7 @@ const FloatingNavigation = () => {
     setDragDelayTimer(timer);
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = useCallback((e) => {
     const touch = e.touches[0];
     
     // Check if we should start dragging based on movement threshold
@@ -246,9 +246,9 @@ const FloatingNavigation = () => {
     const right = viewportWidth - left - buttonSize / 2;
     
     setPosition({ bottom, right });
-  };
+  }, [isClickDetected, isDragging, initialMousePos.x, initialMousePos.y, dragThreshold, dragDelayTimer, dragOffset.x, dragOffset.y]);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     // Clear the drag delay timer
     if (dragDelayTimer) {
       clearTimeout(dragDelayTimer);
@@ -267,7 +267,7 @@ const FloatingNavigation = () => {
     setIsDragging(false);
     setIsClickDetected(false);
     setHasActuallyMoved(false);
-  };
+  }, [dragDelayTimer, isClickDetected, isDragging, toggleMenu]);
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -296,7 +296,7 @@ const FloatingNavigation = () => {
         document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging, dragOffset]);
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   return (
     <>
@@ -314,8 +314,8 @@ const FloatingNavigation = () => {
         ref={dragRef}
         className="fixed z-[60] select-none"
         style={{ 
-          bottom: `${position.bottom}px`, 
-          right: `${position.right}px`,
+          bottom: `${Math.max(20, position.bottom)}px`, 
+          right: `${Math.max(20, position.right)}px`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
         onMouseDown={handleMouseDown}

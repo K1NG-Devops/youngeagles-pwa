@@ -165,7 +165,7 @@ const Home = () => {
       </div>
 
       {/* CTA Section */}
-      <div className={`py-16 ${isDark ? 'bg-gray-800' : 'bg-blue-50'}`}>
+      <div className={`py-8 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-blue-50'}`}>
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Ready to Transform Your Educational Experience?

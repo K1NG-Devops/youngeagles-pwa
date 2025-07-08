@@ -5,7 +5,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'build'],
+    ignores: ['dist', 'node_modules', 'build', '.backup'],
   },
   js.configs.recommended,
   {
@@ -32,6 +32,11 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly',
+        Notification: 'readonly',
+        confirm: 'readonly',
+        alert: 'readonly',
       },
     },
     plugins: {

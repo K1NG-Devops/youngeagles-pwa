@@ -16,7 +16,8 @@ import {
   FaUpload,
   FaDownload,
   FaSpinner,
-  FaGamepad
+  FaGamepad,
+  FaArrowLeft
 } from 'react-icons/fa';
 
 const Homework = () => {
@@ -240,10 +241,25 @@ const Homework = () => {
   }
 
   return (
-    <div className={`min-h-screen mt-18 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-8 mt-18`}>
+    <div className={`min-h-screen pt-24 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Back Button */}
+        <div className="pt-4 mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-gray-300 hover:bg-gray-800 hover:text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </button>
+        </div>
+        
         {/* Header */}
-        <div className="mb-6 pt-4">
+        <div className="mb-6">
           <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             📚 Homework Dashboard
           </h1>

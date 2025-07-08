@@ -6,7 +6,7 @@ const adConfig = {
   adUnits: {
     banner: import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT || 'test-banner',
     sidebar: import.meta.env.VITE_ADSENSE_SIDEBAR_AD_UNIT || 'test-sidebar',
-    footer: import.meta.env.VITE_ADSENSE_FOOTER_AD_UNIT || 'test-footer',
+    footer: import.meta.env.VITE_ADSENSE_FOOTER_AD_UNIT || 'test-footer'
   },
   
   // Settings
@@ -18,21 +18,21 @@ const adConfig = {
     banner: [[728, 90], [320, 50]], // Desktop and mobile banner
     sidebar: [[300, 250], [300, 600]], // Medium rectangle and large rectangle
     footer: [[728, 90], [320, 50]], // Same as banner
-    responsive: 'auto',
+    responsive: 'auto'
   },
   
   // Ad Formats
   formats: {
     display: 'auto',
     responsive: 'auto',
-    fixed: 'rectangle',
+    fixed: 'rectangle'
   },
   
   // Development settings
   development: {
     showPlaceholders: import.meta.env.DEV,
-    debugMode: import.meta.env.DEV,
-  },
+    debugMode: import.meta.env.DEV
+  }
 };
 
 export default adConfig;

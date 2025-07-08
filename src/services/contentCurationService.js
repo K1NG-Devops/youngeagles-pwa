@@ -491,7 +491,7 @@ class ContentCurationService {
    */
   getFilteredContent(ageGroup = null, subject = null) {
     const content = this.getCuratedContent();
-    let filtered = [];
+    const filtered = [];
 
     Object.keys(content).forEach(subjectKey => {
       if (subject && subjectKey !== subject) return;

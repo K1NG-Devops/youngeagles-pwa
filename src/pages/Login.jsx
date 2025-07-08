@@ -254,51 +254,51 @@ const Login = () => {
             isDark 
               ? 'bg-gradient-to-br from-gray-800/50 to-gray-700/50 border-gray-600/50' 
               : 'bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border-blue-200/50'
-          }`}>            
+          }`}>
+            <div className="text-center mb-6">
+              <h3 className={`text-xl font-bold mb-3 ${
+                isDark ? 'text-white' : 'text-gray-800'
+              }`}>
+                🚀 Welcome to Young Eagles
+              </h3>
+              <p className={`text-base ${
+                isDark ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                Your comprehensive education management platform
+              </p>
+            </div>
+                
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { icon: '📱', text: 'Mobile Optimized' },
+                { icon: '🔒', text: 'Secure Platform' },
+                { icon: '⚡', text: 'Real-time Updates' },
+                { icon: '🌐', text: 'Offline Access' }
+              ].map((feature, index) => (
+                <div key={index} className={`flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 hover:scale-105 ${
+                  isDark ? 'bg-gray-700/30 hover:bg-gray-600/30' : 'bg-white/30 hover:bg-white/50'
+                }`}>
+                  <span className="text-2xl">{feature.icon}</span>
+                  <span className={`text-sm font-medium ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {feature.text}
+                  </span>
+                </div>
+              ))}
+            </div>
+                
+            <div className={`mt-6 pt-6 border-t text-center ${
+              isDark ? 'border-gray-600/50' : 'border-blue-200/50'
+            }`}>
+              <p className={`text-sm font-medium ${
+                isDark ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                💡 Need help? Contact your school administrator
+              </p>
+            </div>
           </div>
           
-        </div>
-        <div className="text-center mb-6">
-          <h3 className={`text-xl font-bold mb-3 ${
-            isDark ? 'text-white' : 'text-gray-800'
-          }`}>
-                🚀 Welcome to Young Eagles
-          </h3>
-          <p className={`text-base ${
-            isDark ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-                Your comprehensive education management platform
-          </p>
-        </div>
-            
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            { icon: '📱', text: 'Mobile Optimized' },
-            { icon: '🔒', text: 'Secure Platform' },
-            { icon: '⚡', text: 'Real-time Updates' },
-            { icon: '🌐', text: 'Offline Access' }
-          ].map((feature, index) => (
-            <div key={index} className={`flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 hover:scale-105 ${
-              isDark ? 'bg-gray-700/30 hover:bg-gray-600/30' : 'bg-white/30 hover:bg-white/50'
-            }`}>
-              <span className="text-2xl">{feature.icon}</span>
-              <span className={`text-sm font-medium ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                {feature.text}
-              </span>
-            </div>
-          ))}
-        </div>
-            
-        <div className={`mt-6 pt-6 border-t text-center ${
-          isDark ? 'border-gray-600/50' : 'border-blue-200/50'
-        }`}>
-          <p className={`text-sm font-medium ${
-            isDark ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-                💡 Need help? Contact your school administrator
-          </p>
         </div>
       </div>
     </div>

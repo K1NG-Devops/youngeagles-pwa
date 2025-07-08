@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -54,7 +54,7 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
   // Filter content when filters change
   useEffect(() => {
     filterContent();
-  }, [curatedContent, selectedSubject, selectedAgeGroup, searchTerm]);
+  }, [filterContent]);
 
   const loadCuratedContent = async () => {
     try {
@@ -70,7 +70,7 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
     }
   };
 
-  const filterContent = () => {
+  const filterContent = useCallback(() => {
     let filtered = [...curatedContent];
 
     // Filter by subject
@@ -96,7 +96,7 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
     }
 
     setFilteredContent(filtered);
-  };
+  }, [curatedContent, selectedSubject, selectedAgeGroup, searchTerm]);
 
   const handlePreview = (content) => {
     setPreviewContent(content);

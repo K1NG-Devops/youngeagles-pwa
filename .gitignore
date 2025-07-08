@@ -82,6 +82,9 @@ jspm_packages/
 tmp/
 temp/
 
+# Backup files
+.backup/
+
 # OS generated files
 .DS_Store
 .DS_Store?

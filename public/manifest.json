@@ -1,11 +1,14 @@
 {
-  "name": "Young Eagles PWA",
-  "short_name": "Young Eagles",
-  "description": "Young Eagles Progressive Web App",
+  "name": "YoungEagles - Education Management Platform",
+  "short_name": "YoungEagles",
+  "description": "Comprehensive education management platform connecting students, parents, and teachers. Manage homework, track progress, and enhance learning experiences.",
   "theme_color": "#2563eb",
   "background_color": "#ffffff",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
+  "orientation": "portrait",
+  "categories": ["education", "productivity"],
+  "lang": "en",
   "icons": []
 }

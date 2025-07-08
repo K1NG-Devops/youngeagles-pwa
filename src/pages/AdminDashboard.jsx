@@ -52,16 +52,16 @@ const AdminDashboard = () => {
     storage: 'operational'
   });
 
-useEffect(() => {
-const fetchAdminData = async () => {
+  useEffect(() => {
+    const fetchAdminData = async () => {
       try {
         setIsLoading(true);
         
         // Fetch all admin-relevant data
         const [childrenResponse, classesResponse, usersResponse] = await Promise.all([
-apiService.children.getAll().catch(() => ({ data: { children: [] } })),
-apiService.classes.getAll().catch(() => ({ data: { classes: [] } })),
-apiService.users?.getAll?.().catch(() => ({ data: { users: [] } }))
+          apiService.children.getAll().catch(() => ({ data: { children: [] } })),
+          apiService.classes.getAll().catch(() => ({ data: { classes: [] } })),
+          apiService.users?.getAll?.().catch(() => ({ data: { users: [] } }))
         ]);
         
         const children = childrenResponse.data.children || [];
@@ -69,8 +69,8 @@ apiService.users?.getAll?.().catch(() => ({ data: { users: [] } }))
         const users = usersResponse?.data?.users || [];
         
         // Calculate user counts by role
-const teachers = users.filter(user => user.role === 'teacher').length;
-const parents = users.filter(user => user.role === 'parent').length;
+        const teachers = users.filter(user => user.role === 'teacher').length;
+        const parents = users.filter(user => user.role === 'parent').length;
 
         // Get admin dashboard stats (includes pending approvals)
         let adminStats = null;
@@ -88,9 +88,9 @@ const parents = users.filter(user => user.role === 'parent').length;
           const proofs = paymentProofsResponse?.data?.proofs || [];
           // Use backend stats if available, otherwise calculate manually
           if (!adminStats) {
-pendingPayments = proofs.filter(proof => proof.status === 'pending').length;
+            pendingPayments = proofs.filter(proof => proof.status === 'pending').length;
           }
-setPendingPaymentProofs(proofs.filter(proof => proof.status === 'pending').slice(0, 5));
+          setPendingPaymentProofs(proofs.filter(proof => proof.status === 'pending').slice(0, 5));
         } catch (error) {
           console.log('Payment proofs API not available');
         }
@@ -111,7 +111,7 @@ setPendingPaymentProofs(proofs.filter(proof => proof.status === 'pending').slice
           totalClasses: classes.length,
           totalHomework: homeworkCount,
           pendingPayments: pendingPayments,
-systemAlerts: pendingPayments > 0 ? 1 : 0
+          systemAlerts: pendingPayments > 0 ? 1 : 0
         });
         
         // Set recent users (last 5)
@@ -134,7 +134,7 @@ systemAlerts: pendingPayments > 0 ? 1 : 0
       }
     };
 
-if (user && user.role === 'admin') {
+    if (user && user.role === 'admin') {
       fetchAdminData();
     }
   }, [user]);
@@ -151,24 +151,24 @@ if (user && user.role === 'admin') {
   }
 
   // Handle quick actions
-const handleQuickAction = (action) => {
+  const handleQuickAction = (action) => {
     switch (action) {
-      case 'approve_payment':
-        // Navigate to admin payment review page
-        navigate('/admin-payment-review');
-        break;
-      case 'create_user':
-        // Navigate to user management
-        navigate('/management');
-        break;
-      case 'view_analytics':
-        toast.info('Advanced analytics coming soon!');
-        break;
-      case 'system_settings':
-        navigate('/settings');
-        break;
-      default:
-        break;
+    case 'approve_payment':
+      // Navigate to admin payment review page
+      navigate('/admin-payment-review');
+      break;
+    case 'create_user':
+      // Navigate to user management
+      navigate('/management');
+      break;
+    case 'view_analytics':
+      toast.info('Advanced analytics coming soon!');
+      break;
+    case 'system_settings':
+      navigate('/settings');
+      break;
+    default:
+      break;
     }
   };
 
@@ -387,7 +387,7 @@ const handleQuickAction = (action) => {
               </div>
               {stats.pendingPayments > 0 && (
                 <div className="mt-3 flex items-center justify-between">
-                  <span className={`text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800`}>
+                  <span className={'text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800'}>
                     {stats.pendingPayments} pending
                   </span>
                 </div>
