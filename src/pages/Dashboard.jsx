@@ -6,7 +6,7 @@ import nativeNotificationService from '../services/nativeNotificationService.js'
 import { FaUser, FaBook, FaBrain, FaBell, FaArrowRight, FaChevronDown, FaChevronUp, FaChartLine, FaCreditCard, FaCheckCircle, FaExclamationTriangle, FaGraduationCap } from 'react-icons/fa';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
-import { YoungEaglesMainDisplay } from '../components/ads';
+import SmartAdManager from '../components/ads/SmartAdManager';
 import TeacherDashboard from './TeacherDashboard';
 import AdminDashboard from './AdminDashboard';
 
@@ -173,6 +173,13 @@ const Dashboard = () => {
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} px-2 xs:px-4`}>
       <Header />
       <div className="pt-8 pb-4">
+        {/* Header Ad - High visibility banner */}
+        <SmartAdManager 
+          position="header" 
+          page="dashboard" 
+          className="mb-6" 
+        />
+        
         {/* Welcome Section */}
         <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8 py-4 mt-6">
           <div className="bg-gradient-to-r border-b-2 mb-5 border-blue-500 rounded-xl from-blue-500 to-purple-600 text-white">
@@ -182,10 +189,11 @@ const Dashboard = () => {
             </div>
           </div>
           
-          {/* Ad/Ad Placeholder */}
-          <YoungEaglesMainDisplay 
-            className="mb-6"
-            style={{ maxWidth: '100%' }}
+          {/* Content Rectangle Ad - High engagement area */}
+          <SmartAdManager 
+            position="content" 
+            page="dashboard" 
+            className="mb-6" 
           />
           
           {/* Quick Stats for Parents - Color Scheme:
@@ -232,6 +240,13 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+
+          {/* Native In-Feed Ad - Highest RPM */}
+          <SmartAdManager 
+            position="native-feed" 
+            page="dashboard" 
+            className="my-6" 
+          />
 
           {/* Enhanced Stats Toggle */}
           {user?.role === 'parent' && (
@@ -386,6 +401,13 @@ const Dashboard = () => {
               </Link>
             </div>
           )}
+          
+          {/* Footer Ad - Always visible */}
+          <SmartAdManager 
+            position="footer" 
+            page="dashboard" 
+            className="mt-8" 
+          />
         </div>
       </div>
     </div>

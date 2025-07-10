@@ -500,6 +500,70 @@ const apiService = {
     
     // AI service health check
     healthCheck: () => apiClient.get('/api/ai/health')
+  },
+
+  // Subscription endpoints
+  subscriptions: {
+    // Get current user subscription
+    getCurrent: () => apiClient.get('/api/subscriptions/current'),
+    
+    // Get subscription history
+    getHistory: () => apiClient.get('/api/subscriptions/history'),
+    
+    // Get available plans
+    getPlans: () => apiClient.get('/api/subscriptions/plans'),
+    
+    // Upgrade subscription
+    upgrade: (planId, billingCycle = 'monthly', paymentMethod = 'payfast') => 
+      apiClient.post('/api/subscriptions/upgrade', { 
+        planId, 
+        billingCycle, 
+        paymentMethod 
+      }),
+    
+    // Cancel subscription
+    cancel: (reason = null) => apiClient.post('/api/subscriptions/cancel', { reason }),
+    
+    // Reactivate subscription
+    reactivate: () => apiClient.post('/api/subscriptions/reactivate'),
+    
+    // Get user features based on subscription
+    getFeatures: () => apiClient.get('/api/subscriptions/features'),
+    
+    // Get user usage statistics
+    getUsage: () => apiClient.get('/api/subscriptions/usage'),
+    
+    // Increment feature usage
+    incrementUsage: (feature) => apiClient.post('/api/subscriptions/usage/increment', { feature }),
+    
+    // Check specific feature access
+    checkFeatureAccess: (feature) => apiClient.get(`/api/subscriptions/features/${feature}`),
+    
+    // Get payment history
+    getPaymentHistory: (limit = 10, offset = 0) => 
+      apiClient.get(`/api/subscriptions/payments?limit=${limit}&offset=${offset}`),
+    
+    // Admin endpoints
+    admin: {
+      // Get subscription statistics
+      getStats: () => apiClient.get('/api/subscriptions/admin/stats'),
+      
+      // Create manual subscription
+      createManualSubscription: (data) => 
+        apiClient.post('/api/subscriptions/admin/manual-subscription', data),
+      
+      // Get all subscriptions
+      getAllSubscriptions: (limit = 50, offset = 0) => 
+        apiClient.get(`/api/subscriptions/admin/all?limit=${limit}&offset=${offset}`),
+      
+      // Update subscription status
+      updateSubscriptionStatus: (subscriptionId, status, reason = null) => 
+        apiClient.post(`/api/subscriptions/admin/${subscriptionId}/status`, { status, reason }),
+      
+      // Process refund
+      processRefund: (transactionId, amount, reason = null) => 
+        apiClient.post(`/api/subscriptions/admin/refund`, { transactionId, amount, reason })
+    }
   }
 };
 

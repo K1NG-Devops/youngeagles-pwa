@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import GoogleAdSense from './GoogleAdSense';
-import { ADSENSE_CONFIG } from '../../config/adsense-config';
+import { ENHANCED_ADSENSE_CONFIG } from '../../config/enhanced-adsense-config';
 
 /**
  * Smart Ad Manager Component
  * Intelligently places ads based on user behavior, subscription status, and engagement
  */
 const SmartAdManager = ({ 
-  position = 'content', // 'header', 'content', 'sidebar', 'footer', 'inline'
+  position = 'content', // 'header', 'content', 'sidebar', 'footer', 'inline', 'native-feed'
   page = 'default',
   userSegment = 'casual',
   className = '',
@@ -74,8 +75,8 @@ const SmartAdManager = ({
     const baseConfig = {
       shouldShow: true,
       adType: 'display',
-      size: ADSENSE_CONFIG.AD_SIZES.RECTANGLE,
-      slot: ADSENSE_CONFIG.AD_SLOTS.DISPLAY_AD,
+      size: ENHANCED_ADSENSE_CONFIG.AD_SIZES.MEDIUM_RECTANGLE,
+      slot: ENHANCED_ADSENSE_CONFIG.AD_SLOTS.MAIN_DISPLAY,
       frequency: 'normal'
     };
 
@@ -102,43 +103,49 @@ const SmartAdManager = ({
     const pageConfigs = {
       dashboard: {
         priority: 'high',
-        positions: ['header', 'sidebar', 'content']
+        positions: ['header', 'sidebar', 'content', 'native-feed']
       },
       homework: {
         priority: 'high',
-        positions: ['header', 'inline', 'sidebar']
+        positions: ['header', 'inline', 'sidebar', 'native-feed']
       },
       classes: {
         priority: 'medium',
-        positions: ['content', 'sidebar']
+        positions: ['content', 'sidebar', 'native-feed']
       },
       activities: {
         priority: 'medium',
-        positions: ['content', 'footer']
+        positions: ['content', 'footer', 'native-feed']
       }
     };
 
     // Position-specific configuration
     const positionConfigs = {
       header: {
-        size: ADSENSE_CONFIG.AD_SIZES.LEADERBOARD,
-        slot: ADSENSE_CONFIG.AD_SLOTS.BANNER_AD,
+        size: ENHANCED_ADSENSE_CONFIG.AD_SIZES.LEADERBOARD,
+        slot: ENHANCED_ADSENSE_CONFIG.AD_SLOTS.HEADER_BANNER,
         priority: 'high'
       },
       content: {
-        size: ADSENSE_CONFIG.AD_SIZES.RECTANGLE,
-        slot: ADSENSE_CONFIG.AD_SLOTS.DISPLAY_AD,
+        size: ENHANCED_ADSENSE_CONFIG.AD_SIZES.LARGE_RECTANGLE,
+        slot: ENHANCED_ADSENSE_CONFIG.AD_SLOTS.CONTENT_RECTANGLE,
         priority: 'medium'
       },
       sidebar: {
-        size: ADSENSE_CONFIG.AD_SIZES.SIDEBAR,
-        slot: ADSENSE_CONFIG.AD_SLOTS.SIDEBAR_AD,
+        size: ENHANCED_ADSENSE_CONFIG.AD_SIZES.WIDE_SKYSCRAPER,
+        slot: ENHANCED_ADSENSE_CONFIG.AD_SLOTS.SIDEBAR_SKYSCRAPER,
         priority: 'medium'
       },
       footer: {
-        size: ADSENSE_CONFIG.AD_SIZES.BANNER,
-        slot: ADSENSE_CONFIG.AD_SLOTS.BANNER_AD,
+        size: ENHANCED_ADSENSE_CONFIG.AD_SIZES.LEADERBOARD,
+        slot: ENHANCED_ADSENSE_CONFIG.AD_SLOTS.FOOTER_BANNER,
         priority: 'low'
+      },
+      'native-feed': {
+        size: 'fluid',
+        slot: ENHANCED_ADSENSE_CONFIG.AD_SLOTS.IN_FEED_NATIVE,
+        priority: 'high',
+        adType: 'native-feed'
       }
     };
 
@@ -170,7 +177,7 @@ const SmartAdManager = ({
     return {
       ...baseConfig,
       ...positionConfig,
-      adType: segmentConfig.adType,
+      adType: positionConfig.adType || segmentConfig.adType,
       frequency: segmentConfig.frequency
     };
   };
@@ -202,6 +209,8 @@ const SmartAdManager = ({
       <div className="ad-wrapper" onLoad={handleAdViewed}>
         {adConfig.adType === 'premium_teaser' ? (
           <PremiumTeaser position={position} />
+        ) : adConfig.adType === 'native-feed' ? (
+          <NativeInFeedAd />
         ) : (
           <GoogleAdSense
             slot={adConfig.slot}
@@ -219,6 +228,31 @@ const SmartAdManager = ({
           {children}
         </div>
       )}
+    </div>
+  );
+};
+
+// Native In-feed Ad Component using exact AdSense code
+const NativeInFeedAd = () => {
+  useEffect(() => {
+    try {
+      // Push ad to AdSense
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (error) {
+      console.error('AdSense error:', error);
+    }
+  }, []);
+
+  return (
+    <div className="native-ad-container">
+      <ins 
+        className="adsbygoogle"
+        style={{display: 'block'}}
+        data-ad-format="fluid"
+        data-ad-layout-key="-6t+ed+2i-1n-4w"
+        data-ad-client="ca-pub-5506438806314781"
+        data-ad-slot="6408733271"
+      />
     </div>
   );
 };

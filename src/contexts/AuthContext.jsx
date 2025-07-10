@@ -122,6 +122,12 @@ export const AuthProvider = ({ children }) => {
     nativeNotificationService.info('Logged out successfully');
   };
 
+  const updateUser = (updatedFields) => {
+    const updatedUser = { ...user, ...updatedFields };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const isAuthenticated = () => {
     return !!token && !!user;
   };
@@ -133,6 +139,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated: isAuthenticated()
   };
 

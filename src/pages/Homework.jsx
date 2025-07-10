@@ -4,6 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
 import nativeNotificationService from '../services/nativeNotificationService.js';
+import SmartAdManager from '../components/ads/SmartAdManager';
 import {
   FaBook,
   FaClock,
@@ -243,6 +244,13 @@ const Homework = () => {
   return (
     <div className={`min-h-screen pt-24 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Header Ad - High visibility */}
+        <SmartAdManager 
+          position="header" 
+          page="homework" 
+          className="mb-6" 
+        />
+
         {/* Back Button */}
         <div className="pt-4 mb-4">
           <button
@@ -330,6 +338,13 @@ const Homework = () => {
           </div>
         </div>
 
+        {/* Content Rectangle Ad - High engagement area */}
+        <SmartAdManager 
+          position="content" 
+          page="homework" 
+          className="mb-6" 
+        />
+
         {/* Child/Student Selector */}
         <div className={`rounded-lg shadow-sm p-4 sm:p-6 border mb-6 sm:mb-8 ${
           isDark 
@@ -378,140 +393,148 @@ const Homework = () => {
           </div>
         ) : (
           <div className="space-y-4 sm:space-y-6">
-            {homework.map((assignment) => (
-              <div 
-                key={assignment.id} 
-                className={`rounded-lg shadow-sm border p-4 sm:p-6 hover:shadow-md transition-shadow ${
-                  isDark 
-                    ? 'bg-gray-800 border-gray-700' 
-                    : 'bg-white border-gray-200'
-                }`}
-              >
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-3">
-                        <h3 className={`text-lg sm:text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} break-words`}>
-                          {assignment.title}
-                        </h3>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full self-start ${getStatusColor(assignment.status, assignment.due_date)}`}>
-                          {assignment.status === 'graded' ? 'GRADED' : assignment.status.toUpperCase()}
-                        </span>
-                      </div>
-                    
-                      <div className={`text-sm space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
-                          <div className="flex items-center space-x-2">
-                            <FaCalendarAlt className={`${isDark ? 'text-gray-400' : 'text-gray-400'} flex-shrink-0`} />
-                            <span className="break-words">Due: {formatDate(assignment.due_date)}</span>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <FaChalkboardTeacher className={`${isDark ? 'text-gray-400' : 'text-gray-400'} flex-shrink-0`} />
-                            <span className="break-words">{assignment.teacher_name}</span>
-                          </div>
-                        </div>
-
-                        {assignment.description && (
-                          <p className={`mt-4 ${isDark ? 'text-gray-300' : 'text-gray-700'} break-words`}>{assignment.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-                    <button
-                      onClick={() => navigate(`/homework/${assignment.id}/details?child_id=${selectedChildId}`)}
-                      className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        isDark 
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <FaEye className="w-4 h-4 mr-2" />
-                      View Details
-                    </button>
-                    
-                    {(assignment.status === 'pending') && (
-                      // Show different buttons based on homework type
-                      assignment.content_type === 'interactive' || 
-                      assignment.title.includes('Basic Addition') || 
-                      assignment.title.includes('Counting') || 
-                      assignment.title.includes('Number Recognition') ? (
-                          <button
-                            onClick={() => navigate(`/homework/${assignment.id}/details?child_id=${selectedChildId}`)}
-                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
-                          >
-                            <FaGamepad className="w-4 h-4 mr-2" />
-                          Start Homework
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => navigate(`/submit-work?homework_id=${assignment.id}&child_id=${selectedChildId}`)}
-                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            <FaUpload className="w-4 h-4 mr-2" />
-                          Submit Work
-                          </button>
-                        )
-                    )}
-                  </div>
-                </div>
-
-                {(assignment.status === 'submitted' || assignment.status === 'graded') && (
-                  <div className={`mt-6 p-4 rounded-lg border ${
+            {homework.map((assignment, index) => (
+              <React.Fragment key={assignment.id}>
+                <div 
+                  className={`rounded-lg shadow-sm border p-4 sm:p-6 hover:shadow-md transition-shadow ${
                     isDark 
-                      ? 'bg-gray-700 border-gray-600' 
-                      : 'bg-gray-50 border-gray-100'
-                  }`}>
-                    <h4 className={`font-medium mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Submission Details</h4>
-                    <div className="space-y-2 text-sm">
-                      <p><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Submitted:</span> {formatDate(assignment.submitted_at)}</p>
-                      {assignment.grade && (
-                        <p><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Grade:</span> {assignment.grade}%</p>
-                      )}
-                      {assignment.teacher_feedback && (
-                        <div className="mt-3">
-                          <p className={`mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Teacher Feedback:</p>
-                          <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>{assignment.teacher_feedback}</p>
+                      ? 'bg-gray-800 border-gray-700' 
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-3">
+                          <h3 className={`text-lg sm:text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} break-words`}>
+                            {assignment.title}
+                          </h3>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full self-start ${getStatusColor(assignment.status, assignment.due_date)}`}>
+                            {assignment.status === 'graded' ? 'GRADED' : assignment.status.toUpperCase()}
+                          </span>
                         </div>
-                      )}
-                      {assignment.status === 'graded' && (
-                        <div className={`mt-3 p-2 rounded ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
-                          <p className={`text-sm font-medium ${isDark ? 'text-green-400' : 'text-green-800'}`}>
-                            ✅ Graded and returned by teacher
-                          </p>
+                      
+                        <div className={`text-sm space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
+                            <div className="flex items-center space-x-2">
+                              <FaCalendarAlt className={`${isDark ? 'text-gray-400' : 'text-gray-400'} flex-shrink-0`} />
+                              <span className="break-words">Due: {formatDate(assignment.due_date)}</span>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <FaChalkboardTeacher className={`${isDark ? 'text-gray-400' : 'text-gray-400'} flex-shrink-0`} />
+                              <span className="break-words">{assignment.teacher_name}</span>
+                            </div>
+                          </div>
+
+                          {assignment.description && (
+                            <p className={`mt-4 ${isDark ? 'text-gray-300' : 'text-gray-700'} break-words`}>{assignment.description}</p>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
-                  
-                    {assignment.attachment_url && (
-                      <a 
-                        href={assignment.attachment_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`inline-flex items-center px-4 py-2 mt-4 text-sm font-medium rounded-lg transition-colors ${
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                      <button
+                        onClick={() => navigate(`/homework/${assignment.id}/details?child_id=${selectedChildId}`)}
+                        className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                           isDark 
-                            ? 'text-blue-400 bg-blue-900/20 hover:bg-blue-800/30' 
-                            : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
-                        <FaDownload className="mr-2" />
-                        View Submission
-                      </a>
-                    )}
+                        <FaEye className="w-4 h-4 mr-2" />
+                        View Details
+                      </button>
+                      
+                      {(assignment.status === 'pending') && (
+                        // Show different buttons based on homework type
+                        assignment.content_type === 'interactive' || 
+                        assignment.title.includes('Basic Addition') || 
+                        assignment.title.includes('Counting') || 
+                        assignment.title.includes('Number Recognition') ? (
+                            <button
+                              onClick={() => navigate(`/homework/${assignment.id}/details?child_id=${selectedChildId}`)}
+                              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              <FaGamepad className="w-4 h-4 mr-2" />
+                            Start Homework
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => navigate(`/submit-work?homework_id=${assignment.id}&child_id=${selectedChildId}`)}
+                              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              <FaUpload className="w-4 h-4 mr-2" />
+                            Submit Work
+                            </button>
+                          )
+                      )}
+                    </div>
                   </div>
+
+                  {(assignment.status === 'submitted' || assignment.status === 'graded') && (
+                    <div className={`mt-6 p-4 rounded-lg border ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600' 
+                        : 'bg-gray-50 border-gray-100'
+                    }`}>
+                      <h4 className={`font-medium mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Submission Details</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Submitted:</span> {formatDate(assignment.submitted_at)}</p>
+                        {assignment.grade && (
+                          <p><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Grade:</span> {assignment.grade}%</p>
+                        )}
+                        {assignment.teacher_feedback && (
+                          <div className="mt-3">
+                            <p className={`mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Teacher Feedback:</p>
+                            <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>{assignment.teacher_feedback}</p>
+                          </div>
+                        )}
+                        {assignment.status === 'graded' && (
+                          <div className={`mt-3 p-2 rounded ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+                            <p className={`text-sm font-medium ${isDark ? 'text-green-400' : 'text-green-800'}`}>
+                              ✅ Graded and returned by teacher
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    
+                      {assignment.attachment_url && (
+                        <a 
+                          href={assignment.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center px-4 py-2 mt-4 text-sm font-medium rounded-lg transition-colors ${
+                            isDark 
+                              ? 'text-blue-400 bg-blue-900/20 hover:bg-blue-800/30' 
+                              : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                          }`}
+                        >
+                          <FaDownload className="mr-2" />
+                          View Submission
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {assignment.status === 'submitted' && !assignment.grade && (
+                    <p className={`mt-4 text-sm italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Waiting for teacher's review
+                    </p>
+                  )}
+                </div>
+
+                {/* Native In-Feed Ad every 3rd homework item - Highest RPM */}
+                {(index + 1) % 3 === 0 && (
+                  <SmartAdManager 
+                    position="native-feed" 
+                    page="homework" 
+                    className="my-4" 
+                  />
                 )}
-
-
-
-                {assignment.status === 'submitted' && !assignment.grade && (
-                  <p className={`mt-4 text-sm italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Waiting for teacher's review
-                  </p>
-                )}
-              </div>
+              </React.Fragment>
             ))}
           </div>
         )}

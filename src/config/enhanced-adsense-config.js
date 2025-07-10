@@ -11,34 +11,37 @@
 
 export const ENHANCED_ADSENSE_CONFIG = {
   // Your AdSense Publisher ID
-  PUBLISHER_ID: import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXXXXXXXXX',
+  PUBLISHER_ID: import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-5506438806314781',
   
   // Ad slot IDs - Create these in your AdSense dashboard
   AD_SLOTS: {
     // Display Ads
     MAIN_DISPLAY: import.meta.env.VITE_ADSENSE_MAIN_DISPLAY || '2894237519',
-    HEADER_BANNER: import.meta.env.VITE_ADSENSE_HEADER_BANNER || '1234567890',
-    FOOTER_BANNER: import.meta.env.VITE_ADSENSE_FOOTER_BANNER || '0987654321',
+    HEADER_BANNER: import.meta.env.VITE_ADSENSE_HEADER_BANNER || '9586077878',
+    FOOTER_BANNER: import.meta.env.VITE_ADSENSE_FOOTER_BANNER || '3546766216',
+    
+    // Content Ads
+    CONTENT_RECTANGLE: import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE || '1707587859',
     
     // Sidebar Ads
-    SIDEBAR_SKYSCRAPER: import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER || '1122334455',
-    SIDEBAR_RECTANGLE: import.meta.env.VITE_ADSENSE_SIDEBAR_RECTANGLE || '5544332211',
+    SIDEBAR_SKYSCRAPER: import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER || '8151940224',
+    SIDEBAR_RECTANGLE: import.meta.env.VITE_ADSENSE_SIDEBAR_RECTANGLE || '1707587859',
     
     // Mobile Ads
-    MOBILE_BANNER: import.meta.env.VITE_ADSENSE_MOBILE_BANNER || '6677889900',
-    MOBILE_STICKY: import.meta.env.VITE_ADSENSE_MOBILE_STICKY || '0099887766',
+    MOBILE_BANNER: import.meta.env.VITE_ADSENSE_MOBILE_BANNER || '5122452205',
+    MOBILE_STICKY: import.meta.env.VITE_ADSENSE_MOBILE_STICKY || '5122452205',
     
     // Native Ads (Highest RPM)
-    IN_FEED_NATIVE: import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE || '1357924680',
-    IN_ARTICLE_NATIVE: import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE || '2468135792',
+    IN_FEED_NATIVE: import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE || '6408733271',
+    IN_ARTICLE_NATIVE: import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE || '4668276193',
     
-    // Video Ads
-    VIDEO_OVERLAY: import.meta.env.VITE_ADSENSE_VIDEO_OVERLAY || '3691472583',
-    VIDEO_REWARD: import.meta.env.VITE_ADSENSE_VIDEO_REWARD || '4815926374',
+    // Video Ads (using content rectangle for now)
+    VIDEO_OVERLAY: import.meta.env.VITE_ADSENSE_VIDEO_OVERLAY || '1707587859',
+    VIDEO_REWARD: import.meta.env.VITE_ADSENSE_VIDEO_REWARD || '1707587859',
     
     // Premium Feature Ads
-    PREMIUM_GATE: import.meta.env.VITE_ADSENSE_PREMIUM_GATE || '5927384615',
-    UPGRADE_PROMPT: import.meta.env.VITE_ADSENSE_UPGRADE_PROMPT || '6148372695'
+    PREMIUM_GATE: import.meta.env.VITE_ADSENSE_PREMIUM_GATE || '1707587859',
+    UPGRADE_PROMPT: import.meta.env.VITE_ADSENSE_UPGRADE_PROMPT || '1707587859'
   },
   
   // Standard ad sizes optimized for revenue

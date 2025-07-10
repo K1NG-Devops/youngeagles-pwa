@@ -15,7 +15,7 @@ const SubscriptionExpiredModal = () => {
   }
 
   const isTrialExp = isTrialExpired();
-  const currentPlan = plans[subscription?.planId] || plans.basic;
+  const currentPlan = plans[subscription?.plan_id] || plans.free;
 
   const handleUpgrade = () => {
     navigate('/management?tab=subscription');
@@ -109,7 +109,7 @@ const SubscriptionExpiredModal = () => {
                   R{currentPlan.price}
                 </div>
                 <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  per {currentPlan.period}
+                  per month
                 </div>
               </div>
             </div>

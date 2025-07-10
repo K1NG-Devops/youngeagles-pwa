@@ -63,24 +63,24 @@ const Footer = () => {
             </Link>
             {!hideAuthButtons && (
               <>
-                <Link 
-                  to="/login" 
-                  className={`hover:text-blue-500 transition-colors font-medium ${
-                    isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                  }`}
-                >
-                  Login
-                </Link>
-                <Link 
-                  to="/signup" 
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    isDark 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  Sign Up
-                </Link>
+            <Link 
+              to="/login" 
+              className={`hover:text-blue-500 transition-colors font-medium ${
+                isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
+              }`}
+            >
+              Login
+            </Link>
+            <Link 
+              to="/signup" 
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                isDark 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              Sign Up
+            </Link>
               </>
             )}
           </div>

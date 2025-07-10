@@ -41,14 +41,14 @@ const Contact = () => {
               <div className="flex items-center">
                 <FaPhone className={'text-blue-500 mr-3'} />
                 <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                  +27 (0) 11 123 4567
+                  +27 81 523 6000
                 </span>
               </div>
               
               <div className="flex items-center">
                 <FaMapMarkerAlt className={'text-blue-500 mr-3'} />
                 <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                  Johannesburg, South Africa
+                  Pretoria, South Africa
                 </span>
               </div>
               

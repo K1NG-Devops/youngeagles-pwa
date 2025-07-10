@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaRobot, FaCalculator, FaPalette, FaShapes, FaSpellCheck, FaLeaf, FaArrowLeft, FaTrophy, FaUsers, FaUser, FaClipboardList } from 'react-icons/fa';
 import nativeNotificationService from '../services/nativeNotificationService.js';
+import SmartAdManager from '../components/ads/SmartAdManager';
 import MazeActivity from '../components/PWA/MazeActivity';
 import apiService from '../services/apiService';
 
@@ -403,10 +404,18 @@ const Activities = () => {
   }
 
   return (
-    <div className={`min-h-screen py-6 pt-24 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="w-full">
+    <div className={`min-h-screen pt-20 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Header Ad - High visibility */}
+        <SmartAdManager 
+          position="header" 
+          page="activities" 
+          className="mb-8" 
+        />
+
         {/* Back Button */}
-        <div className="mb-4 px-4">
+        <div className="mb-6">
           <button
             onClick={() => navigate(-1)}
             className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
@@ -416,175 +425,159 @@ const Activities = () => {
             }`}
           >
             <FaArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            Back to Dashboard
           </button>
         </div>
-        
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-4">Interactive Activities Hub</h1>
+
+        {/* Page Header */}
+        <div className="mb-8 text-center">
+          <h1 className={`text-3xl sm:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            🎮 Learning Activities
+          </h1>
           <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             Fun and educational activities for young learners
           </p>
-          
-          {/* Stats */}
-          {completedActivities.length > 0 && (
-            <div className={`mt-6 p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} inline-block`}>
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-500">{completedActivities.length}</div>
-                  <div className="text-sm text-gray-500">Completed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-500">
-                    {Math.round(completedActivities.reduce((sum, comp) => sum + comp.score, 0) / completedActivities.length)}
-                  </div>
-                  <div className="text-sm text-gray-500">Avg Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-500">
-                    {Math.round((completedActivities.length / activities.length) * 100)}%
-                  </div>
-                  <div className="text-sm text-gray-500">Progress</div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-        
+
+        {/* Content Rectangle Ad - High engagement area */}
+        <SmartAdManager 
+          position="content" 
+          page="activities" 
+          className="mb-8" 
+        />
+
         {/* Activities Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {activities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {activities.map((activity, index) => (
+            <React.Fragment key={activity.id}>
+              <ActivityCard activity={activity} />
+              
+              {/* Native In-Feed Ad every 3rd activity card - Highest RPM */}
+              {(index + 1) % 3 === 0 && (
+                <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                  <SmartAdManager 
+                    position="native-feed" 
+                    page="activities" 
+                    className="my-4" 
+                  />
+                </div>
+              )}
+            </React.Fragment>
           ))}
         </div>
 
-        {/* Info Section */}
-        <div className={`mt-12 p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            About Interactive Activities
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                Educational Benefits
-              </h3>
-              <ul className={`text-sm space-y-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                <li>• Develops problem-solving skills</li>
-                <li>• Enhances logical thinking</li>
-                <li>• Improves hand-eye coordination</li>
-                <li>• Builds confidence through achievement</li>
-                <li>• Makes learning fun and engaging</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                How to Use
-              </h3>
-              <ul className={`text-sm space-y-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                <li>• Click on any activity card to start</li>
-                <li>• Follow the instructions in each activity</li>
-                <li>• Complete activities to earn scores</li>
-                <li>• Track your progress over time</li>
-                <li>• Try different difficulty levels</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        {/* Footer Ad - Always visible */}
+        <SmartAdManager 
+          position="footer" 
+          page="activities" 
+          className="mt-12" 
+        />
       </div>
 
-      {/* Assignment Modal */}
-      {showAssignModal && selectedActivity && (
+      {/* Assignment Modal for Teachers */}
+      {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`max-w-2xl w-full rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`w-full max-w-md rounded-xl shadow-2xl ${
+            isDark ? 'bg-gray-800' : 'bg-white'
+          }`}>
             <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Assign: {selectedActivity.title}</h2>
+              <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Assign Activity: {selectedActivity?.title}
+              </h3>
               
               {/* Assignment Type */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Assignment Type</label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="class"
-                      checked={assignmentForm.assignmentType === 'class'}
-                      onChange={(e) => handleFormChange('assignmentType', e.target.value)}
-                      className="mr-2"
-                    />
-                    <FaUsers className="mr-2" />
-                    Entire Class ({students.length} students)
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="individual"
-                      checked={assignmentForm.assignmentType === 'individual'}
-                      onChange={(e) => handleFormChange('assignmentType', e.target.value)}
-                      className="mr-2"
-                    />
-                    <FaUser className="mr-2" />
-                    Individual Students
-                  </label>
-                </div>
+              <div className="mb-4">
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Assignment Type
+                </label>
+                <select
+                  value={assignmentForm.assignmentType}
+                  onChange={(e) => handleFormChange('assignmentType', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                >
+                  <option value="class">Assign to Entire Class</option>
+                  <option value="individual">Assign to Individual Students</option>
+                </select>
               </div>
 
-              {/* Student Selection (for individual assignments) */}
+              {/* Student Selection (if individual) */}
               {assignmentForm.assignmentType === 'individual' && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">Select Students</label>
-                  <div className={`max-h-40 overflow-y-auto p-3 border rounded-lg ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
-                    {students.map((student) => (
-                      <label key={student.id} className="flex items-center py-2">
+                <div className="mb-4">
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Select Students
+                  </label>
+                  <div className="max-h-32 overflow-y-auto border rounded-lg p-2">
+                    {students.map(student => (
+                      <label key={student.id} className="flex items-center space-x-2 p-1">
                         <input
                           type="checkbox"
                           checked={assignmentForm.selectedStudents.includes(student.id)}
                           onChange={() => handleStudentSelection(student.id)}
-                          className="mr-3"
+                          className="rounded"
                         />
-                        <span>{student.first_name} {student.last_name}</span>
+                        <span className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {student.first_name} {student.last_name}
+                        </span>
                       </label>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Instructions */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Instructions for Students</label>
-                <textarea
-                  value={assignmentForm.instructions}
-                  onChange={(e) => handleFormChange('instructions', e.target.value)}
-                  className={`w-full p-3 border rounded-lg ${isDark ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'}`}
-                  rows="3"
-                  placeholder="Enter instructions for students..."
-                />
-              </div>
-
               {/* Due Date */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Due Date</label>
+              <div className="mb-4">
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Due Date
+                </label>
                 <input
                   type="date"
                   value={assignmentForm.dueDate}
                   onChange={(e) => handleFormChange('dueDate', e.target.value)}
-                  className={`w-full p-3 border rounded-lg ${isDark ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'}`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                />
+              </div>
+
+              {/* Instructions */}
+              <div className="mb-6">
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Instructions
+                </label>
+                <textarea
+                  value={assignmentForm.instructions}
+                  onChange={(e) => handleFormChange('instructions', e.target.value)}
+                  rows="3"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex space-x-4">
+              <div className="flex space-x-3">
                 <button
                   onClick={() => setShowAssignModal(false)}
-                  className={`flex-1 py-2 px-4 rounded-lg border ${isDark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                  disabled={loading}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    isDark 
+                      ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitAssignment}
                   disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading ? 'Assigning...' : 'Assign Activity'}
                 </button>

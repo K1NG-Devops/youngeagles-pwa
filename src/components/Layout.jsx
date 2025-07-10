@@ -6,6 +6,7 @@ import SideNavigation from './SideNavigation';
 import TopNavigation from './TopNavigation';
 import FloatingNavigation from './FloatingNavigation';
 import Footer from './Footer';
+import SubscriptionBanner from './subscription/SubscriptionBanner';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -23,6 +24,9 @@ const Layout = () => {
   // Show footer only on specific public/marketing pages, not in authenticated app areas
   const publicPages = ['/', '/login', '/signup', '/privacy-policy', '/terms-of-service', '/contact', '/about', '/help'];
   const showFooter = !isAuthenticated && publicPages.includes(location.pathname);
+
+  // Show subscription banner for authenticated users
+  const showSubscriptionBanner = isAuthenticated && location.pathname !== '/login' && location.pathname !== '/signup';
 
   // NAVIGATION STYLE CONFIGURATION
   // Change this value to switch navigation styles:
@@ -59,25 +63,37 @@ const Layout = () => {
     // Add bottom margin for fixed footer (footer height is ~70px)
     const footerMargin = showFooter ? 'mb-20' : 'mb-4';
     
+    // Add top margin for subscription banner if shown
+    const bannerMargin = showSubscriptionBanner ? 'mt-2' : '';
+    
     if (!showNavigation) {
-      return `min-h-full ${footerMargin}`;
+      return `min-h-full ${footerMargin} ${bannerMargin}`;
     }
     
     switch (navigationStyle) {
     case 'side':
-      return `min-h-full ${footerMargin}`;
+      return `min-h-full ${footerMargin} ${bannerMargin}`;
     case 'top':
-      return `min-h-full ${footerMargin}`;
+      return `min-h-full ${footerMargin} ${bannerMargin}`;
     case 'floating':
-      return `min-h-full ${footerMargin} pb-20`; // Extra padding for floating nav
+      return `min-h-full ${footerMargin} pb-20 ${bannerMargin}`; // Extra padding for floating nav
     case 'bottom':
     default:
-      return `min-h-full mb-28 ${footerMargin}`; // Extra margin for both bottom navigation and footer
+      return `min-h-full mb-28 ${footerMargin} ${bannerMargin}`; // Extra margin for both bottom navigation and footer
     }
   };
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Subscription Banner */}
+      {showSubscriptionBanner && (
+        <SubscriptionBanner 
+          position="top"
+          showOnActive={false}
+          dismissible={true}
+        />
+      )}
+      
       {/* Only show Header if not using top navigation */}
       {showGlobalHeader && navigationStyle !== 'top' && <Header />}
       

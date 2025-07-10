@@ -4,7 +4,7 @@ import { useSubscription } from '../../contexts/SubscriptionContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FaCrown, FaTimes, FaPlay } from 'react-icons/fa';
 import GoogleAdSense from './GoogleAdSense';
-import { ADSENSE_CONFIG } from '../../config/adsense-config';
+import { ENHANCED_ADSENSE_CONFIG } from '../../config/enhanced-adsense-config';
 
 /**
  * Premium Ad Gate Component
@@ -72,8 +72,8 @@ const PremiumAdGate = ({
               
               {/* Display Ad */}
               <GoogleAdSense
-                slot={ADSENSE_CONFIG.AD_SLOTS.DISPLAY_AD}
-                size={ADSENSE_CONFIG.AD_SIZES.RECTANGLE}
+                slot={ENHANCED_ADSENSE_CONFIG.AD_SLOTS.CONTENT_RECTANGLE}
+                size={ENHANCED_ADSENSE_CONFIG.AD_SIZES.LARGE_RECTANGLE}
                 format="rectangle"
                 className="mx-auto"
               />

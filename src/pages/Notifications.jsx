@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
 import { FaBell, FaEnvelope, FaExclamationCircle, FaTasks, FaClock, FaCheckCircle, FaUser } from 'react-icons/fa';
+import AdPlacement from '../components/ads/AdPlacement';
+import { SmartAdManager } from '../components/ads/SmartAdManager';
 
 const Notifications = () => {
   const { isDark } = useTheme();
@@ -205,6 +207,13 @@ const Notifications = () => {
           </div>
         </div>
 
+        {/* Header Ad */}
+        <SmartAdManager 
+          adUnit="header" 
+          context="notifications"
+          className="my-6"
+        />
+
         {notifications.length === 0 ? (
           <div className={`p-6 text-center rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
             <FaBell className={`text-4xl mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-gray-300'}`} />
@@ -212,75 +221,95 @@ const Notifications = () => {
             <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Check back later for new messages and alerts.</p>
           </div>
         ) : (
-          notifications.map((notification) => {
-            const IconComponent = getNotificationIcon(notification.type);
-            return (
-              <div 
-                key={notification.id} 
-                className={`p-4 rounded-xl shadow-sm border transition-all hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                } ${!notification.read ? (isDark ? 'border-l-4 border-l-blue-400' : 'border-l-4 border-l-blue-500') : ''}`}
-                onClick={() => markAsRead(notification.id)}
-                onKeyDown={(e) => handleKeyDown(e, notification.id)}
-                tabIndex={0}
-                role="button"
-                aria-label={`Mark notification "${notification.title}" as read`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${getPriorityColor(notification.priority)}`}>
-                      <IconComponent className="text-lg" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {notification.title}
-                        </h3>
-                        {!notification.read && (
-                          <div 
-                            className="w-2 h-2 bg-blue-500 rounded-full"
-                            aria-label="Unread notification"
-                          ></div>
+          <div className="space-y-4">
+            {notifications.map((notification, index) => {
+              const IconComponent = getNotificationIcon(notification.type);
+              return (
+                <div key={notification.id}>
+                  <div 
+                    className={`p-4 rounded-xl shadow-sm border transition-all hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    } ${!notification.read ? (isDark ? 'border-l-4 border-l-blue-400' : 'border-l-4 border-l-blue-500') : ''}`}
+                    onClick={() => markAsRead(notification.id)}
+                    onKeyDown={(e) => handleKeyDown(e, notification.id)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Mark notification "${notification.title}" as read`}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2 rounded-lg ${getPriorityColor(notification.priority)}`}>
+                          <IconComponent className="text-lg" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {notification.title}
+                            </h3>
+                            {!notification.read && (
+                              <div 
+                                className="w-2 h-2 bg-blue-500 rounded-full"
+                                aria-label="Unread notification"
+                              ></div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(notification.priority)}`}>
+                              {notification.priority?.toUpperCase() || 'NORMAL'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-center space-x-1 mb-1">
+                          <FaClock className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {formatTimestamp(notification.timestamp)}
+                          </span>
+                        </div>
+                        {notification.read && (
+                          <div className="flex items-center space-x-1">
+                            <FaCheckCircle className={`text-xs ${isDark ? 'text-green-400' : 'text-green-500'}`} />
+                            <span className={`text-xs ${isDark ? 'text-green-400' : 'text-green-500'}`}>Read</span>
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(notification.priority)}`}>
-                          {notification.priority?.toUpperCase() || 'NORMAL'}
+                    </div>
+                    
+                    <div className="mb-3">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <FaUser className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          From: {notification.sender}
                         </span>
                       </div>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-relaxed`}>
+                        {notification.message}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="flex items-center space-x-1 mb-1">
-                      <FaClock className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {formatTimestamp(notification.timestamp)}
-                      </span>
-                    </div>
-                    {notification.read && (
-                      <div className="flex items-center space-x-1">
-                        <FaCheckCircle className={`text-xs ${isDark ? 'text-green-400' : 'text-green-500'}`} />
-                        <span className={`text-xs ${isDark ? 'text-green-400' : 'text-green-500'}`}>Read</span>
-                      </div>
-                    )}
-                  </div>
+                  
+                  {/* Native In-Feed Ad every 3rd notification */}
+                  {(index + 1) % 3 === 0 && (
+                    <AdPlacement
+                      adUnit="native-in-feed"
+                      className="my-4"
+                      format="native"
+                      style={{ textAlign: 'center' }}
+                    />
+                  )}
                 </div>
-                
-                <div className="mb-3">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <FaUser className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      From: {notification.sender}
-                    </span>
-                  </div>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-relaxed`}>
-                    {notification.message}
-                  </p>
-                </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
+        
+        {/* Content Ad */}
+        <SmartAdManager 
+          adUnit="content" 
+          context="notifications"
+          className="my-6"
+        />
         
         {/* Summary Section */}
         <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -303,6 +332,13 @@ const Notifications = () => {
             </div>
           </div>
         </div>
+
+        {/* Footer Ad */}
+        <SmartAdManager 
+          adUnit="footer" 
+          context="notifications"
+          className="my-6"
+        />
       </div>
     </div>
   );
