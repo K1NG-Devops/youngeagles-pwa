@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import nativeNotificationService from '../services/nativeNotificationService.js';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaGraduationCap, FaMoon, FaSun, FaSpinner } from 'react-icons/fa';
-import { BannerAd } from '../components/ads';
+import SmartAdManager from '../components/ads/SmartAdManager';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -315,11 +315,11 @@ const Login = () => {
         
         {/* Bottom Ad Space - Responsive and No Overflow */}
         <div className="w-full px-3 sm:px-4 pb-2 mb-4">
-          <BannerAd 
-            className="max-w-full overflow-hidden" 
-            showOnMobile={true}
-            showOnDesktop={true}
-            useSimulated={true}
+          <SmartAdManager 
+            position="footer"
+            page="login"
+            userSegment="casual"
+            className="max-w-full overflow-hidden"
           />
         </div>
       </div>
