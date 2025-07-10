@@ -46,6 +46,7 @@ const ParentProfile = () => {
     newPassword: '',
     confirmPassword: ''
   });
+  const [forceUpdate, setForceUpdate] = useState(0); // State to force re-render
 
   useEffect(() => {
     const fetchChildren = async () => {
@@ -119,13 +120,21 @@ const ParentProfile = () => {
       
       if (response.data.success) {
         const serverImageUrl = response.data.data.profilePictureUrl;
+        const updatedUserData = response.data.data.user;
         
         // Update user profile picture in context with server URL
-        updateUser({ 
+        const userUpdateData = {
           profilePicture: serverImageUrl,
           profile_picture: serverImageUrl, // For compatibility
           avatar: serverImageUrl // For compatibility
-        });
+        };
+
+        // If backend returned updated user data, use it
+        if (updatedUserData) {
+          Object.assign(userUpdateData, updatedUserData);
+        }
+
+        updateUser(userUpdateData);
         
         // Update local profile data
         setProfileData(prev => ({
@@ -133,14 +142,30 @@ const ParentProfile = () => {
           profilePicture: serverImageUrl
         }));
         
+        // Force a re-render by updating a state variable
+        setForceUpdate(prev => prev + 1);
+        
         nativeNotificationService.success('Profile picture updated successfully!');
+        
+        // Log for debugging
+        console.log('✅ Profile picture updated:', {
+          url: serverImageUrl,
+          userUpdateData
+        });
+        
       } else {
         throw new Error(response.data.message || 'Upload failed');
       }
       
     } catch (error) {
       console.error('Error uploading profile picture:', error);
-      nativeNotificationService.error(error.response?.data?.message || 'Failed to upload profile picture. Please try again.');
+      
+      // Handle specific error cases
+      if (error.response?.data?.error === 'MISSING_COLUMN') {
+        nativeNotificationService.error('Profile picture feature is being set up. Please contact your administrator.');
+      } else {
+        nativeNotificationService.error(error.response?.data?.message || 'Failed to upload profile picture. Please try again.');
+      }
     } finally {
       setIsUploadingPicture(false);
     }
