@@ -101,6 +101,18 @@ const SmartAdManager = ({
 
     // Page-specific configuration
     const pageConfigs = {
+      default: {
+        priority: 'low',
+        positions: ['footer'],
+        adLimit: 1,
+        nativeAds: false
+      },
+      login: {
+        priority: 'low',
+        positions: ['footer'],
+        adLimit: 1,
+        nativeAds: false
+      },
       dashboard: {
         priority: 'high',
         positions: ['header', 'sidebar', 'content', 'native-feed']
@@ -149,19 +161,19 @@ const SmartAdManager = ({
       }
     };
 
-    // Combine configurations
+    // Combine configurations with proper fallbacks
     const segmentConfig = segmentConfigs[segment] || segmentConfigs.casual;
     const pageConfig = pageConfigs[currentPage] || pageConfigs.default;
     const positionConfig = positionConfigs[pos] || positionConfigs.content;
 
     // Check if user has seen too many ads
-    const adLimit = segmentConfig.adsPerSession;
+    const adLimit = segmentConfig.adsPerSession || 3;
     if (behavior.adsViewed >= adLimit) {
       return { ...baseConfig, shouldShow: false };
     }
 
     // Check if position is allowed for this page
-    if (pageConfig.positions && !pageConfig.positions.includes(pos)) {
+    if (pageConfig && pageConfig.positions && !pageConfig.positions.includes(pos)) {
       return { ...baseConfig, shouldShow: false };
     }
 
