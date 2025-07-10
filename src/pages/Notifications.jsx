@@ -3,7 +3,7 @@ import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
 import { FaBell, FaEnvelope, FaExclamationCircle, FaTasks, FaClock, FaCheckCircle, FaUser } from 'react-icons/fa';
 import AdPlacement from '../components/ads/AdPlacement';
-import { SmartAdManager } from '../components/ads/SmartAdManager';
+import SmartAdManager from '../components/ads/SmartAdManager';
 
 const Notifications = () => {
   const { isDark } = useTheme();
