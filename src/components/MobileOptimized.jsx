@@ -44,9 +44,9 @@ export const MobileFormContainer = ({ children, className = '' }) => {
         border-2 
         transition-all duration-500
         ${isDark 
-          ? 'bg-gray-800/30 border-gray-700/50' 
-          : 'bg-white/70 border-white/50'
-        }
+      ? 'bg-gray-800/30 border-gray-700/50' 
+      : 'bg-white/70 border-white/50'
+    }
       `}>
         {children}
       </div>
@@ -97,9 +97,9 @@ export const MobileInput = ({
           text-base sm:text-lg
           min-h-[48px] sm:min-h-[56px]
           ${isDark 
-            ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' 
-            : 'bg-white/50 border-gray-300 text-gray-900 placeholder-gray-500'
-          }
+      ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' 
+      : 'bg-white/50 border-gray-300 text-gray-900 placeholder-gray-500'
+    }
           backdrop-blur-sm
         `}
         placeholder={placeholder}
@@ -155,9 +155,9 @@ export const MobileButton = ({
     `,
     secondary: `
       ${isDark 
-        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
-        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-      }
+    ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+}
     `,
     outline: `
       border-2 border-blue-600 text-blue-600
@@ -211,11 +211,11 @@ export const MobileSelectionGroup = ({ options, selected, onSelect, disabled = f
             transform hover:scale-105
             min-h-[44px] sm:min-h-[48px]
             ${selected === option.value
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-              : isDark
-                ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border-2 border-gray-600'
-                : 'bg-gray-100/50 text-gray-600 hover:bg-gray-200/50 border-2 border-gray-200'
-            }
+          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+          : isDark
+            ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border-2 border-gray-600'
+            : 'bg-gray-100/50 text-gray-600 hover:bg-gray-200/50 border-2 border-gray-200'
+        }
             disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
           `}
         >

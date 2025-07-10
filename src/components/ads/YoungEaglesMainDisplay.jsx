@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
 const YoungEaglesMainDisplay = ({ 
-  className = "",
+  className = '',
   style = {},
   disabled = false,
   adType = 'banner' // 'banner', 'sidebar', or 'footer'
@@ -16,13 +16,13 @@ const YoungEaglesMainDisplay = ({
   // Get ad unit ID based on type
   const getAdUnitId = () => {
     switch (adType) {
-      case 'sidebar':
-        return import.meta.env.VITE_ADSENSE_SIDEBAR_AD_UNIT;
-      case 'footer':
-        return import.meta.env.VITE_ADSENSE_FOOTER_AD_UNIT;
-      case 'banner':
-      default:
-        return import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT;
+    case 'sidebar':
+      return import.meta.env.VITE_ADSENSE_SIDEBAR_AD_UNIT;
+    case 'footer':
+      return import.meta.env.VITE_ADSENSE_FOOTER_AD_UNIT;
+    case 'banner':
+    default:
+      return import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT;
     }
   };
   

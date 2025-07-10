@@ -168,7 +168,7 @@ const Classes = () => {
                   onClick={handleBackToClasses}
                   className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
                     isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-600' 
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-300'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-300'
                   }`}
                 >
                   <FaArrowLeft className="w-4 h-4 mr-2" />
@@ -318,7 +318,7 @@ const Classes = () => {
                   <button 
                     className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors border ${
                       isDark ? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white' 
-                             : 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                     onClick={() => handleViewClassDetails(classItem)}
                   >

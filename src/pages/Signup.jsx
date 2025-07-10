@@ -92,9 +92,9 @@ const Signup = () => {
         onClick={toggleTheme}
         className={`fixed xs:static top-2 right-2 xs:top-6 xs:right-6 p-2 xs:p-4 rounded-full transition-all duration-300 z-50 transform hover:scale-110 hover:rotate-12 w-10 h-10 xs:w-12 xs:h-12
           ${isDark 
-            ? 'bg-gray-800/80 text-yellow-400 hover:bg-gray-700/80 border-2 border-gray-600 shadow-2xl backdrop-blur-sm' 
-            : 'bg-white/80 text-blue-600 hover:bg-blue-50/80 border-2 border-blue-200 shadow-2xl backdrop-blur-sm'
-        }`}
+      ? 'bg-gray-800/80 text-yellow-400 hover:bg-gray-700/80 border-2 border-gray-600 shadow-2xl backdrop-blur-sm' 
+      : 'bg-white/80 text-blue-600 hover:bg-blue-50/80 border-2 border-blue-200 shadow-2xl backdrop-blur-sm'
+    }`}
         title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
       >
         {isDark ? <FaSun className="text-xl" /> : <FaMoon className="text-xl" />}

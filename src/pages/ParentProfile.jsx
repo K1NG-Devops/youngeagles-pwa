@@ -35,7 +35,6 @@ const ParentProfile = () => {
   });
   const [children, setChildren] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [profilePicture, setProfilePicture] = useState(null);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -105,7 +104,6 @@ const ParentProfile = () => {
         return;
       }
 
-      setProfilePicture(file);
       uploadProfilePicture(file);
     }
   };
@@ -116,30 +114,33 @@ const ParentProfile = () => {
       const formData = new FormData();
       formData.append('profilePicture', file);
 
-      // Create a local URL for preview
-      const imageUrl = URL.createObjectURL(file);
+      // Upload to server
+      const response = await apiService.users.uploadProfilePicture(formData);
       
-      // Here you would typically upload to your server
-      // const response = await apiService.user.uploadProfilePicture(formData);
-      
-      // Update user profile picture in context immediately for UI sync
-      updateUser({ 
-        profilePicture: imageUrl,
-        profile_picture: imageUrl, // For compatibility
-        avatar: imageUrl // For compatibility
-      });
-      
-      // Update local profile data
-      setProfileData(prev => ({
-        ...prev,
-        profilePicture: imageUrl
-      }));
-      
-      nativeNotificationService.success('Profile picture updated successfully!');
+      if (response.data.success) {
+        const serverImageUrl = response.data.data.profilePictureUrl;
+        
+        // Update user profile picture in context with server URL
+        updateUser({ 
+          profilePicture: serverImageUrl,
+          profile_picture: serverImageUrl, // For compatibility
+          avatar: serverImageUrl // For compatibility
+        });
+        
+        // Update local profile data
+        setProfileData(prev => ({
+          ...prev,
+          profilePicture: serverImageUrl
+        }));
+        
+        nativeNotificationService.success('Profile picture updated successfully!');
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
       
     } catch (error) {
       console.error('Error uploading profile picture:', error);
-      nativeNotificationService.error('Failed to upload profile picture. Please try again.');
+      nativeNotificationService.error(error.response?.data?.message || 'Failed to upload profile picture. Please try again.');
     } finally {
       setIsUploadingPicture(false);
     }
@@ -187,10 +188,7 @@ const ParentProfile = () => {
   };
 
   const getProfilePictureUrl = () => {
-    // Check in order: local upload, profileData, user context
-    if (profilePicture) {
-      return URL.createObjectURL(profilePicture);
-    }
+    // Return the server URL from various sources, no more blob URLs
     return profileData.profilePicture || user?.profilePicture || user?.profile_picture || user?.avatar || null;
   };
 
@@ -206,7 +204,7 @@ const ParentProfile = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
@@ -221,29 +219,31 @@ const ParentProfile = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Parent Profile
           </h1>
-          <p className="text-gray-600 bg-blue-500 p-2 rounded-xl text-center dark:text-gray-100 mt-6">
-            Manage your account and view your children's information
-          </p>
+          <div className="bg-blue-500 dark:bg-blue-600 p-4 rounded-xl text-center mt-6">
+            <p className="text-white font-medium">
+              Manage your account and view your children's information
+            </p>
+          </div>
         </header>
 
         {/* Parent Information Card */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <header className="flex items-center justify-between mb-6">
+        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
+          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <FaUser className="mr-3 text-blue-500 dark:text-blue-400" />
               Account Information
             </h2>
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
               <button 
                 onClick={() => setShowPasswordModal(true)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
               >
                 <FaLock className="mr-2" />
                 Change Password
               </button>
               <button 
                 onClick={() => nativeNotificationService.info('Edit profile feature coming soon!')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
               >
                 <FaEdit className="mr-2" />
                 Edit Profile
@@ -272,7 +272,7 @@ const ParentProfile = () => {
               <div className="absolute -bottom-2 -right-2">
                 <label 
                   htmlFor="profilePicture"
-                  className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full cursor-pointer transition-all duration-300 shadow-lg border-4 border-white dark:border-gray-800 hover:scale-105 active:scale-95"
+                  className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white p-3 rounded-full cursor-pointer transition-all duration-300 shadow-lg border-4 border-white dark:border-gray-800 hover:scale-105 active:scale-95"
                 >
                   {isUploadingPicture ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -312,36 +312,36 @@ const ParentProfile = () => {
             </p>
           </div>
           
-          <section className="grid md:grid-cols-2 gap-6">
+          <section className="grid sm:grid-cols-1 md:grid-cols-2 gap-6">
             <article className="space-y-4">
-              <div className="flex items-center">
-                <FaUser className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0" />
-                <div>
+              <div className="flex items-start">
+                <FaUser className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0 mt-1" />
+                <div className="min-w-0 flex-1">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Full Name</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{profileData.name}</p>
+                  <p className="font-medium text-gray-900 dark:text-white break-words">{profileData.name}</p>
                 </div>
               </div>
-              <div className="flex items-center">
-                <FaEnvelope className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0" />
-                <div>
+              <div className="flex items-start">
+                <FaEnvelope className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0 mt-1" />
+                <div className="min-w-0 flex-1">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Email Address</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{profileData.email}</p>
+                  <p className="font-medium text-gray-900 dark:text-white break-all">{profileData.email}</p>
                 </div>
               </div>
             </article>
             <article className="space-y-4">
-              <div className="flex items-center">
-                <FaPhone className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0" />
-                <div>
+              <div className="flex items-start">
+                <FaPhone className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0 mt-1" />
+                <div className="min-w-0 flex-1">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Phone Number</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{profileData.phone || 'Not provided'}</p>
+                  <p className="font-medium text-gray-900 dark:text-white break-words">{profileData.phone || 'Not provided'}</p>
                 </div>
               </div>
-              <div className="flex items-center">
-                <FaMapMarkerAlt className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0" />
-                <div>
+              <div className="flex items-start">
+                <FaMapMarkerAlt className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0 mt-1" />
+                <div className="min-w-0 flex-1">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Address</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{profileData.address || 'Not provided'}</p>
+                  <p className="font-medium text-gray-900 dark:text-white break-words">{profileData.address || 'Not provided'}</p>
                 </div>
               </div>
             </article>
@@ -470,7 +470,7 @@ const ParentProfile = () => {
         )}
 
         {/* Children Information */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
             <FaChild className="mr-3 text-green-500 dark:text-green-400" />
             My Children ({children.length})
@@ -487,48 +487,56 @@ const ParentProfile = () => {
               {children.map((child) => (
                 <article 
                   key={child.id} 
-                  className="border border-gray-200 dark:border-gray-600 rounded-lg p-6 hover:shadow-md transition-shadow bg-gray-50 dark:bg-gray-700"
+                  className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow bg-gray-50 dark:bg-gray-700"
                 >
-                  <header className="flex items-start justify-between mb-4">
+                  <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-3 sm:space-y-0">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {child.first_name} {child.last_name}
                     </h3>
                     <button 
                       onClick={() => nativeNotificationService.info('Child details feature coming soon!')}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors w-full sm:w-auto"
                     >
                       View Details
                     </button>
                   </header>
                   
-                  <section className="grid md:grid-cols-2 gap-4 text-sm">
+                  <section className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <article className="space-y-3">
-                      <div className="flex items-center">
-                        <FaCalendarAlt className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0" />
-                        <span className="text-gray-600 dark:text-gray-400">Age:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                          {child.age || calculateAge(child.date_of_birth)} years old
-                        </span>
+                      <div className="flex items-start">
+                        <FaCalendarAlt className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-gray-600 dark:text-gray-400">Age:</span>
+                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                            {child.age || calculateAge(child.date_of_birth)} years old
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center">
-                        <FaGraduationCap className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0" />
-                        <span className="text-gray-600 dark:text-gray-400">Class:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">{child.class_name || 'Not assigned'}</span>
+                      <div className="flex items-start">
+                        <FaGraduationCap className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-gray-600 dark:text-gray-400">Class:</span>
+                          <span className="ml-2 font-medium text-gray-900 dark:text-white break-words">{child.class_name || 'Not assigned'}</span>
+                        </div>
                       </div>
                     </article>
                     <article className="space-y-3">
                       {child.date_of_birth && (
-                        <div className="flex items-center">
-                          <FaIdCard className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0" />
-                          <span className="text-gray-600 dark:text-gray-400">Date of Birth:</span>
-                          <span className="ml-2 font-medium text-gray-900 dark:text-white">{formatDate(child.date_of_birth)}</span>
+                        <div className="flex items-start">
+                          <FaIdCard className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <span className="text-gray-600 dark:text-gray-400">Date of Birth:</span>
+                            <span className="ml-2 font-medium text-gray-900 dark:text-white">{formatDate(child.date_of_birth)}</span>
+                          </div>
                         </div>
                       )}
                       {child.emergency_contact && (
-                        <div className="flex items-center">
-                          <FaPhone className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0" />
-                          <span className="text-gray-600 dark:text-gray-400">Emergency Contact:</span>
-                          <span className="ml-2 font-medium text-gray-900 dark:text-white">{child.emergency_contact}</span>
+                        <div className="flex items-start">
+                          <FaPhone className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <span className="text-gray-600 dark:text-gray-400">Emergency Contact:</span>
+                            <span className="ml-2 font-medium text-gray-900 dark:text-white break-words">{child.emergency_contact}</span>
+                          </div>
                         </div>
                       )}
                     </article>
@@ -540,12 +548,12 @@ const ParentProfile = () => {
         </section>
 
         {/* Quick Actions */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
-          <nav className="grid md:grid-cols-3 gap-4">
+          <nav className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button 
               onClick={() => window.location.href = '/homework'}
-              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
             >
               <FaGraduationCap className="mr-2" />
               View Homework
@@ -553,7 +561,7 @@ const ParentProfile = () => {
             
             <button 
               onClick={() => nativeNotificationService.info('Communication feature coming soon!')}
-              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
             >
               <FaEnvelope className="mr-2" />
               Contact Teachers
@@ -561,7 +569,7 @@ const ParentProfile = () => {
             
             <button 
               onClick={() => nativeNotificationService.info('Reports feature coming soon!')}
-              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
             >
               <FaUser className="mr-2" />
               Progress Reports

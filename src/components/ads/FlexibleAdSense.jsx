@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
 const FlexibleAdSense = ({ 
-  className = "",
+  className = '',
   style = {},
   disabled = false,
   adType = 'banner', // 'banner', 'sidebar', 'footer'
@@ -19,13 +19,13 @@ const FlexibleAdSense = ({
   // Get ad unit ID based on type
   const getAdUnitId = () => {
     switch (adType) {
-      case 'sidebar':
-        return import.meta.env.VITE_ADSENSE_SIDEBAR_AD_UNIT;
-      case 'footer':
-        return import.meta.env.VITE_ADSENSE_FOOTER_AD_UNIT;
-      case 'banner':
-      default:
-        return import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT;
+    case 'sidebar':
+      return import.meta.env.VITE_ADSENSE_SIDEBAR_AD_UNIT;
+    case 'footer':
+      return import.meta.env.VITE_ADSENSE_FOOTER_AD_UNIT;
+    case 'banner':
+    default:
+      return import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT;
     }
   };
   
@@ -43,6 +43,41 @@ const FlexibleAdSense = ({
     }
   }, [disabled, adsEnabled, publisherId, adSlot]);
 
+  // Get container styles based on ad type
+  const getContainerStyles = () => {
+    const baseStyles = {
+      width: '100%',
+      maxWidth: '100%',
+      overflow: 'hidden',
+      boxSizing: 'border-box',
+      margin: '10px 0'
+    };
+
+    switch (adType) {
+      case 'sidebar':
+        return {
+          ...baseStyles,
+          maxWidth: '300px',
+          minHeight: '250px'
+        };
+      case 'footer':
+        return {
+          ...baseStyles,
+          maxHeight: '120px',
+          minHeight: '60px'
+        };
+      case 'content':
+      case 'native-feed':
+        return {
+          ...baseStyles,
+          maxWidth: '728px',
+          margin: '15px auto'
+        };
+      default:
+        return baseStyles;
+    }
+  };
+
   // Don't render if ads are disabled or missing required config
   if (!adsEnabled || disabled || !publisherId || !adSlot) {
     // Show placeholder in test mode or development
@@ -50,21 +85,23 @@ const FlexibleAdSense = ({
       const placeholderHeight = format === 'vertical' ? '600px' : format === 'horizontal' ? '90px' : '250px';
       
       return (
-        <div className={`adsense-container ${className}`} style={style}>
+        <div className={`adsense-container w-full overflow-hidden ${className}`} style={getContainerStyles()}>
           <div 
             style={{ 
               minHeight: placeholderHeight,
+              maxHeight: placeholderHeight,
               backgroundColor: '#f8fafc', 
               border: '2px dashed #cbd5e1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: '8px',
-              margin: '10px 0',
-              ...style 
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden'
             }}
           >
-            <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
+            <div style={{ textAlign: 'center', color: '#64748b', padding: '20px', maxWidth: '100%' }}>
               <p style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'bold' }}>
                 📢 AdSense {adType.charAt(0).toUpperCase() + adType.slice(1)} Ad
               </p>
@@ -74,7 +111,7 @@ const FlexibleAdSense = ({
               {!adsEnabled && <p style={{ fontSize: '10px', color: '#ef4444' }}>❌ Ads disabled in config</p>}
               {!publisherId && <p style={{ fontSize: '10px', color: '#ef4444' }}>❌ Publisher ID missing</p>}
               {!adSlot && <p style={{ fontSize: '10px', color: '#ef4444' }}>❌ Ad slot missing</p>}
-              <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '10px' }}>
+              <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '10px', wordBreak: 'break-all' }}>
                 Slot: {adSlot || 'Not configured'}
               </p>
             </div>
@@ -85,16 +122,28 @@ const FlexibleAdSense = ({
     return null;
   }
 
+  const containerStyles = getContainerStyles();
+
   return (
-    <div className={`adsense-container ${className}`} style={style}>
+    <div 
+      className={`adsense-container w-full overflow-hidden ${className}`} 
+      style={containerStyles}
+    >
       <ins 
         ref={adRef}
         className="adsbygoogle"
-        style={{ display: 'block', margin: '10px 0' }}
+        style={{ 
+          display: 'block', 
+          width: '100%',
+          maxWidth: '100%',
+          height: 'auto',
+          overflow: 'hidden',
+          boxSizing: 'border-box'
+        }}
         data-ad-client={publisherId}
         data-ad-slot={adSlot}
         data-ad-format={format}
-        data-full-width-responsive={responsive ? "true" : "false"}
+        data-full-width-responsive={responsive ? 'true' : 'false'}
       />
     </div>
   );

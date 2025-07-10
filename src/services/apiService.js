@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 
 // Log API configuration
 console.log('🌐 API Base URL:', API_BASE_URL);
@@ -480,6 +480,13 @@ const apiService = {
     // Delete user
     delete: (userId) => apiClient.delete(`/api/users/${userId}`),
     
+    // Upload profile picture
+    uploadProfilePicture: (formData) => apiClient.post('/api/users/profile-picture', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }),
+    
     // Get admin dashboard stats (includes pendingApprovals)
     getStats: () => apiClient.get('/api/users/stats/overview')
   },
@@ -562,7 +569,7 @@ const apiService = {
       
       // Process refund
       processRefund: (transactionId, amount, reason = null) => 
-        apiClient.post(`/api/subscriptions/admin/refund`, { transactionId, amount, reason })
+        apiClient.post('/api/subscriptions/admin/refund', { transactionId, amount, reason })
     }
   }
 };

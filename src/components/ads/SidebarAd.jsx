@@ -3,28 +3,32 @@ import GoogleAdSense from './GoogleAdSense';
 import { ADSENSE_CONFIG } from '../../config/adsense-config';
 
 /**
- * Sidebar Ad Component - Production Ready
- * Vertical sidebar ad for desktop layouts
- * Optimized for Young Eagles PWA
+ * Sidebar Ad Component - Optimized for sidebar placement
+ * Responsive and overflow-protected
  */
 const SidebarAd = ({ 
   className = '',
-  position = 'right',
-  showLabel = true 
+  style = {},
+  disabled = false
 }) => {
+  if (disabled) return null;
+
   return (
-    <div className={`hidden lg:block ${className}`}>
-      <div className="mb-4">
-        {showLabel && (
-          <p className="text-xs text-gray-500 mb-2 text-center">
-            Advertisement
-          </p>
-        )}
+    <div className={`w-full max-w-xs mx-auto overflow-hidden ${className}`}>
+      <div 
+        className="w-full overflow-hidden rounded-lg"
+        style={{
+          maxWidth: '300px',
+          minHeight: '250px',
+          boxSizing: 'border-box',
+          ...style
+        }}
+      >
         <GoogleAdSense
           slot={ADSENSE_CONFIG.AD_SLOTS.SIDEBAR_AD}
-          size={ADSENSE_CONFIG.AD_SIZES.SIDEBAR}
+          size={ADSENSE_CONFIG.AD_SIZES.MEDIUM_RECTANGLE}
           format="vertical"
-          className="mx-auto"
+          className="w-full max-w-full overflow-hidden"
           responsive={true}
         />
       </div>

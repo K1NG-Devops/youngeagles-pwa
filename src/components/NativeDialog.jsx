@@ -49,14 +49,14 @@ const NativeDialog = ({
 
   const getSizeStyles = () => {
     switch (size) {
-      case 'small':
-        return { width: '300px', height: 'auto' };
-      case 'large':
-        return { width: '80vw', height: '80vh', maxWidth: '1200px' };
-      case 'full':
-        return { width: '100vw', height: '100vh' };
-      default: // medium
-        return { width: '500px', height: 'auto', maxWidth: '90vw' };
+    case 'small':
+      return { width: '300px', height: 'auto' };
+    case 'large':
+      return { width: '80vw', height: '80vh', maxWidth: '1200px' };
+    case 'full':
+      return { width: '100vw', height: '100vh' };
+    default: // medium
+      return { width: '500px', height: 'auto', maxWidth: '90vw' };
     }
   };
 

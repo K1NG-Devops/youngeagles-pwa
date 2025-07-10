@@ -63,21 +63,21 @@ const BannerAd = ({
 
   if (useSimulated) {
     return (
-      <div className={`w-full flex justify-center my-4 overflow-hidden ${className}`}>
-        <div className={`max-w-2xl w-full mx-2 sm:mx-4 ${isDark ? 'text-white' : 'text-white'}`}>
-          <div className={`bg-gradient-to-r ${currentSimulatedAd.color} p-3 sm:p-4 rounded-xl shadow-lg border border-white/20 relative overflow-hidden`}>
+      <div className={`w-full flex justify-center my-4 px-2 sm:px-4 overflow-hidden ${className}`}>
+        <div className={`max-w-2xl w-full ${isDark ? 'text-white' : 'text-white'}`}>
+          <div className={`bg-gradient-to-r ${currentSimulatedAd.color} p-3 sm:p-4 rounded-xl shadow-lg border border-white/20 relative overflow-hidden w-full`}>
             {/* Sponsored label */}
             <div className="absolute top-2 right-2 bg-white text-gray-600 text-xs px-3 py-1 rounded-full font-medium shadow-lg">
               Sponsored
             </div>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <div className="flex-1">
-                <div className="text-lg font-bold mb-1">{currentSimulatedAd.title}</div>
-                <div className="text-sm opacity-90 mb-2">{currentSimulatedAd.description}</div>
-                <div className="text-xs opacity-75">{currentSimulatedAd.website}</div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full">
+              <div className="flex-1 min-w-0">
+                <div className="text-lg font-bold mb-1 truncate">{currentSimulatedAd.title}</div>
+                <div className="text-sm opacity-90 mb-2 line-clamp-2">{currentSimulatedAd.description}</div>
+                <div className="text-xs opacity-75 truncate">{currentSimulatedAd.website}</div>
               </div>
-              <button className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg">
+              <button className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg flex-shrink-0">
                 {currentSimulatedAd.cta}
               </button>
             </div>
@@ -100,30 +100,34 @@ const BannerAd = ({
   }
 
   return (
-    <div className={`w-full flex justify-center my-4 overflow-hidden ${className}`}>
+    <div className={`w-full flex justify-center my-4 px-2 sm:px-4 overflow-hidden ${className}`}>
       {/* Desktop Banner */}
       {showOnDesktop && (
-        <div className="hidden md:block w-full max-w-2xl mx-2 sm:mx-4 overflow-hidden">
-          <GoogleAdSense
-            slot={ADSENSE_CONFIG.AD_SLOTS.BANNER_AD}
-            size={ADSENSE_CONFIG.AD_SIZES.LEADERBOARD}
-            format="horizontal"
-            className="mx-auto max-w-full"
-            responsive={true}
-          />
+        <div className="hidden md:block w-full max-w-4xl overflow-hidden">
+          <div className="w-full overflow-hidden rounded-lg">
+            <GoogleAdSense
+              slot={ADSENSE_CONFIG.AD_SLOTS.BANNER_AD}
+              size={ADSENSE_CONFIG.AD_SIZES.LEADERBOARD}
+              format="horizontal"
+              className="w-full max-w-full overflow-hidden"
+              responsive={true}
+            />
+          </div>
         </div>
       )}
       
       {/* Mobile Banner */}
       {showOnMobile && (
-        <div className="block md:hidden w-full max-w-2xl mx-2 sm:mx-4 overflow-hidden">
-          <GoogleAdSense
-            slot={ADSENSE_CONFIG.AD_SLOTS.BANNER_AD}
-            size={ADSENSE_CONFIG.AD_SIZES.MOBILE_BANNER}
-            format="horizontal"
-            className="mx-auto max-w-full"
-            responsive={true}
-          />
+        <div className="block md:hidden w-full max-w-2xl overflow-hidden">
+          <div className="w-full overflow-hidden rounded-lg">
+            <GoogleAdSense
+              slot={ADSENSE_CONFIG.AD_SLOTS.BANNER_AD}
+              size={ADSENSE_CONFIG.AD_SIZES.MOBILE_BANNER}
+              format="horizontal"
+              className="w-full max-w-full overflow-hidden"
+              responsive={true}
+            />
+          </div>
         </div>
       )}
     </div>

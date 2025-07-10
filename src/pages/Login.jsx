@@ -314,13 +314,15 @@ const Login = () => {
         </div>
         
         {/* Bottom Ad Space - Responsive and No Overflow */}
-        <div className="w-full px-3 sm:px-4 pb-2 mb-4">
-          <SmartAdManager 
-            position="footer"
-            page="login"
-            userSegment="casual"
-            className="max-w-full overflow-hidden"
-          />
+        <div className="w-full px-3 sm:px-4 pb-2 mb-4 overflow-hidden">
+          <div className="max-w-4xl mx-auto overflow-hidden">
+            <SmartAdManager 
+              position="footer"
+              page="login"
+              userSegment="casual"
+              className="w-full overflow-hidden"
+            />
+          </div>
         </div>
       </div>
     </div>

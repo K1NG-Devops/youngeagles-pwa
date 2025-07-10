@@ -223,8 +223,8 @@ const UserDropdown = ({ onLogout }) => {
                   onClick={() => handleItemClick(item.action)}
                   className={`w-full px-4 py-3 text-left flex items-center space-x-3 transition-colors ${
                     isDark 
-                        ? 'hover:bg-gray-700 text-gray-200'
-                        : 'hover:bg-gray-50 text-gray-700'
+                      ? 'hover:bg-gray-700 text-gray-200'
+                      : 'hover:bg-gray-50 text-gray-700'
                   } ${item.danger ? 'hover:bg-red-50 hover:text-red-600' : ''}`}
                 >
                   <item.icon className={`text-lg ${
@@ -278,7 +278,7 @@ const UserDropdown = ({ onLogout }) => {
                 <div className={`w-4 h-4 mt-1 rounded-full bg-white transition-transform ${
                   isDark ? 'translate-x-5' : 'translate-x-1'
                 }`} />
-            </div>
+              </div>
             </button>
           </div>
         </div>

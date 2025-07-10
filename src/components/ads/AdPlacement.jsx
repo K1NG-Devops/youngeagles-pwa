@@ -10,15 +10,15 @@ const AdPlacement = ({
 }) => {
   const getAdType = () => {
     switch (position) {
-      case 'sidebar':
-        return 'sidebar';
-      case 'footer':
-        return 'footer';
-      case 'header':
-      case 'inline':
-      case 'content':
-      default:
-        return 'banner';
+    case 'sidebar':
+      return 'sidebar';
+    case 'footer':
+      return 'footer';
+    case 'header':
+    case 'inline':
+    case 'content':
+    default:
+      return 'banner';
     }
   };
 

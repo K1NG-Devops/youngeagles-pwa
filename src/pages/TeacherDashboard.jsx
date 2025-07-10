@@ -702,7 +702,7 @@ const TeacherDashboard = () => {
                       </p>
                     </div>
                     <Link
-                      to={`/classes`}
+                      to={'/classes'}
                       className={`text-sm font-medium ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
                     >
                       View Details →

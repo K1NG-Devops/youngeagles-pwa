@@ -7,12 +7,38 @@ import viteCompression from 'vite-plugin-compression'
 export default defineConfig({
   base: '/',
   define: {
-    // Ensure environment variables are available in browser
-    'process.env': {}
+    // Properly set NODE_ENV based on actual environment, with Vercel detection
+    'process.env.NODE_ENV': JSON.stringify(
+      process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production' 
+        ? 'production' 
+        : 'development'
+    ),
+    'global': 'globalThis',
+    // Explicitly disable React development mode in production
+    '__DEV__': process.env.NODE_ENV !== 'production' && process.env.VERCEL_ENV !== 'production'
   },
   envPrefix: 'VITE_',
   plugins: [
-    react(),
+    react({
+      jsxRuntime: 'automatic',
+      jsxImportSource: 'react',
+      // Force production JSX transform regardless of environment
+      jsxDev: false,
+      // Ensure we're using the right React JSX transform
+      babel: {
+        plugins: [],
+        presets: [
+          [
+            '@babel/preset-react',
+            {
+              runtime: 'automatic',
+              development: false, // Always use production JSX transform
+              importSource: 'react'
+            }
+          ]
+        ]
+      }
+    }),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -117,27 +143,8 @@ export default defineConfig({
   },
   build: {
     sourcemap: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        // Reduced aggressiveness to prevent React internals corruption
-        passes: 1,
-        // Optimize for faster parsing
-        pure_funcs: ['console.log', 'console.warn'],
-        unsafe_arrows: false
-      },
-      mangle: {
-        // Disable safari10 mangling which can be too aggressive
-        safari10: false,
-        // Preserve React internals and common properties
-        reserved: ['isElement', 'createElement', 'Component', 'PureComponent']
-      },
-      format: {
-        comments: false
-      }
-    },
+    minify: false, // Temporarily disable minification to test if this is causing the JSX issue
+    // Keep all other optimizations
     rollupOptions: {
       output: {
         manualChunks: (id) => {

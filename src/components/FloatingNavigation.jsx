@@ -349,38 +349,38 @@ const FloatingNavigation = () => {
             const labelsOnRight = shouldShowLabelsOnRight();
             
             return (
-            <div
-              key={path}
+              <div
+                key={path}
                 className={`flex items-center space-x-3 ${labelsOnRight ? 'flex-row-reverse' : ''}`}
-              style={{
+                style={{
                   animation: `${labelsOnRight ? 'slideUpRight' : 'slideUp'} 0.3s ease-out ${index * 0.1}s both`
-              }}
-            >
+                }}
+              >
                 {/* Label - conditionally positioned */}
                 {!labelsOnRight && (
-              <div className={`px-3 py-2 rounded-lg shadow-lg ${
-                isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-              }`}>
-                <span className={`text-sm font-medium whitespace-nowrap ${
-                  isDark ? 'text-white' : 'text-gray-900'
-                }`}>
-                  {label}
-                </span>
-              </div>
+                  <div className={`px-3 py-2 rounded-lg shadow-lg ${
+                    isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                  }`}>
+                    <span className={`text-sm font-medium whitespace-nowrap ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      {label}
+                    </span>
+                  </div>
                 )}
               
-              {/* Icon Button */}
-              <NavLink
-                to={path}
-                onClick={toggleMenu}
-                className={({ isActive }) => 
-                  `nav-item-button w-12 h-12 rounded-full ${color} flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
-                    isActive ? 'ring-4 ring-white ring-opacity-40' : ''
-                  }`
-                }
-              >
-                <Icon className="text-white text-lg" />
-              </NavLink>
+                {/* Icon Button */}
+                <NavLink
+                  to={path}
+                  onClick={toggleMenu}
+                  className={({ isActive }) => 
+                    `nav-item-button w-12 h-12 rounded-full ${color} flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
+                      isActive ? 'ring-4 ring-white ring-opacity-40' : ''
+                    }`
+                  }
+                >
+                  <Icon className="text-white text-lg" />
+                </NavLink>
                 
                 {/* Label - conditionally positioned */}
                 {labelsOnRight && (
@@ -394,7 +394,7 @@ const FloatingNavigation = () => {
                     </span>
                   </div>
                 )}
-            </div>
+              </div>
             );
           })}
 
@@ -409,9 +409,9 @@ const FloatingNavigation = () => {
                   ? 'bg-blue-700 scale-110'
                   : isLongPress
                     ? 'bg-blue-700 scale-105'
-                  : isDark 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-blue-500 hover:bg-blue-600'
+                    : isDark 
+                      ? 'bg-blue-600 hover:bg-blue-700' 
+                      : 'bg-blue-500 hover:bg-blue-600'
             }`}
             style={{ pointerEvents: 'auto' }}
           >
