@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { useTheme } from '../hooks/useTheme';
+import NativeDialog from './NativeDialog';
 import { 
   FaCheckCircle, 
   FaTimesCircle, 
@@ -11,153 +11,118 @@ import {
 } from 'react-icons/fa';
 
 const StudentProgressModal = ({ student, onClose }) => {
-  const { isDark } = useTheme();
-
   if (!student) return null;
 
   const getScoreColor = (score) => {
-    if (score >= 80) return isDark ? 'text-green-400' : 'text-green-600';
-    if (score >= 60) return isDark ? 'text-yellow-400' : 'text-yellow-600';
-    return isDark ? 'text-red-400' : 'text-red-600';
+    if (score >= 80) return '#10b981'; // green
+    if (score >= 60) return '#f59e0b'; // yellow
+    return '#ef4444'; // red
   };
 
   const getScoreIcon = (score) => {
-    if (score >= 80) return <FaCheckCircle className={getScoreColor(score)} />;
-    if (score >= 60) return <FaExclamationCircle className={getScoreColor(score)} />;
-    return <FaTimesCircle className={getScoreColor(score)} />;
+    if (score >= 80) return <FaCheckCircle style={{ color: getScoreColor(score) }} />;
+    if (score >= 60) return <FaExclamationCircle style={{ color: getScoreColor(score) }} />;
+    return <FaTimesCircle style={{ color: getScoreColor(score) }} />;
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className={`w-full max-w-3xl rounded-xl shadow-lg ${
-        isDark ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Student Progress Report
-            </h2>
-            <button
-              onClick={onClose}
-              className={`rounded-lg p-2 hover:bg-opacity-10 ${
-                isDark ? 'hover:bg-gray-300' : 'hover:bg-gray-600'
-              }`}
-            >
-              <FaTimesCircle className={isDark ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
+    <NativeDialog
+      isOpen={true}
+      onClose={onClose}
+      title={`Student Progress Report - ${student.name} (${student.class})`}
+      size="large"
+      actions={[
+        {
+          label: 'Close',
+          onClick: onClose,
+          variant: 'secondary'
+        },
+        {
+          label: 'Download Report',
+          onClick: () => alert('Download functionality coming soon!'),
+          variant: 'primary'
+        }
+      ]}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Overall Progress */}
+        <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <FaChartLine style={{ marginRight: '0.5rem', color: '#3b82f6' }} />
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', margin: 0 }}>Overall Progress</h3>
           </div>
-          <p className={`mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            {student.name} - {student.class}
-          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+            <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem', margin: 0 }}>Average Score</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getScoreColor(student.averageScore), margin: 0 }}>
+                {student.averageScore}%
+              </p>
+            </div>
+            <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem', margin: 0 }}>Completed</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6', margin: 0 }}>
+                {student.completedAssignments}
+              </p>
+            </div>
+            <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem', margin: 0 }}>Pending</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b', margin: 0 }}>
+                {student.pendingAssignments}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Overall Progress */}
-          <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-            <div className="flex items-center mb-4">
-              <FaChartLine className={`mr-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-              <h3 className="text-lg font-semibold">Overall Progress</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                <p className="text-sm text-gray-500 mb-1">Average Score</p>
-                <p className={`text-2xl font-bold ${getScoreColor(student.averageScore)}`}>
-                  {student.averageScore}%
-                </p>
-              </div>
-              <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                <p className="text-sm text-gray-500 mb-1">Completed</p>
-                <p className={`text-2xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                  {student.completedAssignments}
-                </p>
-              </div>
-              <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                <p className="text-sm text-gray-500 mb-1">Pending</p>
-                <p className={`text-2xl font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                  {student.pendingAssignments}
-                </p>
-              </div>
-            </div>
+        {/* Recent Assignments */}
+        <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <FaLightbulb style={{ marginRight: '0.5rem', color: '#f59e0b' }} />
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', margin: 0 }}>Recent Assignments</h3>
           </div>
-
-          {/* Recent Assignments */}
-          <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-            <div className="flex items-center mb-4">
-              <FaLightbulb className={`mr-2 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} />
-              <h3 className="text-lg font-semibold">Recent Assignments</h3>
-            </div>
-            <div className="space-y-3">
-              {student.recentAssignments?.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{assignment.title}</h4>
-                    <div className="flex items-center">
-                      {getScoreIcon(assignment.score)}
-                      <span className={`ml-2 ${getScoreColor(assignment.score)}`}>
-                        {assignment.score}%
-                      </span>
-                    </div>
-                  </div>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {assignment.feedback}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Recommendations */}
-          <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-            <div className="flex items-center mb-4">
-              <FaComments className={`mr-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-              <h3 className="text-lg font-semibold">AI Recommendations</h3>
-            </div>
-            <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-              <ul className="space-y-2">
-                {student.recommendations?.map((rec, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                      {rec}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {student.recentAssignments?.map((assignment) => (
+              <div
+                key={assignment.id}
+                style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <h4 style={{ fontWeight: '500', margin: 0 }}>{assignment.title}</h4>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {getScoreIcon(assignment.score)}
+                    <span style={{ marginLeft: '0.5rem', color: getScoreColor(assignment.score), fontWeight: '500' }}>
+                      {assignment.score}%
                     </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                  {assignment.feedback}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-200">
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onClose}
-              className={`px-4 py-2 rounded-lg ${
-                isDark
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Close
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg ${
-                isDark
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
-              }`}
-            >
-              Download Report
-            </button>
+        {/* AI Recommendations */}
+        <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <FaComments style={{ marginRight: '0.5rem', color: '#10b981' }} />
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', margin: 0 }}>AI Recommendations</h3>
+          </div>
+          <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {student.recommendations?.map((rec, index) => (
+                <li key={index} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  <span style={{ marginRight: '0.5rem', color: '#10b981' }}>•</span>
+                  <span style={{ color: '#374151' }}>
+                    {rec}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
-    </div>
+    </NativeDialog>
   );
 };
 

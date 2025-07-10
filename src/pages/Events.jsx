@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaBell, FaUsers } from 'react-icons/fa';
 
 const Events = () => {

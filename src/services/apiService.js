@@ -158,11 +158,35 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Handle 401 - Unauthorized
+    // Handle 401 - Unauthorized with better error handling
     if (error.response?.status === 401) {
+      const errorCode = error.response?.data?.code;
+      const errorMessage = error.response?.data?.error || 'Authentication failed';
+      
+      console.log('🔒 Authentication Error:', errorCode, errorMessage);
+      
+      // Clear stored auth data
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      
+      // Show appropriate message based on error code
+      if (errorCode === 'TOKEN_EXPIRED') {
+        console.log('⏰ Token expired, redirecting to login...');
+        // You could show a toast notification here if needed
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login?expired=true';
+        }
+      } else if (errorCode === 'INVALID_TOKEN') {
+        console.log('🚫 Invalid token, redirecting to login...');
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login?invalid=true';
+        }
+      } else {
+        console.log('❌ Authentication failed, redirecting to login...');
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
     }
     
     return Promise.reject(error);
@@ -225,7 +249,13 @@ const apiService = {
       };
       return apiClient.post('/api/auth/teacher-login', teacherCreds);
     },
-    adminLogin: (credentials) => apiClient.post('/api/auth/admin-login', credentials)
+    adminLogin: (credentials) => apiClient.post('/api/auth/admin-login', credentials),
+    
+    // Registration endpoints
+    register: (userData) => apiClient.post('/api/auth/register', userData),
+    parentRegister: (userData) => apiClient.post('/api/auth/parent-register', userData),
+    teacherRegister: (userData) => apiClient.post('/api/auth/teacher-register', userData),
+    adminRegister: (userData) => apiClient.post('/api/auth/admin-register', userData)
   },
 
   // Children endpoints

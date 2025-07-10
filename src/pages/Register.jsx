@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTheme } from '../hooks/useTheme';
-import { toast } from 'react-toastify';
+import { useTheme } from '../contexts/ThemeContext';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { FaUser, FaEnvelope, FaPhone, FaHome, FaBuilding, FaLock, FaEye, FaEyeSlash, FaGraduationCap, FaMoon, FaSun, FaSpinner } from 'react-icons/fa';
 import apiService from '../services/apiService';
 
@@ -55,7 +55,7 @@ const Register = () => {
       localStorage.removeItem('accessToken');
       
       // Show success message
-      toast.success('Registration successful!');
+      nativeNotificationService.success('Registration successful!');
       setMessage('Registration successful! Please sign in.');
       setFormData({
         name: '', email: '', phone: '', address: '', workAddress: '', password: '', confirmPassword: ''
@@ -75,7 +75,7 @@ const Register = () => {
         setErrors(err.response?.data?.message || 'Registration failed');
       }
       setMessage('');
-      toast.error('Registration failed. Please try again.');
+      nativeNotificationService.error('Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

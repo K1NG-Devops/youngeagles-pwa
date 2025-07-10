@@ -16,9 +16,9 @@ import {
   FaGraduationCap,
   FaCalendarAlt
 } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
 
 const SubmitWork = () => {
@@ -61,7 +61,7 @@ const SubmitWork = () => {
         }
       } catch (error) {
         console.error('Error fetching children:', error);
-        toast.error('Failed to load children data');
+        nativeNotificationService.error('Failed to load children data');
       }
     };
 
@@ -89,7 +89,7 @@ const SubmitWork = () => {
       } catch (error) {
         console.error('Error fetching homework details:', error);
         setError(error.response?.data?.message || 'Failed to load homework details');
-        toast.error('Failed to load homework details');
+        nativeNotificationService.error('Failed to load homework details');
       } finally {
         setLoading(false);
       }
@@ -127,11 +127,11 @@ const SubmitWork = () => {
     
     const validFiles = newFiles.filter(file => {
       if (file.size > maxSize) {
-        toast.error(`File ${file.name} is too large. Maximum size is 10MB.`);
+        nativeNotificationService.error(`File ${file.name} is too large. Maximum size is 10MB.`);
         return false;
       }
       if (!allowedTypes.includes(file.type)) {
-        toast.error(`File ${file.name} is not a supported type.`);
+        nativeNotificationService.error(`File ${file.name} is not a supported type.`);
         return false;
       }
       return true;
@@ -176,17 +176,17 @@ const SubmitWork = () => {
     e.preventDefault();
     
     if (!homework?.id) {
-      toast.error('No homework selected');
+      nativeNotificationService.error('No homework selected');
       return;
     }
 
     if (!selectedChild) {
-      toast.error('Please select a child');
+      nativeNotificationService.error('Please select a child');
       return;
     }
 
     if (files.length === 0) {
-      toast.error('Please upload at least one file');
+      nativeNotificationService.error('Please upload at least one file');
       return;
     }
 
@@ -207,11 +207,11 @@ const SubmitWork = () => {
       // Submit the homework
       await apiService.homework.submit(homework.id, formData);
       
-      toast.success('Homework submitted successfully!');
+      nativeNotificationService.success('Homework submitted successfully!');
       navigate('/homework');
     } catch (error) {
       console.error('Error submitting homework:', error);
-      toast.error(error.response?.data?.message || 'Failed to submit homework');
+      nativeNotificationService.error(error.response?.data?.message || 'Failed to submit homework');
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);

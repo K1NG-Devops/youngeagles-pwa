@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaChild, FaBars, FaTimes, FaUser, FaCog, FaUsers, FaBullhorn, FaBookOpen, FaChalkboardTeacher } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const SideNavigation = () => {
   const { user, logout } = useAuth();

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import apiService from '../services/apiService';
 import {
   FaArrowLeft,
@@ -163,7 +163,7 @@ const ClassRegister = () => {
       } catch (error) {
         console.error('Error loading class data:', error);
         setError(error.response?.data?.message || 'Failed to load class data');
-        toast.error('Failed to load class data');
+        nativeNotificationService.error('Failed to load class data');
       } finally {
         setIsLoading(false);
       }
@@ -242,7 +242,7 @@ const ClassRegister = () => {
   // Save attendance using the live backend API
   const handleSaveAttendance = async () => {
     if (!teacherClass) {
-      toast.error('No class selected');
+      nativeNotificationService.error('No class selected');
       return;
     }
 
@@ -268,7 +268,7 @@ const ClassRegister = () => {
       const absentCount = Object.values(attendance).filter(status => status === 'absent').length;
       const lateCount = Object.values(attendance).filter(status => status === 'late').length;
 
-      toast.success(
+      nativeNotificationService.success(
         `Attendance saved! ${presentCount} present, ${absentCount} absent, ${lateCount} late`
       );
 
@@ -278,7 +278,7 @@ const ClassRegister = () => {
     } catch (error) {
       console.error('Error saving attendance:', error);
       const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to save attendance';
-      toast.error(errorMessage);
+      nativeNotificationService.error(errorMessage);
     } finally {
       setIsSaving(false);
     }

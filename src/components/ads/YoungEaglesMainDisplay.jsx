@@ -44,26 +44,18 @@ const YoungEaglesMainDisplay = ({
   if (!adsEnabled || disabled || !publisherId || !adSlot) {
     // Show placeholder in test mode or development
     if (testMode || import.meta.env.DEV) {
+      // Theme-aware placeholder
+      const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       return (
         <div className={`youngeagles-ad-container ${className}`} style={style}>
           <div 
-            style={{ 
-              minHeight: '200px', 
-              backgroundColor: '#f3f4f6', 
-              border: '2px dashed #d1d5db',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '8px',
-              ...style 
-            }}
+            className={`flex items-center justify-center rounded-xl border-2 ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-gray-100 border-gray-300'}`}
+            style={{ minHeight: '160px', ...style }}
           >
-            <div style={{ textAlign: 'center', color: '#6b7280' }}>
-              <p>📢 AdSense Placeholder</p>
-              <p style={{ fontSize: '12px' }}>Ad will appear here when live</p>
-              {!adsEnabled && <p style={{ fontSize: '10px' }}>Ads disabled in config</p>}
-              {!publisherId && <p style={{ fontSize: '10px' }}>Publisher ID missing</p>}
-              {!adSlot && <p style={{ fontSize: '10px' }}>Ad slot missing</p>}
+            <div className={`text-center w-full ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+              <p className="text-lg font-bold mb-1">📢 Ad Placeholder</p>
+              <p className="text-xs mb-1">Your ad will appear here when live</p>
+              <p className="text-xs italic opacity-70">(AdSense approval pending)</p>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaRobot, FaUser, FaCog, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const TopNavigation = () => {
   const { user, logout } = useAuth();

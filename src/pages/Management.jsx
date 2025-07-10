@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaCreditCard, FaUpload, FaFileInvoice, FaHistory, FaShieldAlt, FaStar, FaCrown, FaPaperPlane, FaEnvelope, FaReceipt, FaUsers } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -94,7 +94,7 @@ const Management = () => {
     const file = event.target.files[0];
     if (file) {
       // TODO: Implement actual file upload to server
-      toast.success(`Payment proof "${file.name}" uploaded successfully!`);
+      nativeNotificationService.success(`Payment proof "${file.name}" uploaded successfully!`);
     }
   };
 
@@ -108,7 +108,7 @@ const Management = () => {
       setAllUsers(response.data.users || []);
     } catch (error) {
       console.error('Error loading users:', error);
-      toast.error('Failed to load users');
+      nativeNotificationService.error('Failed to load users');
     } finally {
       setIsLoadingUsers(false);
     }
@@ -158,12 +158,12 @@ const Management = () => {
   // Send invoice/receipt
   const sendInvoiceReceipt = async () => {
     if (!invoiceData.recipients.length) {
-      toast.error('Please select at least one recipient');
+      nativeNotificationService.error('Please select at least one recipient');
       return;
     }
 
     if (!invoiceData.subject.trim()) {
-      toast.error('Please enter a subject');
+      nativeNotificationService.error('Please enter a subject');
       return;
     }
 
@@ -180,7 +180,7 @@ const Management = () => {
       // TODO: Replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
       
-      toast.success(`${invoiceData.invoiceType === 'invoice' ? 'Invoice' : 'Receipt'} sent successfully to ${invoiceData.recipients.length} recipient(s)!`);
+      nativeNotificationService.success(`${invoiceData.invoiceType === 'invoice' ? 'Invoice' : 'Receipt'} sent successfully to ${invoiceData.recipients.length} recipient(s)!`);
       
       // Reset form
       setInvoiceData({
@@ -195,7 +195,7 @@ const Management = () => {
       
     } catch (error) {
       console.error('Error sending invoice/receipt:', error);
-      toast.error('Failed to send invoice/receipt');
+      nativeNotificationService.error('Failed to send invoice/receipt');
     } finally {
       setIsSendingInvoice(false);
     }

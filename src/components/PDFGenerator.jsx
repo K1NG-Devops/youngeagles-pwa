@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useTheme } from '../hooks/useTheme';
-import { toast } from 'react-toastify';
+import { useTheme } from '../contexts/ThemeContext';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { 
   generateWorksheetPDF, 
   generateProgressReportPDF, 
@@ -133,13 +133,13 @@ const PDFGenerator = () => {
     try {
       const success = generateWorksheetPDF(sampleWorksheetData, 'sample_worksheet.pdf');
       if (success) {
-        toast.success('📄 Sample worksheet PDF generated successfully!');
+        nativeNotificationService.success('📄 Sample worksheet PDF generated successfully!');
       } else {
-        toast.error('Failed to generate worksheet PDF');
+        nativeNotificationService.error('Failed to generate worksheet PDF');
       }
     } catch (error) {
       console.error('Error generating worksheet:', error);
-      toast.error('Error generating worksheet PDF');
+      nativeNotificationService.error('Error generating worksheet PDF');
     } finally {
       setIsGenerating(false);
     }
@@ -150,13 +150,13 @@ const PDFGenerator = () => {
     try {
       const success = generateProgressReportPDF(sampleStudentData, 'sample_progress_report.pdf');
       if (success) {
-        toast.success('📊 Sample progress report PDF generated successfully!');
+        nativeNotificationService.success('📊 Sample progress report PDF generated successfully!');
       } else {
-        toast.error('Failed to generate progress report PDF');
+        nativeNotificationService.error('Failed to generate progress report PDF');
       }
     } catch (error) {
       console.error('Error generating progress report:', error);
-      toast.error('Error generating progress report PDF');
+      nativeNotificationService.error('Error generating progress report PDF');
     } finally {
       setIsGenerating(false);
     }
@@ -167,13 +167,13 @@ const PDFGenerator = () => {
     try {
       const success = generateCustomPDF(sampleCustomContent, 'sample_custom_document.pdf');
       if (success) {
-        toast.success('📄 Custom document PDF generated successfully!');
+        nativeNotificationService.success('📄 Custom document PDF generated successfully!');
       } else {
-        toast.error('Failed to generate custom PDF');
+        nativeNotificationService.error('Failed to generate custom PDF');
       }
     } catch (error) {
       console.error('Error generating custom document:', error);
-      toast.error('Error generating custom PDF');
+      nativeNotificationService.error('Error generating custom PDF');
     } finally {
       setIsGenerating(false);
     }

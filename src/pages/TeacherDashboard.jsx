@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import {
   FaBook,
   FaUsers,
@@ -30,7 +30,7 @@ import { YoungEaglesMainDisplay } from '../components/ads';
 
 // Hooks and Services
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
 const TeacherDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -156,7 +156,7 @@ const TeacherDashboard = () => {
     try {
       const response = await apiService.homework.create(homeworkData);
       const homeworkId = response?.data?.homeworkId || response?.data?.homework?.id;
-      toast.success(`Lesson "${homeworkData.title}" assigned successfully!`);
+      nativeNotificationService.success(`Lesson "${homeworkData.title}" assigned successfully!`);
 
       // Refresh stats
       setStats(prev => ({
@@ -171,7 +171,7 @@ const TeacherDashboard = () => {
       }
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || 'Failed to assign homework';
-      toast.error(errorMessage);
+      nativeNotificationService.error(errorMessage);
       console.error('Error assigning homework:', error);
       throw error; // Re-throw so calling component can still handle if needed
     }
@@ -204,7 +204,7 @@ const TeacherDashboard = () => {
         
       } catch (error) {
         console.error('Error refreshing homework data:', error);
-        toast.error('Failed to refresh homework data');
+        nativeNotificationService.error('Failed to refresh homework data');
       } finally {
         setIsLoading(false);
       }
@@ -222,17 +222,17 @@ const TeacherDashboard = () => {
       // const response = await apiService.ai.startGrading(submissions);
       // if (response.data.success) {
       //   setGradingQueue(response.data.queue || []);
-      //   toast.success('AI grading has started!');
+      //   nativeNotificationService.success('AI grading has started!');
       // }
       
       // Mock response for now
-      toast.success('AI grading feature coming soon!');
+      nativeNotificationService.success('AI grading feature coming soon!');
       setTimeout(() => {
         setAiGradingStatus('completed');
       }, 3000);
     } catch (error) {
       console.error('Error starting AI grading:', error);
-      toast.error('Failed to start AI grading');
+      nativeNotificationService.error('Failed to start AI grading');
       setAiGradingStatus('idle');
     }
   };
@@ -253,10 +253,10 @@ const TeacherDashboard = () => {
       // }
       
       // Mock response for now
-      toast.info('Grading results feature coming soon!');
+      nativeNotificationService.info('Grading results feature coming soon!');
     } catch (error) {
       console.error('Error viewing grading results:', error);
-      toast.error('Failed to load grading results');
+      nativeNotificationService.error('Failed to load grading results');
     }
   };
 
@@ -266,14 +266,14 @@ const TeacherDashboard = () => {
       // TODO: Implement this endpoint in the backend
       // const response = await apiService.communication.shareWithParent(studentId, gradedWork);
       // if (response.data.success) {
-      //   toast.success('Successfully shared with parent!');
+      //   nativeNotificationService.success('Successfully shared with parent!');
       // }
       
       // Mock response for now
-      toast.success('Parent communication feature coming soon!');
+      nativeNotificationService.success('Parent communication feature coming soon!');
     } catch (error) {
       console.error('Error sharing with parent:', error);
-      toast.error('Failed to share with parent');
+      nativeNotificationService.error('Failed to share with parent');
     }
   };
 
@@ -282,16 +282,16 @@ const TeacherDashboard = () => {
       // TODO: Implement this endpoint in the backend
       // const response = await apiService.reports.generateProgress(studentId);
       // if (response.data.success) {
-      //   toast.success('Progress report generated successfully!');
+      //   nativeNotificationService.success('Progress report generated successfully!');
       //   return response.data.report;
       // }
       
       // Mock response for now
-      toast.success('Progress report feature coming soon!');
+      nativeNotificationService.success('Progress report feature coming soon!');
       return null;
     } catch (error) {
       console.error('Error generating progress report:', error);
-      toast.error('Failed to generate progress report');
+      nativeNotificationService.error('Failed to generate progress report');
       return null;
     }
   };
@@ -381,14 +381,14 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen w-full box-border overflow-x-hidden ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
       
       {/* Welcome Section */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-20 md:pb-28">
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 space-y-6 pb-28 md:pb-32 w-full box-border overflow-x-hidden">
 
-        <div className="bg-gradient-to-r text-center rounded-xl from-green-500 to-blue-600 text-white mt-20">
-          <div className="max-w-6xl mx-auto py-6 px-4">
+        <div className="bg-gradient-to-r text-center rounded-xl from-green-500 to-blue-600 text-white mt-4 sm:mt-6 w-full box-border">
+          <div className="max-w-6xl mx-auto py-6 px-2 sm:px-4 w-full box-border">
             <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1">Welcome back, {user?.name}!</h2>
             <p className="text-green-100 text-xs sm:text-sm">Manage your classes and create engaging lessons</p>
             {/* Display teacher's class name if they have one */}
@@ -408,7 +408,7 @@ const TeacherDashboard = () => {
         
         {/* AI Grading Status Banner */}
         {aiGradingStatus === 'processing' && (
-          <div className={`p-4 rounded-lg border-l-4 border-blue-500 ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+          <div className={`p-4 rounded-lg border-l-4 border-blue-500 ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'} w-full box-border`}>
             <div className="flex items-center">
               <FaSpinner className="animate-spin text-blue-500 mr-3" />
               <div>
@@ -422,7 +422,7 @@ const TeacherDashboard = () => {
         )}
 
         {aiGradingStatus === 'completed' && (
-          <div className={`p-4 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+          <div className={`p-4 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'} w-full box-border`}>
             <div className="flex items-center">
               <FaCheckCircle className="text-green-500 mr-3" />
               <div>
@@ -436,7 +436,7 @@ const TeacherDashboard = () => {
         )}
         
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full box-border">
           <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
             <div className="flex items-center">
               <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-900/20' : 'bg-blue-100'}`}>
@@ -489,8 +489,8 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Lesson Library Summary */}
-        <div className={`p-6 rounded-xl shadow-sm border mb-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-          <div className="flex items-center justify-between mb-4">
+        <div className={`p-4 sm:p-6 rounded-xl shadow-sm border mb-6 w-full box-border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-2">
             <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>📚 CAPS-Aligned Lesson Library</h3>
             <button
               onClick={() => setShowLessonLibrary(true)}
@@ -499,7 +499,7 @@ const TeacherDashboard = () => {
               View All →
             </button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full box-border">
             <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
               <div className={`text-2xl font-bold ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>16</div>
               <div className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Total Lessons</div>
@@ -517,7 +517,7 @@ const TeacherDashboard = () => {
               <div className={`text-xs ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>Ready-Made</div>
             </div>
           </div>
-          <div className={`mt-4 p-3 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+          <div className={`mt-4 p-3 rounded-lg border-l-4 border-green-500 ${isDark ? 'bg-green-900/20' : 'bg-green-50'} w-full box-border`}>
             <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-800'}`}>
               ✅ All lessons include: step-by-step instructions, downloadable worksheets, assessment tools, and parent guidance
             </p>
@@ -525,7 +525,7 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 w-full box-border mb-4">
           {/* Create Homework Assignment */}
           <button
             onClick={() => setShowHomeworkAssignment(true)}
@@ -619,7 +619,7 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Enhanced Feature Cards Grid - Teacher Specific */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full box-border mb-4">
           {/* Mark Register */}
           <Link
             to="/class-register"
@@ -682,7 +682,7 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Class Overview */}
-        <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+        <div className={`p-4 rounded-xl shadow-sm border w-full box-border mb-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
           <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Classes</h3>
           
           {classes.length === 0 ? (

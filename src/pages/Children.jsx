@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { FaChild, FaCalendarAlt, FaUser, FaArrowLeft, FaPhone, FaPlus, FaLock } from 'react-icons/fa';
@@ -37,7 +37,7 @@ const Children = () => {
         setChildren(response.data.children || []);
       } catch (error) {
         console.error('Error fetching children:', error);
-        toast.error('Failed to load children data');
+        nativeNotificationService.error('Failed to load children data');
       } finally {
         setIsLoading(false);
       }
@@ -76,7 +76,7 @@ const Children = () => {
               <button 
                 onClick={() => {
                   if (checkChildLimit()) {
-                    toast.info('Add child feature coming soon!');
+                    nativeNotificationService.info('Add child feature coming soon!');
                   }
                 }}
                 className={`mt-4 px-6 py-3 rounded-lg font-medium transition-colors ${
@@ -130,7 +130,7 @@ const Children = () => {
                 <button 
                   onClick={() => {
                     if (checkChildLimit()) {
-                      toast.info('Add child feature coming soon!');
+                      nativeNotificationService.info('Add child feature coming soon!');
                     }
                   }}
                   disabled={!canAddChild()}
@@ -229,7 +229,7 @@ const Children = () => {
                   className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                     isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
-                  onClick={() => toast.info('View details feature coming soon!')}
+                  onClick={() => nativeNotificationService.info('View details feature coming soon!')}
                 >
                   View Details
                 </button>
@@ -238,7 +238,7 @@ const Children = () => {
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                     }`}
-                    onClick={() => toast.info('Edit feature coming soon!')}
+                    onClick={() => nativeNotificationService.info('Edit feature coming soon!')}
                   >
                     Edit
                   </button>
@@ -254,7 +254,7 @@ const Children = () => {
             <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Quick Actions</h3>
             <div className="flex flex-wrap gap-3">
               <button 
-                onClick={() => toast.info('Add child feature coming soon!')}
+                onClick={() => nativeNotificationService.info('Add child feature coming soon!')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   isDark ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'
                 }`}
@@ -262,7 +262,7 @@ const Children = () => {
                 + Add Child
               </button>
               <button 
-                onClick={() => toast.info('Bulk import feature coming soon!')}
+                onClick={() => nativeNotificationService.info('Bulk import feature coming soon!')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   isDark ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'
                 }`}
@@ -270,7 +270,7 @@ const Children = () => {
                 Import Children
               </button>
               <button 
-                onClick={() => toast.info('Export feature coming soon!')}
+                onClick={() => nativeNotificationService.info('Export feature coming soon!')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   isDark ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-yellow-500 hover:bg-yellow-600 text-white'
                 }`}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FaSpinner, FaCheckCircle, FaExclamationCircle, FaRobot, FaFileAlt } from 'react-icons/fa';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const AIGradingPanel = ({
   pendingSubmissions,

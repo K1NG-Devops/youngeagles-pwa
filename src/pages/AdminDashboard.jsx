@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { 
   FaUsers, 
   FaChalkboardTeacher, 
@@ -26,7 +26,7 @@ import {
   FaUserShield
 } from 'react-icons/fa';
 import Header from '../components/Header';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -128,7 +128,7 @@ const AdminDashboard = () => {
         
       } catch (error) {
         console.error('Error fetching admin data:', error);
-        toast.error('Failed to load admin dashboard data');
+        nativeNotificationService.error('Failed to load admin dashboard data');
       } finally {
         setIsLoading(false);
       }
@@ -162,7 +162,7 @@ const AdminDashboard = () => {
       navigate('/management');
       break;
     case 'view_analytics':
-      toast.info('Advanced analytics coming soon!');
+      nativeNotificationService.info('Advanced analytics coming soon!');
       break;
     case 'system_settings':
       navigate('/settings');

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import EnhancedHomeworkDetail from '../components/EnhancedHomeworkDetail';
 import { FaSpinner, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 
@@ -33,7 +33,7 @@ const HomeworkDetails = () => {
       } catch (error) {
         console.error('Error fetching homework details:', error);
         setError(error.response?.data?.message || error.message || 'Failed to load homework details');
-        toast.error('Failed to load homework details');
+        nativeNotificationService.error('Failed to load homework details');
       } finally {
         setLoading(false);
       }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import {
   FaBook,
   FaUsers,
@@ -21,7 +21,7 @@ import {
   FaLock,
   FaUnlock
 } from 'react-icons/fa';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/apiService';
 
@@ -164,7 +164,7 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
         
       } catch (error) {
         console.error('Error loading teacher data:', error);
-        toast.error('Failed to load class data');
+        nativeNotificationService.error('Failed to load class data');
       } finally {
         setIsLoading(false);
       }
@@ -220,19 +220,19 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
   // Validate form
   const validateForm = () => {
     if (!formData.selectedAssignment) {
-      toast.error('Please select an assignment from the homework library');
+      nativeNotificationService.error('Please select an assignment from the homework library');
       return false;
     }
     if (!formData.dueDate) {
-      toast.error('Due date is required');
+      nativeNotificationService.error('Due date is required');
       return false;
     }
     if (formData.assignmentType === 'individual' && formData.selectedChildren.length === 0) {
-      toast.error('Please select at least one student for individual assignment');
+      nativeNotificationService.error('Please select at least one student for individual assignment');
       return false;
     }
     if (formData.assignmentType === 'class' && !formData.selectedClass) {
-      toast.error('Please select a class');
+      nativeNotificationService.error('Please select a class');
       return false;
     }
     return true;
@@ -272,7 +272,7 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
       const response = await apiService.homework.create(homeworkData);
       
       if (response.data.success) {
-        toast.success(`Homework "${formData.title}" assigned successfully!`);
+        nativeNotificationService.success(`Homework "${formData.title}" assigned successfully!`);
         
         // Call parent callback
         if (onHomeworkCreated) {
@@ -288,7 +288,7 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
     } catch (error) {
       console.error('Error creating homework:', error);
       const errorMessage = error?.response?.data?.message || error.message || 'Failed to create homework';
-      toast.error(errorMessage);
+      nativeNotificationService.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

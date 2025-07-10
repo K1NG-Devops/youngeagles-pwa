@@ -11,10 +11,6 @@ html, body {
 
 @import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Custom animations for confetti */
 @keyframes confetti-fall {
   0% {

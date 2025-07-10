@@ -13,9 +13,9 @@ import {
   FaTrophy,
   FaSmile
 } from 'react-icons/fa';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import apiService from '../services/apiService';
 
 const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
@@ -317,9 +317,9 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
     
     if (isCorrect) {
       setScore(prev => prev + 1);
-      toast.success('Correct! Well done! 🎉');
+      nativeNotificationService.success('Correct! Well done! 🎉');
     } else {
-      toast.error(`Not quite right. The answer is ${activity.correctAnswer} 😊`);
+      nativeNotificationService.error(`Not quite right. The answer is ${activity.correctAnswer} 😊`);
     }
     
     // Auto advance after 2 seconds
@@ -381,7 +381,7 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
       // Verify child_id is not null/undefined
       if (!selectedChildId) {
         console.error('❌ selectedChildId is missing:', selectedChildId);
-        toast.error('Child ID is missing. Please refresh the page and try again.');
+        nativeNotificationService.error('Child ID is missing. Please refresh the page and try again.');
         return;
       }
       
@@ -395,7 +395,7 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
           submitted_at: new Date().toISOString(),
           answers_data: JSON.stringify(results.answers)
         });
-        toast.success(`🎉 Homework submitted automatically! Score: ${results.percentage}%`);
+        nativeNotificationService.success(`🎉 Homework submitted automatically! Score: ${results.percentage}%`);
         console.log('✅ Interactive homework auto-submitted successfully:', response.data);
       } else {
         throw new Error(response.data.message || 'Failed to submit homework');
@@ -409,7 +409,7 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
       // because the student already completed the activities
       setHasBeenSubmitted(true);
       
-      toast.error('Homework completed but submission failed. Please contact your teacher.');
+      nativeNotificationService.error('Homework completed but submission failed. Please contact your teacher.');
     } finally {
       setIsSubmitting(false);
     }

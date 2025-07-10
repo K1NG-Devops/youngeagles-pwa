@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FaCheckCircle, FaSpinner, FaCrown, FaArrowRight } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -53,7 +53,7 @@ const PaymentSuccess = () => {
         if (planId && plans[planId]) {
           const result = await upgradePlan(planId);
           if (result.success) {
-            toast.success(`Successfully upgraded to ${plans[planId].name} plan!`);
+            nativeNotificationService.success(`Successfully upgraded to ${plans[planId].name} plan!`);
           } else {
             throw new Error('Failed to update subscription');
           }
@@ -68,7 +68,7 @@ const PaymentSuccess = () => {
 
       } catch (error) {
         console.error('Payment processing error:', error);
-        toast.error(`Payment processing failed: ${error.message}`);
+        nativeNotificationService.error(`Payment processing failed: ${error.message}`);
         setIsProcessing(false);
         
         // Redirect to management page on error

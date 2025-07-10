@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { generateWorksheetPDF } from '../utils/pdfGenerator';
 import { 
   FaPlay, 
@@ -459,7 +459,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
 
   const handleDownload = async (filename) => {
     if (downloadingFiles.has(filename)) {
-      toast.info('Already downloading this file, please wait...');
+      nativeNotificationService.info('Already downloading this file, please wait...');
       return;
     }
 
@@ -484,7 +484,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
       setDownloadProgress(prev => ({ ...prev, [filename]: 100 }));
       
       if (success) {
-        toast.success(
+        nativeNotificationService.success(
           <div className="flex items-center gap-2">
             <FaCheckCircle className="text-green-500" />
             <span>📄 {worksheetData.title} downloaded successfully!</span>
@@ -495,7 +495,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
       }
     } catch (error) {
       console.error('Error downloading worksheet:', error);
-      toast.error(
+      nativeNotificationService.error(
         <div className="flex items-center gap-2">
           <FaExclamationTriangle className="text-red-500" />
           <span>Failed to download worksheet. Please try again.</span>
@@ -524,7 +524,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
       const totalFiles = lesson.worksheets.length;
       let completed = 0;
       
-      toast.info(`Starting download of ${totalFiles} materials for "${lesson.title}"`);
+      nativeNotificationService.info(`Starting download of ${totalFiles} materials for "${lesson.title}"`);
       
       for (const worksheet of lesson.worksheets) {
         try {
@@ -532,7 +532,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
           completed++;
           
           if (completed === totalFiles) {
-            toast.success(
+            nativeNotificationService.success(
               <div className="flex items-center gap-2">
                 <FaCheckCircle className="text-green-500" />
                 <span>All materials downloaded successfully!</span>
@@ -541,7 +541,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
           }
         } catch (error) {
           console.error(`Failed to download ${worksheet}:`, error);
-          toast.error(`Failed to download ${worksheet}`);
+          nativeNotificationService.error(`Failed to download ${worksheet}`);
         }
         
         if (completed < totalFiles) {
@@ -549,7 +549,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
         }
       }
     } else {
-      toast.info('No downloadable materials available for this lesson.');
+      nativeNotificationService.info('No downloadable materials available for this lesson.');
     }
   };
 
@@ -557,7 +557,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
     setPreviewLesson(lesson);
     setCurrentPreviewStep(0);
     setShowPreviewModal(true);
-    toast.success(`Starting preview of "${lesson.title}"`);
+    nativeNotificationService.success(`Starting preview of "${lesson.title}"`);
   };
 
   const handleNextStep = () => {
@@ -608,20 +608,20 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
 
     try {
       setGeneratingPDF(true);
-      toast.info('Testing PDF generation...');
+      nativeNotificationService.info('Testing PDF generation...');
       
       const success = await generateWorksheetPDF(testData, 'test-worksheet.pdf');
       
       if (success) {
-        toast.success('✅ PDF generation test passed! System is working correctly.');
+        nativeNotificationService.success('✅ PDF generation test passed! System is working correctly.');
         return true;
       } else {
-        toast.error('❌ PDF generation test failed. Please check system configuration.');
+        nativeNotificationService.error('❌ PDF generation test failed. Please check system configuration.');
         return false;
       }
     } catch (error) {
       console.error('PDF generation test error:', error);
-      toast.error('❌ PDF generation test encountered an error: ' + error.message);
+      nativeNotificationService.error('❌ PDF generation test encountered an error: ' + error.message);
       return false;
     } finally {
       setGeneratingPDF(false);
@@ -639,7 +639,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
       return true;
     } catch (error) {
       console.error('PDF dependencies check failed:', error);
-      toast.error('PDF generation is not available. Please contact support.');
+      nativeNotificationService.error('PDF generation is not available. Please contact support.');
       return false;
     }
   };
@@ -669,12 +669,12 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
   const handleAssignLesson = async () => {
     // Validation
     if (selectedClasses.length === 0) {
-      toast.error('Please select at least one class');
+      nativeNotificationService.error('Please select at least one class');
       return;
     }
 
     if (!assignmentDetails.dueDate) {
-      toast.error('Please set a due date');
+      nativeNotificationService.error('Please set a due date');
       return;
     }
 
@@ -682,7 +682,7 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
     const today = new Date();
     const dueDate = new Date(assignmentDetails.dueDate);
     if (dueDate <= today) {
-      toast.error('Due date must be in the future');
+      nativeNotificationService.error('Due date must be in the future');
       return;
     }
 
@@ -707,13 +707,13 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
         await apiService.homework.create(homeworkData);
       }
 
-      toast.success(`✅ Lesson "${selectedLesson.title}" assigned successfully!`);
+      nativeNotificationService.success(`✅ Lesson "${selectedLesson.title}" assigned successfully!`);
       setShowAssignModal(false);
       setSelectedClasses([]);
       setAssignmentDetails({ dueDate: '', instructions: '', points: 10 });
     } catch (error) {
       console.error('Error assigning lesson:', error);
-      toast.error('Failed to assign lesson. Please try again.');
+      nativeNotificationService.error('Failed to assign lesson. Please try again.');
     }
   };
 
@@ -1356,16 +1356,17 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
   );
 
   const LessonDetail = ({ lesson, onClose }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className={`rounded-2xl max-w-4xl max-h-[90vh] overflow-y-auto p-8 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 xs:p-4 z-50">
+      <div className={`rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-2 xs:p-4 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex justify-between items-start mb-6">
           <div>
             <div className="text-6xl mb-4">{lesson.image}</div>
             <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>{lesson.title}</h2>
-            <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{lesson.description}</p>
+            <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} break-words`}>{lesson.description}</p>
           </div>
           <button 
             onClick={onClose}
+            aria-label="Close lesson details"
             className={`text-2xl ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}
           >
             <FaTimes />
@@ -2106,7 +2107,7 @@ Young Eagles Learning Platform
   };
 
   return (
-    <div className={`min-h-screen p-6 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50'}`}>
+    <div className={`min-h-screen p-2 xs:p-6 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50'}`}>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -2171,7 +2172,7 @@ Young Eagles Learning Platform
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-6">
           {filteredLessons.map(lesson => (
             <LessonCard key={lesson.id} lesson={lesson} />
           ))}

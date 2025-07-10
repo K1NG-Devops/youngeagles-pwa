@@ -10,10 +10,10 @@ import {
   FaUpload,
   FaArrowLeft
 } from 'react-icons/fa';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import InteractiveHomework from './InteractiveHomework';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 
 const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
   const { isDark } = useTheme();
@@ -46,7 +46,7 @@ const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
   const handleInteractiveComplete = (results) => {
     setInteractiveComplete(true);
     setInteractiveResults(results);
-    toast.success(`Interactive activities completed! Score: ${results.score}/${results.totalQuestions}`);
+    nativeNotificationService.success(`Interactive activities completed! Score: ${results.score}/${results.totalQuestions}`);
   };
 
   const handleSubmitWork = () => {

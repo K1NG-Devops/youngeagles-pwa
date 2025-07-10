@@ -4,7 +4,7 @@ import { FaCreditCard, FaUniversity, FaMobileAlt, FaLock, FaCheckCircle, FaArrow
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import payfastService from '../services/payfastService';
 
 const Checkout = () => {
@@ -137,31 +137,31 @@ const Checkout = () => {
     if (paymentMethod === 'payfast') {
       const { firstName, lastName, email } = formData;
       if (!firstName || !lastName || !email) {
-        toast.error('Please fill in all required details');
+        nativeNotificationService.error('Please fill in all required details');
         return false;
       }
       if (!email.includes('@')) {
-        toast.error('Please enter a valid email address');
+        nativeNotificationService.error('Please enter a valid email address');
         return false;
       }
     } else if (paymentMethod === 'card') {
       const { cardNumber, expiryDate, cvv, cardholderName } = formData;
       if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
-        toast.error('Please fill in all card details');
+        nativeNotificationService.error('Please fill in all card details');
         return false;
       }
       if (cardNumber.replace(/\s/g, '').length < 16) {
-        toast.error('Please enter a valid card number');
+        nativeNotificationService.error('Please enter a valid card number');
         return false;
       }
       if (cvv.length < 3) {
-        toast.error('Please enter a valid CVV');
+        nativeNotificationService.error('Please enter a valid CVV');
         return false;
       }
     } else if (paymentMethod === 'eft') {
       const { bankName, accountNumber, branchCode } = formData;
       if (!bankName || !accountNumber || !branchCode) {
-        toast.error('Please fill in all bank details');
+        nativeNotificationService.error('Please fill in all bank details');
         return false;
       }
     }
@@ -212,7 +212,7 @@ const Checkout = () => {
         const result = await upgradePlan(planId);
         
         if (result.success) {
-          toast.success('Payment successful! Welcome to your new plan!');
+          nativeNotificationService.success('Payment successful! Welcome to your new plan!');
           navigate('/management?upgraded=true');
         } else {
           throw new Error(result.error?.message || 'Payment failed');
@@ -221,7 +221,7 @@ const Checkout = () => {
       
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error(`Payment failed: ${error.message}`);
+      nativeNotificationService.error(`Payment failed: ${error.message}`);
       setLoading(false);
     }
   };

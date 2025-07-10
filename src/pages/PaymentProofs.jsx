@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { 
   FaUpload, 
   FaSpinner, 
@@ -59,7 +59,7 @@ const PaymentProofs = () => {
         }
       } catch (error) {
         console.error('Error loading data:', error);
-        toast.error('Failed to load data');
+        nativeNotificationService.error('Failed to load data');
       } finally {
         setIsLoading(false);
       }
@@ -83,7 +83,7 @@ const PaymentProofs = () => {
     e.preventDefault();
     
     if (!formData.proof_file) {
-      toast.error('Please select a file to upload');
+      nativeNotificationService.error('Please select a file to upload');
       return;
     }
 
@@ -97,7 +97,7 @@ const PaymentProofs = () => {
       });
 
       await apiService.payments.submitProof(formDataToSend);
-      toast.success('Payment proof submitted successfully!');
+      nativeNotificationService.success('Payment proof submitted successfully!');
       
       setFormData({
         child_id: '',
@@ -123,7 +123,7 @@ const PaymentProofs = () => {
       }
     } catch (error) {
       console.error('Error submitting payment proof:', error);
-      toast.error(error.response?.data?.message || 'Failed to submit payment proof');
+      nativeNotificationService.error(error.response?.data?.message || 'Failed to submit payment proof');
     } finally {
       setIsSubmitting(false);
     }
@@ -167,7 +167,7 @@ const PaymentProofs = () => {
     try {
       setDeletingProofId(proofId);
       await apiService.payments.deleteRejectedProof(proofId);
-      toast.success('Rejected payment proof deleted successfully');
+      nativeNotificationService.success('Rejected payment proof deleted successfully');
       
       // Reload proofs and summary
       const proofsResponse = await apiService.payments.getProofs();
@@ -177,7 +177,7 @@ const PaymentProofs = () => {
       setPaymentSummary(summaryResponse.data.summary);
     } catch (error) {
       console.error('Error deleting rejected proof:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete rejected proof');
+      nativeNotificationService.error(error.response?.data?.message || 'Failed to delete rejected proof');
     } finally {
       setDeletingProofId(null);
     }

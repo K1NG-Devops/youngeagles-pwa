@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/apiService';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { FaBell, FaEnvelope, FaExclamationCircle, FaTasks, FaClock, FaCheckCircle, FaUser } from 'react-icons/fa';
 
 const Notifications = () => {

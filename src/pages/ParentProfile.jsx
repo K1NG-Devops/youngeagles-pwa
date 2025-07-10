@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { 
   FaUser, 
   FaChild, 
@@ -11,11 +11,14 @@ import {
   FaEdit,
   FaGraduationCap,
   FaCalendarAlt,
-  FaIdCard
+  FaIdCard,
+  FaArrowLeft
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const ParentProfile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [children, setChildren] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [profileData] = useState({
@@ -79,7 +82,14 @@ const ParentProfile = () => {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-4 flex items-center text-sm font-medium rounded-lg px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <FaArrowLeft className="mr-2" />
+          Back
+        </button>
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -98,7 +108,7 @@ const ParentProfile = () => {
               Account Information
             </h2>
             <button 
-              onClick={() => toast.info('Edit profile feature coming soon!')}
+              onClick={() => nativeNotificationService.info('Edit profile feature coming soon!')}
               className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
             >
               <FaEdit className="mr-2" />
@@ -167,7 +177,7 @@ const ParentProfile = () => {
                       {child.first_name} {child.last_name}
                     </h3>
                     <button 
-                      onClick={() => toast.info('Child details feature coming soon!')}
+                      onClick={() => nativeNotificationService.info('Child details feature coming soon!')}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                     >
                       View Details
@@ -225,7 +235,7 @@ const ParentProfile = () => {
             </button>
             
             <button 
-              onClick={() => toast.info('Communication feature coming soon!')}
+              onClick={() => nativeNotificationService.info('Communication feature coming soon!')}
               className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
             >
               <FaEnvelope className="mr-2" />
@@ -233,7 +243,7 @@ const ParentProfile = () => {
             </button>
             
             <button 
-              onClick={() => toast.info('Reports feature coming soon!')}
+              onClick={() => nativeNotificationService.info('Reports feature coming soon!')}
               className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
             >
               <FaUser className="mr-2" />

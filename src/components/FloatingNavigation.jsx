@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { NavLink } from 'react-router-dom';
-import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaChild, FaBars, FaTimes, FaGripVertical, FaUsers, FaBullhorn, FaBookOpen, FaChalkboardTeacher } from 'react-icons/fa';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaChild, FaBars, FaTimes, FaGripVertical, FaUsers, FaBullhorn, FaBookOpen, FaChalkboardTeacher, FaUpload } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 const FloatingNavigation = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState(() => {
@@ -21,7 +22,9 @@ const FloatingNavigation = () => {
   const [isClickDetected, setIsClickDetected] = useState(false);
   const [dragDelayTimer, setDragDelayTimer] = useState(null);
   const [hasActuallyMoved, setHasActuallyMoved] = useState(false);
-  const dragDelayMs = 50; // 50ms delay to differentiate between click and drag
+  const [isLongPress, setIsLongPress] = useState(false);
+  const [hasMovedBeyondThreshold, setHasMovedBeyondThreshold] = useState(false);
+  const dragDelayMs = 200; // 200ms delay for long press detection (reduced for better UX)
   const dragThreshold = 5; // 5px movement threshold
   
   // Define navigation items based on user role
@@ -34,7 +37,7 @@ const FloatingNavigation = () => {
       return [
         ...baseItems,
         { path: '/children', icon: FaChild, label: 'My Children', color: 'bg-green-500' },
-        { path: '/activities', icon: FaGraduationCap, label: 'Activities', color: 'bg-purple-500' },
+        { path: '/payment-proofs', icon: FaUpload, label: 'Submit POP', color: 'bg-yellow-500' },
         { path: '/events', icon: FaCalendarAlt, label: 'Events', color: 'bg-orange-500' },
         { path: '/notifications', icon: FaBell, label: 'Announcements', color: 'bg-red-500' }
       ];
@@ -61,6 +64,13 @@ const FloatingNavigation = () => {
 
   const navItems = getNavItems();
 
+  // Check if labels should appear on the right side (when button is on the left side of screen)
+  const shouldShowLabelsOnRight = () => {
+    const viewportWidth = window.innerWidth;
+    const buttonRightPosition = viewportWidth - position.right;
+    return buttonRightPosition < viewportWidth * 0.4; // If button is in left 40% of screen
+  };
+
   // Save position to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('floatingNavPosition', JSON.stringify(position));
@@ -75,6 +85,9 @@ const FloatingNavigation = () => {
     
     e.preventDefault();
     
+    // Safety check
+    if (!dragRef.current) return;
+    
     // Clear any existing timer
     if (dragDelayTimer) {
       clearTimeout(dragDelayTimer);
@@ -85,6 +98,8 @@ const FloatingNavigation = () => {
     setDragStartTime(Date.now());
     setIsClickDetected(true);
     setHasActuallyMoved(false);
+    setIsLongPress(false);
+    setHasMovedBeyondThreshold(false);
     
     const rect = dragRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -95,9 +110,9 @@ const FloatingNavigation = () => {
       y: e.clientY - centerY
     });
     
-    // Set up delay timer to enable dragging after delay
+    // Set up delay timer for long press detection
     const timer = setTimeout(() => {
-      setIsDragging(true);
+      setIsLongPress(true);
       setIsClickDetected(false);
     }, dragDelayMs);
     
@@ -106,18 +121,20 @@ const FloatingNavigation = () => {
 
   const handleMouseMove = useCallback((e) => {
     // Check if we should start dragging based on movement threshold
-    if (isClickDetected && !isDragging) {
+    if ((isClickDetected || isLongPress) && !isDragging) {
       const deltaX = Math.abs(e.clientX - initialMousePos.x);
       const deltaY = Math.abs(e.clientY - initialMousePos.y);
       
       // If movement exceeds threshold, start dragging immediately
       if (deltaX > dragThreshold || deltaY > dragThreshold) {
+        setHasMovedBeyondThreshold(true);
         if (dragDelayTimer) {
           clearTimeout(dragDelayTimer);
           setDragDelayTimer(null);
         }
         setIsDragging(true);
         setIsClickDetected(false);
+        setIsLongPress(false);
       }
       return;
     }
@@ -145,7 +162,7 @@ const FloatingNavigation = () => {
     const right = viewportWidth - left - buttonSize / 2;
     
     setPosition({ bottom, right });
-  }, [isClickDetected, isDragging, initialMousePos.x, initialMousePos.y, dragThreshold, dragDelayTimer, dragOffset.x, dragOffset.y]);
+  }, [isClickDetected, isLongPress, isDragging, initialMousePos.x, initialMousePos.y, dragThreshold, dragDelayTimer, dragOffset.x, dragOffset.y, hasMovedBeyondThreshold]);
 
   const handleMouseUp = useCallback(() => {
     // Clear the drag delay timer
@@ -154,19 +171,19 @@ const FloatingNavigation = () => {
       setDragDelayTimer(null);
     }
     
-    // If it was a quick click (timer didn't activate drag mode), toggle menu
-    if (isClickDetected && !isDragging) {
+    // If no movement beyond threshold and not currently dragging, it's a click -> toggle menu
+    if (!hasMovedBeyondThreshold && !isDragging) {
       toggleMenu();
     }
-    // If drag mode was activated but no actual movement occurred, it's a long press
-    // In this case, do nothing (don't toggle menu)
     // If drag mode was activated AND movement occurred, it was a successful drag
-    // In this case, also do nothing (position was already updated during movement)
+    // In this case, do nothing (position was already updated during movement)
     
     setIsDragging(false);
     setIsClickDetected(false);
+    setIsLongPress(false);
     setHasActuallyMoved(false);
-  }, [dragDelayTimer, isClickDetected, isDragging, toggleMenu]);
+    setHasMovedBeyondThreshold(false);
+  }, [dragDelayTimer, isClickDetected, isLongPress, isDragging, hasActuallyMoved, hasMovedBeyondThreshold, toggleMenu]);
 
   const handleTouchStart = (e) => {
     // Allow dragging on the main FAB button, but not on expanded nav items
@@ -174,6 +191,9 @@ const FloatingNavigation = () => {
     if (navLink) return; // Don't drag when clicking nav links
     
     e.preventDefault();
+    
+    // Safety check
+    if (!dragRef.current) return;
     
     // Clear any existing timer
     if (dragDelayTimer) {
@@ -186,6 +206,8 @@ const FloatingNavigation = () => {
     setDragStartTime(Date.now());
     setIsClickDetected(true);
     setHasActuallyMoved(false);
+    setIsLongPress(false);
+    setHasMovedBeyondThreshold(false);
     
     const rect = dragRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -196,9 +218,9 @@ const FloatingNavigation = () => {
       y: touch.clientY - centerY
     });
     
-    // Set up delay timer to enable dragging after delay
+    // Set up delay timer for long press detection
     const timer = setTimeout(() => {
-      setIsDragging(true);
+      setIsLongPress(true);
       setIsClickDetected(false);
     }, dragDelayMs);
     
@@ -209,18 +231,20 @@ const FloatingNavigation = () => {
     const touch = e.touches[0];
     
     // Check if we should start dragging based on movement threshold
-    if (isClickDetected && !isDragging) {
+    if ((isClickDetected || isLongPress) && !isDragging) {
       const deltaX = Math.abs(touch.clientX - initialMousePos.x);
       const deltaY = Math.abs(touch.clientY - initialMousePos.y);
       
       // If movement exceeds threshold, start dragging immediately
       if (deltaX > dragThreshold || deltaY > dragThreshold) {
+        setHasMovedBeyondThreshold(true);
         if (dragDelayTimer) {
           clearTimeout(dragDelayTimer);
           setDragDelayTimer(null);
         }
         setIsDragging(true);
         setIsClickDetected(false);
+        setIsLongPress(false);
       }
       return;
     }
@@ -245,7 +269,7 @@ const FloatingNavigation = () => {
     const right = viewportWidth - left - buttonSize / 2;
     
     setPosition({ bottom, right });
-  }, [isClickDetected, isDragging, initialMousePos.x, initialMousePos.y, dragThreshold, dragDelayTimer, dragOffset.x, dragOffset.y]);
+  }, [isClickDetected, isLongPress, isDragging, initialMousePos.x, initialMousePos.y, dragThreshold, dragDelayTimer, dragOffset.x, dragOffset.y, hasMovedBeyondThreshold]);
 
   const handleTouchEnd = useCallback(() => {
     // Clear the drag delay timer
@@ -254,19 +278,19 @@ const FloatingNavigation = () => {
       setDragDelayTimer(null);
     }
     
-    // If it was a quick tap (timer didn't activate drag mode), toggle menu
-    if (isClickDetected && !isDragging) {
+    // If no movement beyond threshold and not currently dragging, it's a tap -> toggle menu
+    if (!hasMovedBeyondThreshold && !isDragging) {
       toggleMenu();
     }
-    // If drag mode was activated but no actual movement occurred, it's a long press
-    // In this case, do nothing (don't toggle menu)
     // If drag mode was activated AND movement occurred, it was a successful drag
-    // In this case, also do nothing (position was already updated during movement)
+    // In this case, do nothing (position was already updated during movement)
     
     setIsDragging(false);
     setIsClickDetected(false);
+    setIsLongPress(false);
     setHasActuallyMoved(false);
-  }, [dragDelayTimer, isClickDetected, isDragging, toggleMenu]);
+    setHasMovedBeyondThreshold(false);
+  }, [dragDelayTimer, isClickDetected, isLongPress, isDragging, hasActuallyMoved, hasMovedBeyondThreshold, toggleMenu]);
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -280,9 +304,9 @@ const FloatingNavigation = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isExpanded]);
 
-  // Add event listeners for drag functionality
+  // Add event listeners for interaction detection
   useEffect(() => {
-    if (isDragging) {
+    if (isClickDetected || isLongPress || isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -295,7 +319,7 @@ const FloatingNavigation = () => {
         document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+  }, [isClickDetected, isLongPress, isDragging, hasMovedBeyondThreshold, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   return (
     <>
@@ -317,57 +341,77 @@ const FloatingNavigation = () => {
           right: `${Math.max(20, position.right)}px`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
       >
-        <div className="flex flex-col-reverse items-end space-y-reverse space-y-3">
+        <div className={`flex flex-col-reverse space-y-reverse space-y-3 ${shouldShowLabelsOnRight() ? 'items-start' : 'items-end'}`}>
           
           {/* Navigation Items */}
-          {isExpanded && navItems.map(({ path, icon: Icon, label, color }, index) => (
-            <div
-              key={path}
-              className="flex items-center space-x-3"
-              style={{
-                animation: `slideUp 0.3s ease-out ${index * 0.1}s both`
-              }}
-            >
-              {/* Label */}
-              <div className={`px-3 py-2 rounded-lg shadow-lg ${
-                isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-              }`}>
-                <span className={`text-sm font-medium whitespace-nowrap ${
-                  isDark ? 'text-white' : 'text-gray-900'
-                }`}>
-                  {label}
-                </span>
-              </div>
-              
-              {/* Icon Button */}
-              <NavLink
-                to={path}
-                onClick={toggleMenu}
-                className={({ isActive }) => 
-                  `nav-item-button w-12 h-12 rounded-full ${color} flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
-                    isActive ? 'ring-4 ring-white ring-opacity-40' : ''
-                  }`
-                }
+          {isExpanded && navItems.map(({ path, icon: Icon, label, color }, index) => {
+            const labelsOnRight = shouldShowLabelsOnRight();
+            
+            return (
+              <div
+                key={path}
+                className={`flex items-center space-x-3 ${labelsOnRight ? 'flex-row-reverse' : ''}`}
+                style={{
+                  animation: `${labelsOnRight ? 'slideUpRight' : 'slideUp'} 0.3s ease-out ${index * 0.1}s both`
+                }}
               >
-                <Icon className="text-white text-lg" />
-              </NavLink>
-            </div>
-          ))}
+                {/* Label - conditionally positioned */}
+                {!labelsOnRight && (
+                  <div className={`px-3 py-2 rounded-lg shadow-lg ${
+                    isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                  }`}>
+                    <span className={`text-sm font-medium whitespace-nowrap ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      {label}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Icon Button */}
+                <NavLink
+                  to={path}
+                  onClick={toggleMenu}
+                  className={({ isActive }) => 
+                    `nav-item-button w-12 h-12 rounded-full ${color} flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
+                      isActive ? 'ring-4 ring-white ring-opacity-40' : ''
+                    }`
+                  }
+                >
+                  <Icon className="text-white text-lg" />
+                </NavLink>
+                
+                {/* Label - conditionally positioned */}
+                {labelsOnRight && (
+                  <div className={`px-3 py-2 rounded-lg shadow-lg ${
+                    isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                  }`}>
+                    <span className={`text-sm font-medium whitespace-nowrap ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      {label}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {/* Main FAB Button */}
           <button
-            onClick={toggleMenu}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
             className={`nav-item-button w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 relative ${
               isExpanded 
                 ? 'bg-red-500 rotate-45' 
                 : isDragging
                   ? 'bg-blue-700 scale-110'
-                  : isDark 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-blue-500 hover:bg-blue-600'
+                  : isLongPress
+                    ? 'bg-blue-700 scale-105'
+                    : isDark 
+                      ? 'bg-blue-600 hover:bg-blue-700' 
+                      : 'bg-blue-500 hover:bg-blue-600'
             }`}
             style={{ pointerEvents: 'auto' }}
           >
@@ -395,6 +439,16 @@ const FloatingNavigation = () => {
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+        @keyframes slideUpRight {
+          from {
+            opacity: 0;
+            transform: translateY(20px) translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) translateX(0);
           }
         }
       `}</style>

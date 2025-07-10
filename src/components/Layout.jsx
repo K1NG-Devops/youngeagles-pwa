@@ -20,8 +20,9 @@ const Layout = () => {
   // Show header only on pages that don't have their own header section
   const showGlobalHeader = isAuthenticated && location.pathname !== '/dashboard';
     
-  // Show footer only on public pages
-  const showFooter = !isAuthenticated || ['/privacy-policy', '/terms-of-service', '/contact'].includes(location.pathname);
+  // Show footer only on specific public/marketing pages, not in authenticated app areas
+  const publicPages = ['/', '/login', '/signup', '/privacy-policy', '/terms-of-service', '/contact', '/about', '/help'];
+  const showFooter = !isAuthenticated && publicPages.includes(location.pathname);
 
   // NAVIGATION STYLE CONFIGURATION
   // Change this value to switch navigation styles:

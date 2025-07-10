@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaRobot } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Navigation = () => {
   const { user } = useAuth();

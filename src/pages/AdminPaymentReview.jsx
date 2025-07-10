@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { 
   FaCheck, 
   FaTimes, 
@@ -141,7 +141,7 @@ const AdminPaymentReview = () => {
         }
       ];
       setPaymentProofs(mockProofs);
-      toast.info('Showing demo data - Admin payment review endpoint not yet implemented');
+      nativeNotificationService.info('Showing demo data - Admin payment review endpoint not yet implemented');
     } finally {
       setIsLoading(false);
     }
@@ -192,11 +192,11 @@ const AdminPaymentReview = () => {
           : proof
       ));
       
-      toast.success('Payment proof approved successfully!');
+      nativeNotificationService.success('Payment proof approved successfully!');
       setShowModal(false);
     } catch (error) {
       console.error('Error approving payment proof:', error);
-      toast.error('Failed to approve payment proof');
+      nativeNotificationService.error('Failed to approve payment proof');
     } finally {
       setActionLoading(null);
     }
@@ -219,11 +219,11 @@ const AdminPaymentReview = () => {
           : proof
       ));
       
-      toast.success('Payment proof rejected');
+      nativeNotificationService.success('Payment proof rejected');
       setShowModal(false);
     } catch (error) {
       console.error('Error rejecting payment proof:', error);
-      toast.error('Failed to reject payment proof');
+      nativeNotificationService.error('Failed to reject payment proof');
     } finally {
       setActionLoading(null);
     }
@@ -237,7 +237,7 @@ const AdminPaymentReview = () => {
     try {
       setDeletingProofId(proofId);
       await apiService.payments.deleteRejectedProof(proofId);
-      toast.success('Rejected payment proof deleted successfully');
+      nativeNotificationService.success('Rejected payment proof deleted successfully');
       
       // Remove from local state
       setPaymentProofs(prev => prev.filter(proof => proof.id !== proofId));
@@ -256,7 +256,7 @@ const AdminPaymentReview = () => {
       }
     } catch (error) {
       console.error('Error deleting rejected proof:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete rejected proof');
+      nativeNotificationService.error(error.response?.data?.message || 'Failed to delete rejected proof');
     } finally {
       setDeletingProofId(null);
     }

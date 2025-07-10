@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { useNavigate } from 'react-router-dom';
 import { 
   FaGraduationCap, 
@@ -37,7 +37,7 @@ const Classes = () => {
         setClasses(classesData);
         
         if (classesData.length === 0) {
-          toast.info('No classes found in the system');
+          nativeNotificationService.info('No classes found in the system');
         } else {
           console.log(`✅ Loaded ${classesData.length} classes`);
         }
@@ -83,13 +83,13 @@ const Classes = () => {
             const teacherClass = mockClasses.find(cls => cls.teacher_name === user.name) || mockClasses[0];
             teacherClass.teacher_name = user.name;
             setClasses([teacherClass]);
-            toast.info(`Using demo data - showing your class: ${teacherClass.class_name}`);
+            nativeNotificationService.info(`Using demo data - showing your class: ${teacherClass.class_name}`);
           } else {
             setClasses(mockClasses);
-            toast.info(`Using demo data - ${mockClasses.length} sample classes`);
+            nativeNotificationService.info(`Using demo data - ${mockClasses.length} sample classes`);
           }
         } else {
-          toast.error(errorMsg);
+          nativeNotificationService.error(errorMsg);
         }
       } finally {
         setIsLoading(false);

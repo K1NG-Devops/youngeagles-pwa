@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaLock, FaCrown, FaArrowRight } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 
 const FeatureGuard = ({ 
   feature, 
@@ -86,7 +86,7 @@ export const useFeatureAccess = () => {
   const checkFeatureAccess = (feature, showToast = true) => {
     const access = hasFeature(feature);
     if (!access && showToast) {
-      toast.warning('This feature requires a plan upgrade');
+      nativeNotificationService.warning('This feature requires a plan upgrade');
     }
     return access;
   };
@@ -95,7 +95,7 @@ export const useFeatureAccess = () => {
     const canUpload = canUploadFile(fileSizeInMB);
     if (!canUpload && showToast) {
       const maxSize = getFeatureLimit('maxFileSize');
-      toast.error(`File size exceeds your plan limit of ${maxSize}MB`);
+      nativeNotificationService.error(`File size exceeds your plan limit of ${maxSize}MB`);
     }
     return canUpload;
   };
@@ -104,7 +104,7 @@ export const useFeatureAccess = () => {
     const canAdd = canAddChild();
     if (!canAdd && showToast) {
       const maxChildren = getFeatureLimit('maxChildren');
-      toast.error(`You've reached your plan limit of ${maxChildren} children`);
+      nativeNotificationService.error(`You've reached your plan limit of ${maxChildren} children`);
     }
     return canAdd;
   };

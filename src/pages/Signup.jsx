@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
-import { toast } from 'react-toastify';
+import { useTheme } from '../contexts/ThemeContext';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaGraduationCap, FaMoon, FaSun, FaSpinner, FaEnvelope, FaPhone, FaUserTag } from 'react-icons/fa';
 
 const Signup = () => {
@@ -34,17 +34,17 @@ const Signup = () => {
     e.preventDefault();
     
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      toast.error('Please fill in all required fields');
+      nativeNotificationService.error('Please fill in all required fields');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      nativeNotificationService.error('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+      nativeNotificationService.error('Password must be at least 6 characters long');
       return;
     }
     
@@ -59,12 +59,12 @@ const Signup = () => {
       });
       
       if (result.success) {
-        toast.success('Account created successfully! Please sign in.');
+        nativeNotificationService.success('Account created successfully! Please sign in.');
         navigate('/login');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error.message || 'Failed to create account. Please try again.');
+      nativeNotificationService.error(error.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,8 +90,8 @@ const Signup = () => {
       {/* Theme Toggle Button */}
       <button
         onClick={toggleTheme}
-        className={`fixed top-6 right-6 p-4 rounded-full transition-all duration-300 z-50 transform hover:scale-110 hover:rotate-12 ${
-          isDark 
+        className={`fixed xs:static top-2 right-2 xs:top-6 xs:right-6 p-2 xs:p-4 rounded-full transition-all duration-300 z-50 transform hover:scale-110 hover:rotate-12 w-10 h-10 xs:w-12 xs:h-12
+          ${isDark 
             ? 'bg-gray-800/80 text-yellow-400 hover:bg-gray-700/80 border-2 border-gray-600 shadow-2xl backdrop-blur-sm' 
             : 'bg-white/80 text-blue-600 hover:bg-blue-50/80 border-2 border-blue-200 shadow-2xl backdrop-blur-sm'
         }`}
@@ -136,7 +136,7 @@ const Signup = () => {
               }`}>
                 I am registering as:
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 xs:gap-3 user-type-buttons">
                 {['parent', 'teacher', 'admin'].map((type) => (
                   <button
                     key={type}

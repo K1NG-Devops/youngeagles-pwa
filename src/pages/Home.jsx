@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { YoungEaglesMainDisplay } from '../components/ads';
 import { 
   FaGraduationCap, 
@@ -83,11 +83,11 @@ const Home = () => {
   ];
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} px-2 xs:px-4`}>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="relative z-10 max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <div className="mb-8">
               <FaGraduationCap className="text-8xl text-white mx-auto mb-6 animate-bounce" />
@@ -124,9 +124,19 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Ad Section - After Hero */}
+      <div className="py-8">
+        <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
+          <YoungEaglesMainDisplay 
+            className="max-w-4xl mx-auto"
+            adType="banner"
+          />
+        </div>
+      </div>
+
       {/* Features Section */}
       <div className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Everything You Need
@@ -136,11 +146,11 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xs:gap-8">
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className={`p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 ${
+                className={`p-6 xs:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 ${
                   isDark 
                     ? 'bg-gray-800 border border-gray-700 hover:border-gray-600' 
                     : 'bg-white border border-gray-100 hover:border-gray-200'
@@ -158,6 +168,14 @@ const Home = () => {
               </div>
             ))}
           </div>
+          
+          {/* Mid-Features Ad */}
+          <div className="mt-16 mb-8">
+            <YoungEaglesMainDisplay 
+              className="max-w-4xl mx-auto"
+              adType="banner"
+            />
+          </div>
         </div>
         
         {/* YoungEagles Ad Section */}
@@ -168,8 +186,8 @@ const Home = () => {
       </div>
 
       {/* CTA Section */}
-      <div className={`py-8 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-blue-50'}`}>
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+      <div className={`py-8 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-blue-50'} px-2 xs:px-4`}>
+        <div className="max-w-4xl mx-auto text-center px-2 xs:px-4 sm:px-6 lg:px-8">
           <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Ready to Transform Your Educational Experience?
           </h2>

@@ -146,42 +146,17 @@ const UserDropdown = ({ onLogout }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* User Avatar Button */}
+      {/* Settings Gear Button */}
       <button
         onClick={isOpen ? handleClose : handleOpen}
-        className={`flex items-center space-x-2 p-2 rounded-lg transition-all duration-200 ${
+        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${
           isDark 
             ? 'hover:bg-gray-700 text-white' 
             : 'hover:bg-blue-500 text-white hover:text-white'
         } ${isOpen ? (isDark ? 'bg-gray-700' : 'bg-blue-500') : ''}`}
-        title="User Menu"
+        title="Settings & Menu"
       >
-        {/* Avatar */}
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold overflow-hidden ${
-          isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-white text-blue-600 border-2 border-blue-200'
-        }`}>
-          {getProfileImage() ? (
-            <img 
-              src={getProfileImage()} 
-              alt="User profile picture" 
-              className="w-full h-full rounded-full object-cover"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-          ) : null}
-          <div className={`w-full h-full flex items-center justify-center ${getProfileImage() ? 'hidden' : ''}`}>
-            {getUserInitials()}
-          </div>
-        </div>
-        
-        {/* Chevron - hidden on mobile */}
-        <FaChevronDown 
-          className={`hidden sm:block text-xs transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`} 
-        />
+        <FaCog className={`text-lg transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
       </button>
 
       {/* Dropdown Menu */}
@@ -200,13 +175,14 @@ const UserDropdown = ({ onLogout }) => {
               : 'border-gray-100 bg-gray-50'
           }`}>
             <div className="flex items-center space-x-3">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold overflow-hidden border-2 ${
-                isDark ? 'bg-gray-600 text-white border-gray-500' : 'bg-blue-100 text-blue-600 border-blue-200'
+              {/* Profile Picture in Dropdown */}
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold overflow-hidden ${
+                isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-blue-500 text-white border-2 border-blue-400'
               }`}>
                 {getProfileImage() ? (
                   <img 
                     src={getProfileImage()} 
-                    alt="User profile picture" 
+                    alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -218,108 +194,92 @@ const UserDropdown = ({ onLogout }) => {
                   {getUserInitials()}
                 </div>
               </div>
+              
               <div className="flex-1 min-w-0">
                 <h3 className={`font-semibold truncate ${
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}>
                   {user?.name || 'User'}
                 </h3>
-                <p className={`text-sm truncate ${
-                  isDark ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  {user?.email || 'user@youngeagles.org.za'}
-                </p>
-                <p className={`text-xs font-medium capitalize ${getRoleColor(user?.role)}`}>
+                <p className={`text-sm ${getRoleColor(user?.role)} capitalize`}>
                   {user?.role || 'User'}
                 </p>
+                {user?.email && (
+                  <p className={`text-xs truncate ${
+                    isDark ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {user.email}
+                  </p>
+                )}
               </div>
-              
-              {/* Quick Theme Toggle */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleTheme();
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDark 
-                    ? 'hover:bg-gray-600 text-gray-300' 
-                    : 'hover:bg-gray-200 text-gray-600'
-                }`}
-                title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-              >
-                {isDark ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-blue-600" />}
-              </button>
             </div>
           </div>
 
           {/* Menu Items */}
           <div className="py-2">
             {menuItems.map((item, index) => (
-              <React.Fragment key={index}>
+              <div key={index}>
                 <button
                   onClick={() => handleItemClick(item.action)}
-                  className={`w-full flex items-center px-4 py-3 text-left transition-colors group ${
-                    item.danger
-                      ? isDark
-                        ? 'hover:bg-red-900/50 text-red-400'
-                        : 'hover:bg-red-50 text-red-600'
-                      : isDark
+                  className={`w-full px-4 py-3 text-left flex items-center space-x-3 transition-colors ${
+                    isDark 
                         ? 'hover:bg-gray-700 text-gray-200'
                         : 'hover:bg-gray-50 text-gray-700'
-                  }`}
+                  } ${item.danger ? 'hover:bg-red-50 hover:text-red-600' : ''}`}
                 >
-                  <item.icon className={`mr-3 text-lg transition-colors ${
-                    item.danger 
-                      ? (isDark ? 'text-red-400 group-hover:text-red-300' : 'text-red-500 group-hover:text-red-600')
-                      : (isDark ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-600')
+                  <item.icon className={`text-lg ${
+                    item.danger ? 'text-red-500' : (isDark ? 'text-gray-400' : 'text-gray-500')
                   }`} />
-                  <div className="flex-1">
-                    <div className={`font-medium transition-colors ${
-                      item.danger 
-                        ? (isDark ? 'text-red-400 group-hover:text-red-300' : 'text-red-600 group-hover:text-red-700')
-                        : (isDark ? 'text-white group-hover:text-gray-100' : 'text-gray-900 group-hover:text-gray-800')
+                  <div className="flex-1 min-w-0">
+                    <div className={`font-medium ${
+                      item.danger ? 'text-red-600' : (isDark ? 'text-white' : 'text-gray-900')
                     }`}>
                       {item.label}
                     </div>
-                    <div className={`text-xs transition-colors ${
-                      item.danger
-                        ? isDark ? 'text-red-500 group-hover:text-red-400' : 'text-red-500 group-hover:text-red-600'
-                        : isDark ? 'text-gray-500 group-hover:text-gray-400' : 'text-gray-500 group-hover:text-gray-600'
+                    <div className={`text-xs ${
+                      item.danger ? 'text-red-500' : (isDark ? 'text-gray-400' : 'text-gray-500')
                     }`}>
                       {item.description}
                     </div>
                   </div>
                 </button>
-                {item.divider && (
-                  <div className={`my-1 border-t ${
-                    isDark ? 'border-gray-700' : 'border-gray-100'
-                  }`} />
-                )}
-              </React.Fragment>
+                {item.divider && <hr className={`${isDark ? 'border-gray-700' : 'border-gray-200'}`} />}
+              </div>
             ))}
           </div>
 
-          {/* Footer */}
-          <div className={`px-4 py-3 border-t text-center ${
+          {/* Theme Toggle */}
+          <div className={`p-4 border-t ${
             isDark 
               ? 'border-gray-700 bg-gray-750' 
               : 'border-gray-100 bg-gray-50'
           }`}>
-            <p className={`text-xs ${
-              isDark ? 'text-gray-500' : 'text-gray-400'
-            }`}>
-              Young Eagles PWA v2.0.0
-            </p>
-            <div className="flex items-center justify-center space-x-2 mt-2">
-              <div className={`w-2 h-2 rounded-full ${
-                isDark ? 'bg-green-400' : 'bg-green-500'
-              }`}></div>
-              <span className={`text-xs ${
-                isDark ? 'text-gray-400' : 'text-gray-500'
+            <button
+              onClick={() => handleItemClick(toggleTheme)}
+              className={`w-full flex items-center justify-between p-2 rounded-lg transition-colors ${
+                isDark 
+                  ? 'hover:bg-gray-700 text-gray-200' 
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                {isDark ? (
+                  <FaSun className="text-yellow-500" />
+                ) : (
+                  <FaMoon className="text-blue-500" />
+                )}
+                <span className="font-medium">
+                  {isDark ? 'Light Mode' : 'Dark Mode'}
+                </span>
+              </div>
+              <div className={`w-10 h-6 rounded-full transition-colors ${
+                isDark ? 'bg-blue-600' : 'bg-gray-300'
               }`}>
-                Connected
-              </span>
+                <div className={`w-4 h-4 mt-1 rounded-full bg-white transition-transform ${
+                  isDark ? 'translate-x-5' : 'translate-x-1'
+                }`} />
             </div>
+            </button>
           </div>
         </div>
       )}

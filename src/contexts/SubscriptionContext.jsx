@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 
 const SubscriptionContext = createContext();
 
@@ -112,7 +112,7 @@ export const SubscriptionProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error loading subscription:', error);
-      toast.error('Failed to load subscription data');
+      nativeNotificationService.error('Failed to load subscription data');
     } finally {
       setLoading(false);
     }
@@ -144,12 +144,12 @@ export const SubscriptionProvider = ({ children }) => {
       };
       
       updateSubscription(newSubscription);
-      toast.success(`Successfully upgraded to ${plans[planId].name} plan!`);
+      nativeNotificationService.success(`Successfully upgraded to ${plans[planId].name} plan!`);
       
       return { success: true };
     } catch (error) {
       console.error('Error upgrading plan:', error);
-      toast.error('Failed to upgrade plan. Please try again.');
+      nativeNotificationService.error('Failed to upgrade plan. Please try again.');
       return { success: false, error };
     } finally {
       setLoading(false);
@@ -167,12 +167,12 @@ export const SubscriptionProvider = ({ children }) => {
       };
       
       updateSubscription(updatedSub);
-      toast.success('Subscription cancelled successfully');
+      nativeNotificationService.success('Subscription cancelled successfully');
       
       return { success: true };
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      toast.error('Failed to cancel subscription');
+      nativeNotificationService.error('Failed to cancel subscription');
       return { success: false, error };
     } finally {
       setLoading(false);

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const PrivacyPolicy = () => {
   const { isDark } = useTheme();

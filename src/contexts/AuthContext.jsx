@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 
 const AuthContext = createContext();
 
@@ -68,14 +68,45 @@ export const AuthProvider = ({ children }) => {
         // Set auth header for future requests
         apiService.setAuthToken(newToken);
         
-        toast.success(`Welcome back, ${userData.name}!`);
+        nativeNotificationService.success(`Welcome back, ${userData.name}!`);
         return { success: true };
       } else {
         throw new Error(response.data.error || 'Login failed');
       }
     } catch (error) {
       const errorMessage = error.response?.data?.error || error.message || 'Login failed';
-      toast.error(errorMessage);
+      nativeNotificationService.error(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      setLoading(true);
+      
+      // Determine the registration endpoint based on user role
+      let endpoint = '/api/auth/register';
+      if (userData.role === 'parent') {
+        endpoint = '/api/auth/parent-register';
+      } else if (userData.role === 'teacher') {
+        endpoint = '/api/auth/teacher-register';
+      } else if (userData.role === 'admin') {
+        endpoint = '/api/auth/admin-register';
+      }
+
+      const response = await apiService.post(endpoint, userData);
+      
+      if (response.data.success) {
+        nativeNotificationService.success('Account created successfully! Please sign in to continue.');
+        return { success: true, data: response.data };
+      } else {
+        throw new Error(response.data.error || 'Registration failed');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || error.message || 'Registration failed';
+      nativeNotificationService.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -88,7 +119,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     apiService.setAuthToken(null);
-    toast.info('Logged out successfully');
+    nativeNotificationService.info('Logged out successfully');
   };
 
   const isAuthenticated = () => {
@@ -100,6 +131,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    register,
     logout,
     isAuthenticated: isAuthenticated()
   };

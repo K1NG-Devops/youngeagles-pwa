@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GoogleAdSense from './GoogleAdSense';
 import { ADSENSE_CONFIG } from '../../config/adsense-config';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 /**
  * Banner Ad Component - Production Ready with Simulated Ad Option
@@ -63,11 +63,11 @@ const BannerAd = ({
 
   if (useSimulated) {
     return (
-      <div className={`w-full flex justify-center my-4 ${className}`}>
-        <div className={`max-w-2xl w-full mx-4 ${isDark ? 'text-white' : 'text-white'}`}>
-          <div className={`bg-gradient-to-r ${currentSimulatedAd.color} p-4 rounded-xl shadow-lg border border-white/20 relative`}>
+      <div className={`w-full flex justify-center my-4 overflow-hidden ${className}`}>
+        <div className={`max-w-2xl w-full mx-2 sm:mx-4 ${isDark ? 'text-white' : 'text-white'}`}>
+          <div className={`bg-gradient-to-r ${currentSimulatedAd.color} p-3 sm:p-4 rounded-xl shadow-lg border border-white/20 relative overflow-hidden`}>
             {/* Sponsored label */}
-            <div className="absolute -top-2 -right-2 bg-white text-gray-600 text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+            <div className="absolute top-2 right-2 bg-white text-gray-600 text-xs px-3 py-1 rounded-full font-medium shadow-lg">
               Sponsored
             </div>
             
@@ -100,15 +100,15 @@ const BannerAd = ({
   }
 
   return (
-    <div className={`w-full flex justify-center my-4 ${className}`}>
+    <div className={`w-full flex justify-center my-4 overflow-hidden ${className}`}>
       {/* Desktop Banner */}
       {showOnDesktop && (
-        <div className="hidden md:block w-full">
+        <div className="hidden md:block w-full max-w-2xl mx-2 sm:mx-4 overflow-hidden">
           <GoogleAdSense
             slot={ADSENSE_CONFIG.AD_SLOTS.BANNER_AD}
             size={ADSENSE_CONFIG.AD_SIZES.LEADERBOARD}
             format="horizontal"
-            className="mx-auto"
+            className="mx-auto max-w-full"
             responsive={true}
           />
         </div>
@@ -116,12 +116,12 @@ const BannerAd = ({
       
       {/* Mobile Banner */}
       {showOnMobile && (
-        <div className="block md:hidden w-full">
+        <div className="block md:hidden w-full max-w-2xl mx-2 sm:mx-4 overflow-hidden">
           <GoogleAdSense
             slot={ADSENSE_CONFIG.AD_SLOTS.BANNER_AD}
             size={ADSENSE_CONFIG.AD_SIZES.MOBILE_BANNER}
             format="horizontal"
-            className="mx-auto"
+            className="mx-auto max-w-full"
             responsive={true}
           />
         </div>

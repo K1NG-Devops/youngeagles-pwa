@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import contentCurationService from '../services/contentCurationService';
 import { 
   FaBook, 
@@ -61,10 +61,10 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
       setIsLoading(true);
       const content = await contentCurationService.populateLibrary();
       setCuratedContent(content);
-      toast.success(`✅ Loaded ${content.length} high-quality educational activities!`);
+      nativeNotificationService.success(`✅ Loaded ${content.length} high-quality educational activities!`);
     } catch (error) {
       console.error('Error loading curated content:', error);
-      toast.error('Failed to load educational content');
+      nativeNotificationService.error('Failed to load educational content');
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +112,7 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
     const itemKey = `${content.id}-${worksheet.title}`;
     
     if (downloadingItems.has(itemKey)) {
-      toast.info('Already downloading this worksheet');
+      nativeNotificationService.info('Already downloading this worksheet');
       return;
     }
 
@@ -140,7 +140,7 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
       const success = await generateWorksheetPDF(pdfData, worksheet.title.replace(/\s+/g, '_') + '.pdf');
       
       if (success) {
-        toast.success(
+        nativeNotificationService.success(
           <div className="flex items-center gap-2">
             <FaCheckCircle className="text-green-500" />
             <span>📄 {worksheet.title} downloaded successfully!</span>
@@ -151,7 +151,7 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
       }
     } catch (error) {
       console.error('Error downloading worksheet:', error);
-      toast.error(`Failed to download ${worksheet.title}`);
+      nativeNotificationService.error(`Failed to download ${worksheet.title}`);
     } finally {
       setDownloadingItems(prev => {
         const newSet = new Set(prev);
@@ -162,7 +162,7 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
   };
 
   const downloadAllWorksheets = async (content) => {
-    toast.info(`Starting download of ${content.worksheets.length} worksheets for "${content.title}"`);
+    nativeNotificationService.info(`Starting download of ${content.worksheets.length} worksheets for "${content.title}"`);
     
     for (const worksheet of content.worksheets) {
       await downloadWorksheet(content, worksheet);
@@ -170,17 +170,17 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     
-    toast.success(`✅ All worksheets for "${content.title}" downloaded!`);
+    nativeNotificationService.success(`✅ All worksheets for "${content.title}" downloaded!`);
   };
 
   const submitAssignment = async () => {
     if (!selectedContent || assignmentDetails.selectedClasses.length === 0) {
-      toast.error('Please select at least one class');
+      nativeNotificationService.error('Please select at least one class');
       return;
     }
 
     if (!assignmentDetails.dueDate) {
-      toast.error('Please set a due date');
+      nativeNotificationService.error('Please set a due date');
       return;
     }
 
@@ -204,12 +204,12 @@ const CuratedLessonLibrary = ({ onAssignHomework, classes = [] }) => {
         await onAssignHomework(homeworkData);
       }
 
-      toast.success(`✅ "${selectedContent.title}" assigned successfully!`);
+      nativeNotificationService.success(`✅ "${selectedContent.title}" assigned successfully!`);
       setShowAssignModal(false);
       setAssignmentDetails({ dueDate: '', instructions: '', selectedClasses: [] });
     } catch (error) {
       console.error('Error assigning content:', error);
-      toast.error('Failed to assign content');
+      nativeNotificationService.error('Failed to assign content');
     }
   };
 

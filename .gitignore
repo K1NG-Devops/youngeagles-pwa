@@ -107,3 +107,6 @@ Thumbs.db
 sw.js
 workbox-*.js 
 .vercel
+
+# Documentation and test files
+docs/

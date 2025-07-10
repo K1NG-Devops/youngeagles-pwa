@@ -3,7 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaRobot, FaCalculator, FaPalette, FaShapes, FaSpellCheck, FaLeaf, FaArrowLeft, FaTrophy, FaUsers, FaUser, FaClipboardList } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import MazeActivity from '../components/PWA/MazeActivity';
 import apiService from '../services/apiService';
 
@@ -166,7 +166,7 @@ const Activities = () => {
     if (!selectedActivity) return;
 
     if (assignmentForm.assignmentType === 'individual' && assignmentForm.selectedStudents.length === 0) {
-      toast.error('Please select at least one student for individual assignment');
+      nativeNotificationService.error('Please select at least one student for individual assignment');
       return;
     }
 
@@ -179,13 +179,13 @@ const Activities = () => {
         ? students.length 
         : assignmentForm.selectedStudents.length;
 
-      toast.success(`Activity "${selectedActivity.title}" assigned to ${studentsCount} student${studentsCount !== 1 ? 's' : ''}!`);
+      nativeNotificationService.success(`Activity "${selectedActivity.title}" assigned to ${studentsCount} student${studentsCount !== 1 ? 's' : ''}!`);
       
       setShowAssignModal(false);
       setSelectedActivity(null);
     } catch (error) {
       console.error('Error assigning activity:', error);
-      toast.error('Failed to assign activity. Please try again.');
+      nativeNotificationService.error('Failed to assign activity. Please try again.');
     } finally {
       setLoading(false);
     }

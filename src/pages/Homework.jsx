@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
-import { toast } from 'react-toastify';
+import nativeNotificationService from '../services/nativeNotificationService.js';
 import {
   FaBook,
   FaClock,
@@ -172,7 +172,7 @@ const Homework = () => {
         
       } catch (error) {
         console.error('Error fetching homework:', error);
-        toast.error('Failed to load homework assignments');
+        nativeNotificationService.error('Failed to load homework assignments');
       } finally {
         setIsLoading(false);
       }
