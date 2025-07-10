@@ -342,7 +342,7 @@ const FloatingNavigation = () => {
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
       >
-        <div className={`flex flex-col-reverse space-y-reverse space-y-3 ${shouldShowLabelsOnRight() ? 'items-start' : 'items-end'}`}>
+        <div className={`flex flex-col-reverse mobile-gap-md ${shouldShowLabelsOnRight() ? 'items-start' : 'items-end'}`}>
           
           {/* Navigation Items */}
           {isExpanded && navItems.map(({ path, icon: Icon, label, color }, index) => {
@@ -351,7 +351,7 @@ const FloatingNavigation = () => {
             return (
               <div
                 key={path}
-                className={`flex items-center space-x-3 ${labelsOnRight ? 'flex-row-reverse' : ''}`}
+                className={`flex items-center mobile-gap-md touch-responsive ${labelsOnRight ? 'flex-row-reverse' : ''}`}
                 style={{
                   animation: `${labelsOnRight ? 'slideUpRight' : 'slideUp'} 0.3s ease-out ${index * 0.1}s both`
                 }}
@@ -374,8 +374,8 @@ const FloatingNavigation = () => {
                   to={path}
                   onClick={toggleMenu}
                   className={({ isActive }) => 
-                    `nav-item-button w-12 h-12 rounded-full ${color} flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
-                      isActive ? 'ring-4 ring-white ring-opacity-40' : ''
+                    `nav-item-button w-12 h-12 rounded-full ${color} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 touch-responsive ${
+                      isActive ? 'ring-4 ring-white ring-opacity-40 scale-105' : ''
                     }`
                   }
                 >
@@ -402,9 +402,9 @@ const FloatingNavigation = () => {
           <button
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
-            className={`nav-item-button w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 relative ${
+            className={`nav-item-button w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 relative touch-responsive ${
               isExpanded 
-                ? 'bg-red-500 rotate-45' 
+                ? 'bg-red-500 rotate-45 scale-105' 
                 : isDragging
                   ? 'bg-blue-700 scale-110'
                   : isLongPress

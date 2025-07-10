@@ -4,122 +4,106 @@ import BannerAd from './BannerAd';
 import SidebarAd from './SidebarAd';
 
 /**
- * SmartAdManager - Intelligent ad placement component
+ * SmartAdManager - Intelligent ad placement component with full responsive scaling
  * Selects the appropriate ad component based on position, page context, and user segment
  */
-const SmartAdManager = ({ 
-  position = 'banner', 
-  page = 'default',
-  userSegment = 'casual',
-  className = '',
-  style = {},
-  disabled = false 
-}) => {
-  
-  // Determine ad format based on position
-  const getAdFormat = () => {
+const SmartAdManager = ({ position, page, className = '', style = {} }) => {
+  const renderAd = () => {
+    // Enhanced container style for proper sizing
+    const containerStyle = {
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box',
+      ...style
+    };
+
     switch (position) {
-      case 'sidebar':
-        return 'vertical';
-      case 'footer':
-        return 'horizontal';
-      case 'banner':
-      case 'header':
-        return 'auto';
-      default:
-        return 'auto';
-    }
-  };
-
-  // Determine if ads should be shown based on user segment and page
-  const shouldShowAd = () => {
-    // Always show ads unless explicitly disabled
-    if (disabled) return false;
-    
-    // You can add logic here to disable ads for premium users
-    // if (userSegment === 'premium') return false;
-    
-    return true;
-  };
-
-  // Get responsive container classes based on position
-  const getContainerClasses = () => {
-    const baseClasses = 'w-full overflow-hidden'; // Prevent all overflow issues
-    
-    switch (position) {
-      case 'sidebar':
-        return `${baseClasses} max-w-sm mx-auto`;
-      case 'footer':
-        return `${baseClasses} max-w-full`;
-      case 'banner':
-      case 'header':
-        return `${baseClasses} max-w-4xl mx-auto`;
-      case 'content':
-      case 'native-feed':
-        return `${baseClasses} max-w-3xl mx-auto`;
-      default:
-        return `${baseClasses} max-w-full`;
-    }
-  };
-
-  // Choose the appropriate ad component based on position
-  const renderAdComponent = () => {
-    if (!shouldShowAd()) return null;
-
-    const format = getAdFormat();
-    
-    switch (position) {
-      case 'sidebar':
-        return (
+    case 'sidebar':
+      return (
+        <div className="w-full" style={containerStyle}>
           <SidebarAd 
-            className={`w-full ${className}`}
-            style={style}
-            disabled={disabled}
-          />
-        );
-      
-      case 'banner':
-      case 'header':
-        return (
-          <BannerAd 
-            className={`w-full ${className}`}
-            style={style}
-            disabled={disabled}
-          />
-        );
-      
-      case 'footer':
-      case 'content':
-      case 'native-feed':
-      default:
-        return (
-          <FlexibleAdSense 
-            adType={position}
-            format={format}
-            className={`w-full ${className}`}
-            style={style}
-            disabled={disabled}
+            className={className}
+            showOnDesktop={true}
+            showOnMobile={false}
             responsive={true}
-            showPlaceholder={true}
           />
-        );
+        </div>
+      );
+      
+    case 'banner':
+    case 'header':
+      return (
+        <div className="w-full" style={containerStyle}>
+          <BannerAd 
+            className={className}
+            showOnDesktop={true}
+            showOnMobile={true}
+            responsive={true}
+          />
+        </div>
+      );
+      
+    case 'footer':
+      return (
+        <div className="w-full" style={containerStyle}>
+          <FlexibleAdSense 
+            adType="footer"
+            format="horizontal"
+            className={className}
+            style={containerStyle}
+            responsive={true}
+            showPlaceholder={false}
+          />
+        </div>
+      );
+       
+    case 'content':
+      return (
+        <div className="w-full" style={containerStyle}>
+          <FlexibleAdSense 
+            adType="content"
+            format="rectangle"
+            className={className}
+            style={containerStyle}
+            responsive={true}
+            showPlaceholder={false}
+          />
+        </div>
+      );
+       
+    case 'native-feed':
+      return (
+        <div className="w-full" style={containerStyle}>
+          <FlexibleAdSense 
+            adType="native-feed"
+            format="fluid"
+            className={className}
+            style={containerStyle}
+            responsive={true}
+            showPlaceholder={false}
+          />
+        </div>
+      );
+       
+    default:
+      return (
+        <div className="w-full" style={containerStyle}>
+          <FlexibleAdSense 
+            adType="banner"
+            format="auto"
+            className={className}
+            style={containerStyle}
+            responsive={true}
+            showPlaceholder={false}
+          />
+        </div>
+      );
     }
   };
-
-  const containerClasses = getContainerClasses();
 
   return (
-    <div 
-      className={`smart-ad-manager ${containerClasses} ${className}`} 
-      style={{
-        boxSizing: 'border-box',
-        position: 'relative',
-        ...style
-      }}
-    >
-      <div className="w-full overflow-hidden">
-        {renderAdComponent()}
-      </div>
+    <div className={`smart-ad-manager w-full ${className}`} style={style}>
+      {renderAd()}
     </div>
   );
 };

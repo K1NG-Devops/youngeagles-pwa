@@ -84,7 +84,7 @@ const Layout = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen flex flex-col transition-colors ultra-smooth-scroll ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Subscription Banner */}
       {showSubscriptionBanner && (
         <SubscriptionBanner 
@@ -101,13 +101,15 @@ const Layout = () => {
       {navigationStyle === 'top' && showNavigation && <TopNavigation />}
       
       {/* Main content area with proper flex behavior */}
-      <main className="flex-1">
+      <main className="flex-1 ultra-smooth-scroll">
         <div className={getMainContentClasses()}>
           {/* Conditionally wrap content with max-width container */}
           {location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard' || location.pathname === '/activities' ? (
-            <Outlet />
+            <div className="container-perfect">
+              <Outlet />
+            </div>
           ) : (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto container-perfect component-spacing">
               <Outlet />
             </div>
           )}

@@ -36,26 +36,26 @@ const Navigation = () => {
   const navItems = getNavItems();
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t transition-colors rounded-t-2xl ${
+    <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t transition-colors rounded-t-2xl touch-responsive safe-area-padding ${
       isDark 
         ? 'bg-gray-800 border-gray-700' 
         : 'bg-white border-gray-200'
     }`}>
-      <div className="flex justify-around px-2 py-2">
+      <div className="flex justify-around px-2 py-3 mobile-gap-sm">
         {navItems.map(({ path, icon: Icon, label }) => (
           <NavLink
             key={path}
             to={path}
             className={({ isActive }) => 
-              `flex flex-col items-center py-2 px-2 rounded-lg transition-colors min-w-0 flex-1 ${
+              `flex flex-col items-center py-3 px-3 rounded-lg transition-all duration-200 min-w-0 flex-1 touch-responsive mobile-gap-xs hover-lift ${
                 isActive 
-                  ? (isDark ? 'text-blue-400 bg-blue-900/20' : 'text-blue-600 bg-blue-50')
+                  ? (isDark ? 'text-blue-400 bg-blue-900/20 transform scale-105' : 'text-blue-600 bg-blue-50 transform scale-105')
                   : (isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800')
               }`
             }
           >
-            <Icon className="text-xl mb-1" />
-            <span className="text-xs font-medium text-center">{label}</span>
+            <Icon className="text-xl mb-1 transition-transform duration-200" />
+            <span className="text-xs font-medium text-center truncate w-full">{label}</span>
           </NavLink>
         ))}
       </div>

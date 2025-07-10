@@ -68,7 +68,16 @@ const UserDropdown = ({ onLogout }) => {
 
   const getProfileImage = () => {
     // Check multiple possible profile image fields
-    return user?.avatar || user?.profile_picture || user?.profilePicture || user?.image || null;
+    const profilePic = user?.avatar || user?.profile_picture || user?.profilePicture || user?.image || null;
+    
+    if (profilePic && profilePic.startsWith('/uploads/')) {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      // Add cache buster for development
+      const cacheBuster = import.meta.env.DEV ? `?t=${Date.now()}` : '';
+      return `${baseUrl}${profilePic}${cacheBuster}`;
+    }
+    
+    return profilePic;
   };
 
   const getRoleColor = (role) => {
@@ -184,7 +193,9 @@ const UserDropdown = ({ onLogout }) => {
                     src={getProfileImage()} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
+                    onLoad={() => console.log('✅ Dropdown profile picture loaded:', getProfileImage())}
                     onError={(e) => {
+                      console.error('❌ Dropdown profile picture failed to load:', e.target.src);
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';
                     }}

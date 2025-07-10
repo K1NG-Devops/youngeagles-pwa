@@ -48,6 +48,7 @@ const ParentProfile = () => {
   });
   const [forceUpdate, setForceUpdate] = useState(0); // State to force re-render
 
+  // Initialize profile data and refresh profile picture
   useEffect(() => {
     const fetchChildren = async () => {
       try {
@@ -63,9 +64,37 @@ const ParentProfile = () => {
     };
 
     if (user) {
+      // Initialize profile data with user info
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        profilePicture: user.profilePicture || user.profile_picture || user.avatar || null
+      });
+      
       fetchChildren();
+      
+      // Force profile picture refresh after a delay to ensure context is loaded
+      setTimeout(() => {
+        setForceUpdate(prev => prev + 1);
+      }, 500);
     }
   }, [user]);
+
+  // Additional effect to monitor profile picture changes in real-time
+  useEffect(() => {
+    const profilePic = user?.profilePicture || user?.profile_picture || user?.avatar;
+    if (profilePic && profilePic !== profileData.profilePicture) {
+      setProfileData(prev => ({
+        ...prev,
+        profilePicture: profilePic,
+        profile_picture: profilePic,
+        avatar: profilePic
+      }));
+      console.log('🔄 Profile picture updated in real-time:', profilePic);
+    }
+  }, [user?.profilePicture, user?.profile_picture, user?.avatar, profileData.profilePicture]);
 
   const calculateAge = (dateOfBirth) => {
     const today = new Date();
@@ -115,42 +144,55 @@ const ParentProfile = () => {
       const formData = new FormData();
       formData.append('profilePicture', file);
 
-      // Upload to server
-      const response = await apiService.users.uploadProfilePicture(formData);
+      console.log('🚀 Starting profile picture upload:', {
+        fileName: file.name,
+        fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        fileType: file.type
+      });
+
+      // Upload to server with retry logic
+      const response = await uploadWithRetry(formData);
       
       if (response.data.success) {
         const serverImageUrl = response.data.data.profilePictureUrl;
         const updatedUserData = response.data.data.user;
         
-        // Update user profile picture in context with server URL
+        // Create comprehensive user update data
         const userUpdateData = {
           profilePicture: serverImageUrl,
           profile_picture: serverImageUrl, // For compatibility
-          avatar: serverImageUrl // For compatibility
+          avatar: serverImageUrl, // For compatibility
+          image: serverImageUrl // For additional compatibility
         };
 
-        // If backend returned updated user data, use it
+        // If backend returned updated user data, merge it
         if (updatedUserData) {
           Object.assign(userUpdateData, updatedUserData);
         }
 
+        // Update user context first
         updateUser(userUpdateData);
         
         // Update local profile data
         setProfileData(prev => ({
           ...prev,
-          profilePicture: serverImageUrl
+          profilePicture: serverImageUrl,
+          profile_picture: serverImageUrl,
+          avatar: serverImageUrl
         }));
         
-        // Force a re-render by updating a state variable
+        // Force multiple re-renders to ensure update takes
         setForceUpdate(prev => prev + 1);
+        setTimeout(() => setForceUpdate(prev => prev + 1), 100);
+        setTimeout(() => setForceUpdate(prev => prev + 1), 500);
         
         nativeNotificationService.success('Profile picture updated successfully!');
         
         // Log for debugging
         console.log('✅ Profile picture updated:', {
           url: serverImageUrl,
-          userUpdateData
+          userUpdateData,
+          currentUser: user
         });
         
       } else {
@@ -161,13 +203,38 @@ const ParentProfile = () => {
       console.error('Error uploading profile picture:', error);
       
       // Handle specific error cases
-      if (error.response?.data?.error === 'MISSING_COLUMN') {
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        nativeNotificationService.error('Upload timed out. Please check your connection and try a smaller image.');
+      } else if (error.response?.data?.error === 'MISSING_COLUMN') {
         nativeNotificationService.error('Profile picture feature is being set up. Please contact your administrator.');
+      } else if (error.response?.status === 413) {
+        nativeNotificationService.error('Image file is too large. Please try a smaller image (max 5MB).');
       } else {
         nativeNotificationService.error(error.response?.data?.message || 'Failed to upload profile picture. Please try again.');
       }
     } finally {
       setIsUploadingPicture(false);
+    }
+  };
+
+  // Upload with retry logic
+  const uploadWithRetry = async (formData, maxRetries = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`📤 Upload attempt ${attempt}/${maxRetries}`);
+        return await apiService.users.uploadProfilePicture(formData);
+      } catch (error) {
+        console.warn(`❌ Upload attempt ${attempt} failed:`, error.message);
+        
+        if (attempt === maxRetries) {
+          throw error; // Final attempt failed
+        }
+        
+        // Wait before retry (exponential backoff)
+        const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+        console.log(`⏳ Retrying in ${delay/1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
   };
 
@@ -213,8 +280,32 @@ const ParentProfile = () => {
   };
 
   const getProfilePictureUrl = () => {
-    // Return the server URL from various sources, no more blob URLs
-    return profileData.profilePicture || user?.profilePicture || user?.profile_picture || user?.avatar || null;
+    // Check in this order: profileData first, then user context
+    const profilePic = profileData.profilePicture || 
+                      profileData.profile_picture || 
+                      profileData.avatar ||
+                      user?.profilePicture || 
+                      user?.profile_picture || 
+                      user?.avatar || 
+                      user?.image || 
+                      null;
+    
+    console.log('🖼️ Profile picture URL:', {
+      profilePic,
+      profileData: profileData,
+      userContext: user,
+      hasImage: !!profilePic
+    });
+    
+    // Ensure the URL is properly formatted for server URLs
+    if (profilePic && profilePic.startsWith('/uploads/')) {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const fullUrl = `${baseUrl}${profilePic}`;
+      console.log('🔗 Full profile picture URL:', fullUrl);
+      return fullUrl;
+    }
+    
+    return profilePic;
   };
 
   if (isLoading) {
@@ -230,79 +321,93 @@ const ParentProfile = () => {
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
+      <section className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+        {/* Back Button - Mobile Optimized */}
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center text-sm font-medium rounded-lg px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="mb-4 sm:mb-6 flex items-center text-sm font-medium rounded-lg px-3 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95"
         >
           <FaArrowLeft className="mr-2" />
           Back
         </button>
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+
+        {/* Header - Mobile Optimized */}
+        <header className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-2">
             Parent Profile
           </h1>
-          <div className="bg-blue-500 dark:bg-blue-600 p-4 rounded-xl text-center mt-6">
-            <p className="text-white font-medium">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-3 sm:p-4 rounded-xl text-center shadow-lg">
+            <p className="text-white font-medium text-sm sm:text-base">
               Manage your account and view your children's information
             </p>
           </div>
         </header>
 
-        {/* Parent Information Card */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
-          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+        {/* Parent Information Card - Enhanced Mobile Design */}
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 transition-all duration-200">
+          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-3 sm:space-y-0">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <FaUser className="mr-3 text-blue-500 dark:text-blue-400" />
               Account Information
             </h2>
             <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
               <button 
                 onClick={() => setShowPasswordModal(true)}
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 active:scale-95"
               >
-                <FaLock className="mr-2" />
+                <FaLock className="mr-2 text-sm" />
                 Change Password
               </button>
               <button 
                 onClick={() => nativeNotificationService.info('Edit profile feature coming soon!')}
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 active:scale-95"
               >
-                <FaEdit className="mr-2" />
+                <FaEdit className="mr-2 text-sm" />
                 Edit Profile
               </button>
             </div>
           </header>
           
-          {/* Profile Picture Section */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="relative group">
-              <div className="w-36 h-36 rounded-full overflow-hidden border-4 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800 shadow-lg">
+          {/* Enhanced Profile Picture Section - Mobile First */}
+          <div className="flex items-center justify-center mb-6 sm:mb-8">
+            <div className="profile-picture-container relative group">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800 shadow-xl smooth-animation hover-lift"  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                {!getProfilePictureUrl() && (
+                  <div className="loading-skeleton w-full h-full absolute inset-0 rounded-full"></div>
+                )}
                 {getProfilePictureUrl() ? (
                   <img 
                     src={getProfilePictureUrl()} 
                     alt="Profile" 
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
+                    onLoad={() => console.log('✅ Profile picture loaded successfully')}
+                    onError={(e) => {
+                      console.error('❌ Profile picture failed to load:', e.target.src);
+                      // Hide the image and show placeholder
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = 'flex';
+                    }}
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <FaUser className="text-5xl text-gray-400 dark:text-gray-500" />
-                  </div>
-                )}
+                ) : null}
+                {/* Fallback placeholder */}
+                <div 
+                  className={`w-full h-full flex items-center justify-center ${getProfilePictureUrl() ? 'hidden' : 'flex'}`}
+                  style={{ display: getProfilePictureUrl() ? 'none' : 'flex' }}
+                >
+                  <FaUser className="text-3xl sm:text-4xl md:text-5xl text-gray-400 dark:text-gray-500" />
+                </div>
               </div>
               
-              {/* Upload Button */}
-              <div className="absolute -bottom-2 -right-2">
+              {/* Enhanced Upload Button */}
+              <div className="absolute -bottom-1 sm:-bottom-2 -right-1 sm:-right-2">
                 <label 
                   htmlFor="profilePicture"
-                  className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white p-3 rounded-full cursor-pointer transition-all duration-300 shadow-lg border-4 border-white dark:border-gray-800 hover:scale-105 active:scale-95"
+                  className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white p-2 sm:p-3 rounded-full cursor-pointer transition-all duration-300 shadow-lg border-3 sm:border-4 border-white dark:border-gray-800 hover:scale-110 active:scale-95 flex items-center justify-center"
                 >
                   {isUploadingPicture ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
                   ) : (
-                    <FaCamera className="text-lg" />
+                    <FaCamera className="text-sm sm:text-lg" />
                   )}
                 </label>
                 <input
@@ -315,30 +420,30 @@ const ParentProfile = () => {
                 />
               </div>
 
-              {/* Upload Progress/Status */}
+              {/* Upload Progress/Status - Enhanced */}
               {isUploadingPicture && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                <div className="absolute inset-0 bg-black bg-opacity-60 rounded-full flex items-center justify-center backdrop-blur-sm">
                   <div className="text-white text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                    <p className="text-sm">Uploading...</p>
+                    <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-white mx-auto mb-2"></div>
+                    <p className="text-xs sm:text-sm font-medium">Uploading...</p>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Profile Picture Help Text */}
+          {/* Profile Picture Help Text - Mobile Optimized */}
           <div className="text-center mb-6">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
               Click the camera icon to update your profile picture
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-500">
               Supports JPEG, PNG, GIF, WebP (max 5MB)
             </p>
           </div>
           
-          <section className="grid sm:grid-cols-1 md:grid-cols-2 gap-6">
-            <article className="space-y-4">
+          <section className="grid sm:grid-cols-1 md:grid-cols-2 grid-gap-perfect">
+            <article className="list-spacing">
               <div className="flex items-start">
                 <FaUser className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0 mt-1" />
                 <div className="min-w-0 flex-1">
@@ -354,7 +459,7 @@ const ParentProfile = () => {
                 </div>
               </div>
             </article>
-            <article className="space-y-4">
+            <article className="list-spacing">
               <div className="flex items-start">
                 <FaPhone className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0 mt-1" />
                 <div className="min-w-0 flex-1">
@@ -373,21 +478,21 @@ const ParentProfile = () => {
           </section>
         </section>
 
-        {/* Password Change Modal */}
+        {/* Password Change Modal - Enhanced Mobile */}
         {showPasswordModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-3 sm:mx-4 modal smooth-animation">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h3>
                 <button
                   onClick={() => setShowPasswordModal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 smooth-animation p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95"
                 >
-                  <FaTimes className="text-xl" />
+                  <FaTimes className="text-lg" />
                 </button>
               </div>
               
-              <form onSubmit={handlePasswordChange} className="p-6">
+              <form onSubmit={handlePasswordChange} className="p-4 sm:p-6">
                 <div className="space-y-4">
                   {/* Current Password */}
                   <div>
@@ -467,14 +572,14 @@ const ParentProfile = () => {
                   <button
                     type="button"
                     onClick={() => setShowPasswordModal(false)}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 smooth-animation active:scale-95"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isChangingPassword}
-                    className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 smooth-animation disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                   >
                     {isChangingPassword ? (
                       <div className="flex items-center">
@@ -494,40 +599,40 @@ const ParentProfile = () => {
           </div>
         )}
 
-        {/* Children Information */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+        {/* Children Information - Enhanced */}
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 card-content component-spacing card-enhanced smooth-animation">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white component-spacing-tight flex items-center">
             <FaChild className="mr-3 text-green-500 dark:text-green-400" />
             My Children ({children.length})
           </h2>
           
           {children.length === 0 ? (
-            <article className="text-center py-8">
-              <FaChild className="text-6xl text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Children Registered</h3>
-              <p className="text-gray-600 dark:text-gray-300">Contact the school to register your children.</p>
+            <article className="text-center section-spacing-compact">
+              <FaChild className="text-4xl sm:text-6xl text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">No Children Registered</h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Contact the school to register your children.</p>
             </article>
           ) : (
-            <section className="space-y-4">
+            <section className="list-spacing">
               {children.map((child) => (
                 <article 
                   key={child.id} 
-                  className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow bg-gray-50 dark:bg-gray-700"
+                  className="border border-gray-200 dark:border-gray-600 rounded-xl card-content bg-gray-50 dark:bg-gray-700 smooth-animation hover-lift card-enhanced"
                 >
-                  <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-3 sm:space-y-0">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between component-spacing-tight">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                       {child.first_name} {child.last_name}
                     </h3>
                     <button 
                       onClick={() => nativeNotificationService.info('Child details feature coming soon!')}
-                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors w-full sm:w-auto"
+                      className="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 smooth-animation hover-lift touch-responsive active:scale-95 w-full sm:w-auto"
                     >
                       View Details
                     </button>
                   </header>
                   
-                  <section className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <article className="space-y-3">
+                  <section className="grid sm:grid-cols-1 md:grid-cols-2 grid-gap-perfect text-sm">
+                    <article className="list-spacing-tight">
                       <div className="flex items-start">
                         <FaCalendarAlt className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
@@ -545,7 +650,7 @@ const ParentProfile = () => {
                         </div>
                       </div>
                     </article>
-                    <article className="space-y-3">
+                    <article className="list-spacing-tight">
                       {child.date_of_birth && (
                         <div className="flex items-start">
                           <FaIdCard className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -572,31 +677,31 @@ const ParentProfile = () => {
           )}
         </section>
 
-        {/* Quick Actions */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
-          <nav className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Quick Actions - Enhanced */}
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 card-content card-enhanced smooth-animation">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white component-spacing-tight">Quick Actions</h3>
+          <nav className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 grid-gap-perfect">
             <button 
               onClick={() => window.location.href = '/homework'}
-              className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 smooth-animation hover-lift touch-responsive active:scale-95"
             >
-              <FaGraduationCap className="mr-2" />
+              <FaGraduationCap className="mr-2 text-base" />
               View Homework
             </button>
             
             <button 
               onClick={() => nativeNotificationService.info('Communication feature coming soon!')}
-              className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 smooth-animation hover-lift touch-responsive active:scale-95"
             >
-              <FaEnvelope className="mr-2" />
+              <FaEnvelope className="mr-2 text-base" />
               Contact Teachers
             </button>
             
             <button 
               onClick={() => nativeNotificationService.info('Reports feature coming soon!')}
-              className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 smooth-animation hover-lift touch-responsive active:scale-95"
             >
-              <FaUser className="mr-2" />
+              <FaUser className="mr-2 text-base" />
               Progress Reports
             </button>
           </nav>

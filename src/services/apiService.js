@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 // Log API configuration
 console.log('🌐 API Base URL:', API_BASE_URL);
@@ -480,12 +480,24 @@ const apiService = {
     // Delete user
     delete: (userId) => apiClient.delete(`/api/users/${userId}`),
     
-    // Upload profile picture
-    uploadProfilePicture: (formData) => apiClient.post('/api/users/profile-picture', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }),
+    // Upload profile picture with extended timeout and progress tracking
+    uploadProfilePicture: (formData) => {
+      console.log('📤 Starting profile picture upload to:', `${API_BASE_URL}/api/users/profile-picture`);
+      return apiClient.post('/api/users/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 120000, // Increased to 2 minutes for file uploads
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`📊 Upload progress: ${percentCompleted}%`);
+          }
+        }
+      });
+    },
     
     // Get admin dashboard stats (includes pendingApprovals)
     getStats: () => apiClient.get('/api/users/stats/overview')

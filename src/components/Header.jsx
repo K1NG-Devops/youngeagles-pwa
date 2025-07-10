@@ -17,16 +17,25 @@ const Header = () => {
   };
 
   const getProfileImage = () => {
-    return user?.avatar || user?.profile_picture || user?.profilePicture || user?.image || null;
+    const profilePic = user?.avatar || user?.profile_picture || user?.profilePicture || user?.image || null;
+    
+    if (profilePic && profilePic.startsWith('/uploads/')) {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      // Add cache buster for development
+      const cacheBuster = import.meta.env.DEV ? `?t=${Date.now()}` : '';
+      return `${baseUrl}${profilePic}${cacheBuster}`;
+    }
+    
+    return profilePic;
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 px-4 sm:px-6 py-3 shadow-sm border-b z-50 ${
+    <header className={`fixed top-0 left-0 right-0 container-perfect py-4 shadow-sm border-b z-50 safe-area-padding ${
       isDark 
         ? 'bg-gray-800 border-gray-700' 
         : 'bg-blue-600 border-blue-700'
     }`}>
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
+      <div className="flex justify-between items-center max-w-7xl mx-auto mobile-gap-md">
         <h1 className={`text-lg sm:text-xl font-bold truncate mr-4 ${
           isDark ? 'text-white' : 'text-white'
         }`}>
@@ -34,15 +43,15 @@ const Header = () => {
         </h1>
         
         {isAuthenticated && user && (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center mobile-gap-md">
             {/* Settings Gear - UserDropdown */}
             <div className="flex-shrink-0">
               <UserDropdown onLogout={logout} />
             </div>
             
             {/* Profile Picture - Bigger and on the right */}
-            <div className="flex items-center space-x-2">
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-sm font-semibold overflow-hidden ${
+            <div className="flex items-center mobile-gap-sm touch-responsive">
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-sm font-semibold overflow-hidden transition-transform duration-200 hover:scale-105 ${
                 isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-white text-blue-600 border-2 border-blue-200'
               }`}>
                 {getProfileImage() ? (
@@ -50,7 +59,9 @@ const Header = () => {
                     src={getProfileImage()} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
+                    onLoad={() => console.log('✅ Header profile picture loaded:', getProfileImage())}
                     onError={(e) => {
+                      console.error('❌ Header profile picture failed to load:', e.target.src);
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';
                     }}

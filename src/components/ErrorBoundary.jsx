@@ -1,6 +1,5 @@
 import React from 'react';
 import { FaExclamationTriangle, FaRedo, FaHome } from 'react-icons/fa';
-import { useTheme } from '../contexts/ThemeContext';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -55,15 +54,16 @@ class ErrorBoundary extends React.Component {
 }
 
 const ErrorFallback = ({ error, errorInfo, onRetry, onGoHome }) => {
-  const { isDark } = useTheme();
+  // Use system preference for theme since we can't access ThemeContext
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <div className={`max-w-md w-full rounded-lg shadow-lg p-6 text-center ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`min-h-screen flex items-center justify-center p-4 ${prefersDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`max-w-md w-full rounded-lg shadow-lg p-6 text-center ${prefersDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
         <div className="mb-4">
           <FaExclamationTriangle className="mx-auto text-4xl text-red-500 mb-2" />
           <h2 className="text-xl font-bold mb-2">Oops! Something went wrong</h2>
-          <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className={`text-sm mb-4 ${prefersDark ? 'text-gray-300' : 'text-gray-600'}`}>
             We encountered an unexpected error. Don't worry, your data is safe.
           </p>
         </div>
@@ -80,7 +80,7 @@ const ErrorFallback = ({ error, errorInfo, onRetry, onGoHome }) => {
           <button
             onClick={onGoHome}
             className={`w-full border px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 ${
-              isDark 
+              prefersDark 
                 ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
                 : 'border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
@@ -96,7 +96,7 @@ const ErrorFallback = ({ error, errorInfo, onRetry, onGoHome }) => {
             <summary className="cursor-pointer text-sm font-medium mb-2">
               Error Details (Development)
             </summary>
-            <pre className={`text-xs p-3 rounded overflow-auto ${isDark ? 'bg-gray-900 text-red-300' : 'bg-gray-100 text-red-600'}`}>
+            <pre className={`text-xs p-3 rounded overflow-auto ${prefersDark ? 'bg-gray-900 text-red-300' : 'bg-gray-100 text-red-600'}`}>
               {error.toString()}
               {errorInfo && errorInfo.componentStack}
             </pre>
