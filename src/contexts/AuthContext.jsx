@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import nativeNotificationService from '../services/nativeNotificationService.js';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -123,9 +123,63 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (updatedFields) => {
-    const updatedUser = { ...user, ...updatedFields };
+    const updatedUser = { 
+      ...user, 
+      ...updatedFields,
+      // Add updated timestamp for cache busting
+      updated_at: new Date().toISOString()
+    };
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+  
+  const refreshUserProfile = async () => {
+    if (!token || !user?.id) return;
+    
+    try {
+      // Try different possible endpoints for user profile
+      let response;
+      const possibleEndpoints = [
+        '/api/auth/profile',
+        `/api/users/${user.id}`,
+        '/api/users/profile',
+        `/api/users/${user.id}/profile`
+      ];
+      
+      for (const endpoint of possibleEndpoints) {
+        try {
+          response = await apiService.get(endpoint);
+          if (response.data.success || response.data.user) {
+            break;
+          }
+        } catch (endpointError) {
+          // Continue to next endpoint
+          continue;
+        }
+      }
+      
+      if (response && (response.data.success || response.data.user)) {
+        const freshUser = {
+          ...user, // Keep existing user data
+          ...(response.data.user || response.data), // Merge new data
+          updated_at: new Date().toISOString()
+        };
+        setUser(freshUser);
+        localStorage.setItem('user', JSON.stringify(freshUser));
+        console.log('✅ User profile refreshed successfully');
+      } else {
+        console.log('ℹ️ No suitable profile endpoint found, keeping existing user data');
+      }
+    } catch (error) {
+      console.log('ℹ️ Profile refresh not available, keeping existing user data');
+      // Don't throw error, just update timestamp for cache busting
+      const updatedUser = {
+        ...user,
+        updated_at: new Date().toISOString()
+      };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
   };
 
   const isAuthenticated = () => {
@@ -140,6 +194,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateUser,
+    refreshUserProfile,
     isAuthenticated: isAuthenticated()
   };
 

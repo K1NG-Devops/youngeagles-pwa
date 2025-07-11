@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import apiService from '../services/apiService';
+import AdManager from '../components/ads/AdManager';
 
 import { FaUser, FaBook, FaBrain, FaBell, FaArrowRight, FaChevronDown, FaChevronUp, FaChartLine, FaCreditCard, FaCheckCircle, FaExclamationTriangle, FaGraduationCap } from 'react-icons/fa';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
-import SmartAdManager from '../components/ads/SmartAdManager';
 import TeacherDashboard from './TeacherDashboard';
 import AdminDashboard from './AdminDashboard';
 
@@ -172,23 +172,29 @@ const Dashboard = () => {
   return (
     <div className={`min-h-screen ultra-smooth-scroll ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
-      <main className="pt-2 sm:pt-4 pb-6 px-3 sm:px-4 lg:px-6">
+      <main className="pt-0 pb-6 px-3 sm:px-4 lg:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Welcome Section */}
-          <div className="bg-gradient-to-r border-b-2 border-blue-500 rounded-xl from-blue-500 to-purple-600 text-white card-enhanced shadow-lg mt-2 sm:mt-4 mb-4">
+          <div className="bg-gradient-to-r border-b-2 border-blue-500 rounded-xl from-blue-500 to-purple-600 text-white text-center card-enhanced shadow-lg mt-6 mb-6">
             <div className="card-content">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-12 mb-2 p-4 leading-tight">Welcome back, {user?.name}!</h1>
               <p className="text-blue-100 text-sm md:text-base">Track your child's learning progress and stay connected</p>
             </div>
           </div>
 
-          {/* Header Ad - Compact placement under welcome */}
-          <SmartAdManager 
-            position="header" 
-            page="dashboard" 
-            className="shadow-md rounded-lg overflow-hidden mb-3" 
-          />
-
+          {/* Dashboard Header Banner Ad */}
+          {/* <AdManager 
+            type="banner"
+            context={{ 
+              pageType: 'dashboard', 
+              section: 'header',
+              userRole: user?.role,
+              childrenCount: stats.children
+            }}
+            className="mb-4"
+            dismissible={true}
+          /> */}
+          
           {/* Quick Stats for Parents - Color Scheme:
                Blue: Information/General stats
                Purple: Academic/Homework related  
@@ -234,7 +240,19 @@ const Dashboard = () => {
             </div>
           )}
 
-
+          {/* Dashboard Stats Rectangle Ad */}
+          <AdManager 
+            type="rectangle"
+            context={{ 
+              pageType: 'dashboard', 
+              section: 'stats',
+              userRole: user?.role,
+              homeworkCount: stats.homework,
+              completionRate: stats.completionRate
+            }}
+            size="medium"
+            className="max-w-sm mx-auto mb-4"
+          />
 
           {/* Enhanced Stats Toggle */}
           {user?.role === 'parent' && (
@@ -368,16 +386,22 @@ const Dashboard = () => {
             </div>
           )}
           
-          {/* Content Ad - After detailed stats */}
-          <SmartAdManager 
-            position="content" 
-            page="dashboard" 
-            className="shadow-sm rounded-xl overflow-hidden mb-4" 
-          />
-
           {/* Quick Actions for Parents */}
           {user?.role === 'parent' && (
             <div className="mb-4">
+              {/* Quick Actions Native Ad */}
+              <div className="mb-6">
+                <AdManager 
+                  type="native"
+                  context={{ 
+                    pageType: 'dashboard', 
+                    section: 'quick-actions',
+                    userRole: user?.role,
+                    features: ['homework', 'activities', 'notifications']
+                  }}
+                  className="mb-4"
+                />
+              </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center">
                 <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-3"></div>
                 Quick Actions
@@ -427,13 +451,6 @@ const Dashboard = () => {
             </div>
           )}
           
-          {/* Footer Ad - End of dashboard */}
-          <SmartAdManager 
-            position="footer" 
-            page="dashboard" 
-            className="shadow-sm rounded-xl overflow-hidden mt-6" 
-          />
-
         </div>
       </main>
     </div>

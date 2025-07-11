@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import UserDropdown from './UserDropdown';
+import ProfilePictureModal from './common/ProfilePictureModal';
 
 const Header = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark } = useTheme();
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const getUserInitials = () => {
     if (!user?.name) return 'U';
@@ -17,13 +19,38 @@ const Header = () => {
   };
 
   const getProfileImage = () => {
-    const profilePic = user?.avatar || user?.profile_picture || user?.profilePicture || user?.image || null;
+    const profilePic = user?.profilePicture || user?.profile_picture || user?.avatar || user?.image || null;
+    
+    console.log('🖼️ Header profile picture debug:', {
+      profilePic: profilePic ? (profilePic.startsWith('data:') ? 'base64-image' : profilePic) : null,
+      user,
+      hasImage: !!profilePic,
+      env: {
+        VITE_API_URL: import.meta.env.VITE_API_URL,
+        VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL
+      }
+    });
+    
+    // Handle base64 images (local storage fallback)
+    if (profilePic && profilePic.startsWith('data:image/')) {
+      return profilePic;
+    }
     
     if (profilePic && profilePic.startsWith('/uploads/')) {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      // Add cache buster for development
-      const cacheBuster = import.meta.env.DEV ? `?t=${Date.now()}` : '';
-      return `${baseUrl}${profilePic}${cacheBuster}`;
+      // Use the correct API URL from environment
+      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      // Use user ID and update timestamp for better cache control
+      const cacheKey = user?.updated_at || user?.id || Date.now();
+      const fullUrl = `${baseUrl}${profilePic}?v=${cacheKey}`;
+      console.log('🔗 Header full profile picture URL:', fullUrl);
+      return fullUrl;
+    }
+    
+    // If it's already a full URL, add version cache key
+    if (profilePic && (profilePic.startsWith('http://') || profilePic.startsWith('https://'))) {
+      const cacheKey = user?.updated_at || user?.id || Date.now();
+      const separator = profilePic.includes('?') ? '&' : '?';
+      return `${profilePic}${separator}v=${cacheKey}`;
     }
     
     return profilePic;
@@ -35,7 +62,7 @@ const Header = () => {
         ? 'bg-gray-800 border-gray-700' 
         : 'bg-blue-600 border-blue-700'
     }`}>
-      <div className="flex justify-between items-center max-w-7xl mx-auto mobile-gap-md">
+      <div className="flex justify-between items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mobile-gap-md">
         <h1 className={`text-lg sm:text-xl font-bold truncate mr-4 ${
           isDark ? 'text-white' : 'text-white'
         }`}>
@@ -51,26 +78,38 @@ const Header = () => {
             
             {/* Profile Picture - Bigger and on the right */}
             <div className="flex items-center mobile-gap-sm touch-responsive">
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-sm font-semibold overflow-hidden transition-transform duration-200 hover:scale-105 ${
-                isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-white text-blue-600 border-2 border-blue-200'
-              }`}>
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-sm font-semibold overflow-hidden transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-white/50 cursor-pointer ${
+                  isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-white text-blue-600 border-2 border-blue-200'
+                }`}
+                title="View and edit profile picture"
+              >
                 {getProfileImage() ? (
                   <img 
                     src={getProfileImage()} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
-                    onLoad={() => console.log('✅ Header profile picture loaded:', getProfileImage())}
+                    key={`header-profile-${Date.now()}`} // Force re-render
+                    onLoad={(e) => {
+                      console.log('✅ Header profile picture loaded:', e.target.src);
+                      e.target.style.display = 'block';
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'none';
+                    }}
                     onError={(e) => {
                       console.error('❌ Header profile picture failed to load:', e.target.src);
+                      console.error('Error details:', e);
                       e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'flex';
                     }}
                   />
                 ) : null}
                 <div className={`w-full h-full flex items-center justify-center ${getProfileImage() ? 'hidden' : ''}`}>
                   {getUserInitials()}
                 </div>
-              </div>
+              </button>
               
               {/* User Name - Hidden on small screens */}
               <span className={`hidden sm:inline-block text-sm font-medium ${
@@ -82,8 +121,14 @@ const Header = () => {
           </div>
         )}
       </div>
+      
+      {/* Profile Picture Modal */}
+      <ProfilePictureModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </header>
   );
 };
 
-export default Header; 
+export default Header;

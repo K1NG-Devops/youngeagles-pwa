@@ -125,9 +125,22 @@ export const MobileButton = ({
   variant = 'primary',
   size = 'large',
   className = '',
+  hapticFeedback = true,
   ...props 
 }) => {
   const { isDark } = useTheme();
+  
+  const handleClick = (e) => {
+    // Haptic feedback for touch interactions
+    if (hapticFeedback && 'vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+    
+    // Call the original onClick handler
+    if (onClick) {
+      onClick(e);
+    }
+  };
   
   const baseClasses = `
     w-full flex justify-center items-center
@@ -167,7 +180,7 @@ export const MobileButton = ({
   
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled || loading}
       className={`
         ${baseClasses}

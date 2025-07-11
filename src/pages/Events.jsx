@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaBell, FaUsers } from 'react-icons/fa';
+import { AdManager } from '../components/ads';
 
 const Events = () => {
   const { isDark } = useTheme();
@@ -74,6 +75,17 @@ const Events = () => {
           <p className="text-purple-100 text-sm">Stay updated with school events and important dates</p>
         </div>
 
+        {/* Top Banner Ad */}
+        <AdManager 
+          type="banner" 
+          context="events" 
+          className="my-4"
+          userContext={{
+            pageType: 'events',
+            hasEvents: events.length > 0
+          }}
+        />
+
         {events.length === 0 ? (
           <div className={`p-6 text-center rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
             <FaCalendarAlt className={`text-4xl mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-gray-300'}`} />
@@ -81,49 +93,78 @@ const Events = () => {
             <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Check back later for new events and announcements.</p>
           </div>
         ) : (
-          events.map((event) => {
+          events.map((event, index) => {
             const IconComponent = getEventIcon(event.type);
             return (
-              <div key={event.id} className={`p-4 rounded-xl shadow-sm border transition-all hover:shadow-md ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${getPriorityColor(event.priority)}`}>
-                      <IconComponent className="text-lg" />
+              <React.Fragment key={event.id}>
+                <div className={`p-4 rounded-xl shadow-sm border transition-all hover:shadow-md ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${getPriorityColor(event.priority)}`}>
+                        <IconComponent className="text-lg" />
+                      </div>
+                      <div>
+                        <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{event.title}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(event.priority)}`}>
+                          {event.priority.toUpperCase()}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{event.title}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(event.priority)}`}>
-                        {event.priority.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-center space-x-2">
-                    <FaCalendarAlt className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{formatDate(event.date)}</span>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <FaClock className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{event.time}</span>
-                  </div>
-                  
-                  {event.location !== 'N/A' && (
+                  <div className="space-y-2 mb-3">
                     <div className="flex items-center space-x-2">
-                      <FaMapMarkerAlt className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{event.location}</span>
+                      <FaCalendarAlt className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{formatDate(event.date)}</span>
                     </div>
-                  )}
+                    
+                    <div className="flex items-center space-x-2">
+                      <FaClock className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{event.time}</span>
+                    </div>
+                    
+                    {event.location !== 'N/A' && (
+                      <div className="flex items-center space-x-2">
+                        <FaMapMarkerAlt className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{event.location}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-relaxed`}>{event.description}</p>
                 </div>
-                
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-relaxed`}>{event.description}</p>
-              </div>
+
+                {/* Rectangle Ad after every 2nd event */}
+                {(index + 1) % 2 === 0 && (
+                  <AdManager 
+                    type="rectangle" 
+                    context="events" 
+                    className="my-4"
+                    size="medium"
+                    dismissible
+                    userContext={{
+                      pageType: 'events',
+                      eventType: event.type,
+                      position: `after-event-${index + 1}`
+                    }}
+                  />
+                )}
+              </React.Fragment>
             );
           })
         )}
         
+        {/* Native Ad before Admin Updates */}
+        <AdManager 
+          type="native" 
+          context="events" 
+          className="my-4"
+          userContext={{
+            pageType: 'events',
+            section: 'before-admin-updates'
+          }}
+        />
+
         {/* Admin Updates Section */}
         <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
           <div className="flex items-center space-x-2 mb-3">
@@ -136,6 +177,20 @@ const Events = () => {
             </p>
           </div>
         </div>
+
+        {/* Bottom Rectangle Ad */}
+        <AdManager 
+          type="rectangle" 
+          context="events" 
+          className="my-6"
+          size="large"
+          dismissible
+          userContext={{
+            pageType: 'events',
+            section: 'bottom',
+            hasEvents: events.length > 0
+          }}
+        />
       </div>
     </div>
   );

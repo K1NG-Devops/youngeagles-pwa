@@ -31,9 +31,7 @@ export const getEnvVar = (key, defaultValue = '') => {
 // Export environment variables with fallbacks
 export const ENV = {
   API_URL: getEnvVar('VITE_API_URL', 'http://localhost:3001'),
-  ADSENSE_PUBLISHER_ID: getEnvVar('VITE_ADSENSE_PUBLISHER_ID', 'ca-pub-test'),
-  ADSENSE_ENABLED: getEnvVar('VITE_ADSENSE_ENABLED', 'false') === 'true',
-  ADSENSE_TEST_MODE: getEnvVar('VITE_ADSENSE_TEST_MODE', 'true') === 'true',
+  // AdSense variables removed
   VAPID_PUBLIC_KEY: getEnvVar('VITE_VAPID_PUBLIC_KEY', ''),
   NODE_ENV: getEnvVar('NODE_ENV', 'development'),
   DEV: getEnvVar('DEV', 'true') === 'true',

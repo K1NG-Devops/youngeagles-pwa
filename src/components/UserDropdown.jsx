@@ -3,10 +3,12 @@ import { FaCog, FaSignOutAlt, FaUserCircle, FaChevronDown, FaQuestionCircle, FaI
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import ProfilePictureModal from './common/ProfilePictureModal';
 
 const UserDropdown = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -67,14 +69,39 @@ const UserDropdown = ({ onLogout }) => {
   };
 
   const getProfileImage = () => {
-    // Check multiple possible profile image fields
-    const profilePic = user?.avatar || user?.profile_picture || user?.profilePicture || user?.image || null;
+    // Check multiple possible profile image fields  
+    const profilePic = user?.profilePicture || user?.profile_picture || user?.avatar || user?.image || null;
+    
+    console.log('🖼️ UserDropdown profile picture debug:', {
+      profilePic: profilePic ? (profilePic.startsWith('data:') ? 'base64-image' : profilePic) : null,
+      user,
+      hasImage: !!profilePic,
+      env: {
+        VITE_API_URL: import.meta.env.VITE_API_URL,
+        VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL
+      }
+    });
+    
+    // Handle base64 images (local storage fallback)
+    if (profilePic && profilePic.startsWith('data:image/')) {
+      return profilePic;
+    }
     
     if (profilePic && profilePic.startsWith('/uploads/')) {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      // Add cache buster for development
-      const cacheBuster = import.meta.env.DEV ? `?t=${Date.now()}` : '';
-      return `${baseUrl}${profilePic}${cacheBuster}`;
+      // Use the correct API URL from environment
+      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      // Use user ID and update timestamp for better cache control
+      const cacheKey = user?.updated_at || user?.id || Date.now();
+      const fullUrl = `${baseUrl}${profilePic}?v=${cacheKey}`;
+      console.log('🔗 UserDropdown full profile picture URL:', fullUrl);
+      return fullUrl;
+    }
+    
+    // If it's already a full URL, add version cache key
+    if (profilePic && (profilePic.startsWith('http://') || profilePic.startsWith('https://'))) {
+      const cacheKey = user?.updated_at || user?.id || Date.now();
+      const separator = profilePic.includes('?') ? '&' : '?';
+      return `${profilePic}${separator}v=${cacheKey}`;
     }
     
     return profilePic;
@@ -158,14 +185,14 @@ const UserDropdown = ({ onLogout }) => {
       {/* Settings Gear Button */}
       <button
         onClick={isOpen ? handleClose : handleOpen}
-        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${
+        className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 ${
           isDark 
             ? 'hover:bg-gray-700 text-white' 
             : 'hover:bg-blue-500 text-white hover:text-white'
         } ${isOpen ? (isDark ? 'bg-gray-700' : 'bg-blue-500') : ''}`}
         title="Settings & Menu"
       >
-        <FaCog className={`text-lg transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
+        <FaCog className={`text-xl transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
       </button>
 
       {/* Dropdown Menu */}
@@ -185,26 +212,41 @@ const UserDropdown = ({ onLogout }) => {
           }`}>
             <div className="flex items-center space-x-3">
               {/* Profile Picture in Dropdown */}
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold overflow-hidden ${
-                isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-blue-500 text-white border-2 border-blue-400'
-              }`}>
+              <button
+                onClick={() => {
+                  setIsProfileModalOpen(true);
+                  handleClose();
+                }}
+                className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold overflow-hidden transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-blue-500/50 cursor-pointer ${
+                  isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-blue-500 text-white border-2 border-blue-400'
+                }`}
+                title="View and edit profile picture"
+              >
                 {getProfileImage() ? (
                   <img 
                     src={getProfileImage()} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
-                    onLoad={() => console.log('✅ Dropdown profile picture loaded:', getProfileImage())}
+                    key={`dropdown-profile-${Date.now()}`} // Force re-render
+                    onLoad={(e) => {
+                      console.log('✅ Dropdown profile picture loaded:', e.target.src);
+                      e.target.style.display = 'block';
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'none';
+                    }}
                     onError={(e) => {
                       console.error('❌ Dropdown profile picture failed to load:', e.target.src);
+                      console.error('Error details:', e);
                       e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'flex';
                     }}
                   />
                 ) : null}
                 <div className={`w-full h-full flex items-center justify-center ${getProfileImage() ? 'hidden' : ''}`}>
                   {getUserInitials()}
                 </div>
-              </div>
+              </button>
               
               <div className="flex-1 min-w-0">
                 <h3 className={`font-semibold truncate ${
@@ -294,6 +336,12 @@ const UserDropdown = ({ onLogout }) => {
           </div>
         </div>
       )}
+      
+      {/* Profile Picture Modal */}
+      <ProfilePictureModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </div>
   );
 };

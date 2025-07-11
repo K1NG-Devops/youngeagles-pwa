@@ -4,7 +4,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
 import nativeNotificationService from '../services/nativeNotificationService.js';
-import SmartAdManager from '../components/ads/SmartAdManager';
 import {
   FaBook,
   FaClock,
@@ -245,11 +244,7 @@ const Homework = () => {
     <div className={`min-h-screen pt-24 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header Ad - High visibility */}
-        <SmartAdManager 
-          position="header" 
-          page="homework" 
-          className="mb-6" 
-        />
+        
 
         {/* Back Button */}
         <div className="pt-4 mb-4">
@@ -339,11 +334,7 @@ const Homework = () => {
         </div>
 
         {/* Content Rectangle Ad - High engagement area */}
-        <SmartAdManager 
-          position="content" 
-          page="homework" 
-          className="mb-6" 
-        />
+        
 
         {/* Child/Student Selector */}
         <div className={`rounded-lg shadow-sm p-4 sm:p-6 border mb-6 sm:mb-8 ${
@@ -526,14 +517,7 @@ const Homework = () => {
                   )}
                 </div>
 
-                {/* Native In-Feed Ad every 3rd homework item - Highest RPM */}
-                {(index + 1) % 3 === 0 && (
-                  <SmartAdManager 
-                    position="native-feed" 
-                    page="homework" 
-                    className="my-4" 
-                  />
-                )}
+                {/* Ads removed */}
               </React.Fragment>
             ))}
           </div>

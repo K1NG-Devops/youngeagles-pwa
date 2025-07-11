@@ -26,7 +26,6 @@ import ParentCommunicationPanel from '../components/ParentCommunicationPanel';
 import AdvancedHomeworkAssignment from '../components/AdvancedHomeworkAssignment';
 import NewHomeworkAssignment from '../components/NewHomeworkAssignment';
 import Header from '../components/Header';
-import { YoungEaglesMainDisplay } from '../components/ads';
 
 // Hooks and Services
 import { useAuth } from '../contexts/AuthContext';
@@ -399,13 +398,7 @@ const TeacherDashboard = () => {
             )}
           </div>
         </div>
-        
-        {/* YoungEagles Ad */}
-        <YoungEaglesMainDisplay 
-          className="mb-6"
-          style={{ maxWidth: '100%' }}
-        />
-        
+          
         {/* AI Grading Status Banner */}
         {aiGradingStatus === 'processing' && (
           <div className={`p-4 rounded-lg border-l-4 border-blue-500 ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'} w-full box-border`}>
@@ -428,13 +421,13 @@ const TeacherDashboard = () => {
               <div>
                 <p className={`font-medium ${isDark ? 'text-green-300' : 'text-green-800'}`}>AI Grading Complete!</p>
                 <p className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                  New graded assignments are ready for review and sharing with parents.
+                    New graded assignments are ready for review and sharing with parents.
                 </p>
               </div>
             </div>
           </div>
         )}
-        
+          
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full box-border">
           <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>

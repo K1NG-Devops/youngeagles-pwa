@@ -28,11 +28,11 @@ const PWAEnhancements = () => {
       setDeferredPrompt(e);
       setIsInstallable(true);
       
-      // Show install prompt after a delay if not already standalone
-      if (!isStandalone) {
+      // Show install prompt after a shorter delay if not already standalone
+      if (!isStandalone && !sessionStorage.getItem('pwa-install-permanently-dismissed')) {
         setTimeout(() => {
           setShowInstallPrompt(true);
-        }, 30000); // Show after 30 seconds
+        }, 10000); // Show after 10 seconds instead of 30
       }
     };
 
@@ -99,14 +99,14 @@ const PWAEnhancements = () => {
   // Handle dismiss install prompt
   const handleDismissInstall = () => {
     setShowInstallPrompt(false);
-    // Don't show again for this session
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
+    // Mark as permanently dismissed
+    sessionStorage.setItem('pwa-install-permanently-dismissed', 'true');
   };
 
   // Check if install prompt should be shown
   const shouldShowInstallPrompt = () => {
     if (isStandalone || !isInstallable || !showInstallPrompt) return false;
-    return !sessionStorage.getItem('pwa-install-dismissed');
+    return !sessionStorage.getItem('pwa-install-permanently-dismissed');
   };
 
   return (
@@ -123,7 +123,7 @@ const PWAEnhancements = () => {
 
       {/* Install App Prompt */}
       {shouldShowInstallPrompt() && (
-        <div className={`fixed bottom-4 left-4 right-4 z-50 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-4 border-l-4 border-blue-500`}>
+        <div className={`fixed ${!isOnline ? 'top-12' : 'top-4'} left-4 right-4 z-50 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-4 border-l-4 border-blue-500`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="bg-blue-500 p-2 rounded-full">

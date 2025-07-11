@@ -1,74 +1,91 @@
 import React, { useEffect, useRef } from 'react';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 
 const GoogleAdSense = ({ 
-  slot = '5965347315',
-  client = 'ca-pub-5506438806314781',
-  size = 'responsive',
-  format = 'auto',
+  adSlot, 
+  adFormat = 'auto',
+  adLayoutKey,
   className = '',
   style = {},
-  responsive = true,
-  disabled = false 
+  responsive = true
 }) => {
+  const { showAds } = useSubscription();
   const adRef = useRef(null);
+  const isLoaded = useRef(false);
+
+  const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID;
+  const isEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
+  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
 
   useEffect(() => {
-    if (!disabled) {
-      try {
-        // Load AdSense script if not already loaded
-        if (!window.adsbygoogle) {
-          const script = document.createElement('script');
-          script.async = true;
-          script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
-          script.crossOrigin = 'anonymous';
-          document.head.appendChild(script);
-        }
+    // Don't show ads if user has premium subscription
+    if (!showAds() || !isEnabled || !publisherId) {
+      return;
+    }
 
-        // Push ad when script is ready
-        const pushAd = () => {
-          if (window.adsbygoogle && adRef.current) {
+    // Load AdSense script if not already loaded
+    if (!window.adsbygoogle && !isLoaded.current) {
+      const script = document.createElement('script');
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.setAttribute('data-ad-client', publisherId);
+      
+      script.onload = () => {
+        isLoaded.current = true;
+        // Initialize ads after script loads
+        if (adRef.current) {
+          try {
             (window.adsbygoogle = window.adsbygoogle || []).push({});
+          } catch (error) {
+            console.error('AdSense error:', error);
           }
-        };
-
-        // Wait for script to load then push ad
-        if (window.adsbygoogle) {
-          pushAd();
-        } else {
-          const checkScript = setInterval(() => {
-            if (window.adsbygoogle) {
-              clearInterval(checkScript);
-              pushAd();
-            }
-          }, 100);
         }
+      };
+
+      script.onerror = () => {
+        console.warn('Failed to load AdSense script');
+      };
+
+      document.head.appendChild(script);
+    } else if (window.adsbygoogle && adRef.current) {
+      // Script already loaded, just push the ad
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (error) {
-        console.error('AdSense loading error:', error);
+        console.error('AdSense error:', error);
       }
     }
-  }, [disabled, client, slot]);
 
-  if (disabled) {
+    return () => {
+      // Cleanup if needed
+    };
+  }, [showAds, isEnabled, publisherId, adSlot]);
+
+  // Don't render if ads are disabled
+  if (!showAds() || !isEnabled || !publisherId) {
     return null;
   }
 
   const adStyle = {
     display: 'block',
-    width: '100%',
-    height: '100%',
     ...style
   };
 
   return (
-    <ins
-      ref={adRef}
-      className={`adsbygoogle ${className}`}
-      style={adStyle}
-      data-ad-client={client}
-      data-ad-slot={slot}
-      data-ad-format={format}
-      data-full-width-responsive={responsive ? 'true' : 'false'}
-    />
+    <div className={`adsense-container ${className}`}>
+      <ins
+        ref={adRef}
+        className="adsbygoogle"
+        style={adStyle}
+        data-ad-client={publisherId}
+        data-ad-slot={adSlot}
+        data-ad-format={adFormat}
+        data-ad-layout-key={adLayoutKey}
+        data-full-width-responsive={responsive ? 'true' : 'false'}
+        data-adtest={isTestMode ? 'on' : 'off'}
+      />
+    </div>
   );
 };
 

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { FaRobot, FaCalculator, FaPalette, FaShapes, FaSpellCheck, FaLeaf, FaArrowLeft, FaTrophy, FaUsers, FaUser, FaClipboardList } from 'react-icons/fa';
-import nativeNotificationService from '../services/nativeNotificationService.js';
-import SmartAdManager from '../components/ads/SmartAdManager';
-import MazeActivity from '../components/PWA/MazeActivity';
+import { useTheme } from '../contexts/ThemeContext';
+import { FaTrophy, FaCalculator, FaRobot, FaPalette, FaShapes, FaSpellCheck, FaLeaf, FaClipboardList, FaArrowLeft } from 'react-icons/fa';
 import apiService from '../services/apiService';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { useNavigate } from 'react-router-dom';
+import nativeNotificationService from '../services/nativeNotificationService';
+import LazyLoader from '../components/LazyLoader';
+import MazeActivity from '../components/PWA/MazeActivity';
 
 const Activities = () => {
   const { isDark } = useTheme();
@@ -407,12 +408,7 @@ const Activities = () => {
     <div className={`min-h-screen pt-20 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Header Ad - High visibility */}
-        <SmartAdManager 
-          position="header" 
-          page="activities" 
-          className="mb-8" 
-        />
+        {/* Header section - ads removed */}
 
         {/* Back Button */}
         <div className="mb-6">
@@ -439,39 +435,16 @@ const Activities = () => {
           </p>
         </div>
 
-        {/* Content Rectangle Ad - High engagement area */}
-        <SmartAdManager 
-          position="content" 
-          page="activities" 
-          className="mb-8" 
-        />
+        {/* Content section - ads removed */}
 
         {/* Activities Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activities.map((activity, index) => (
-            <React.Fragment key={activity.id}>
-              <ActivityCard activity={activity} />
-              
-              {/* Native In-Feed Ad every 3rd activity card - Highest RPM */}
-              {(index + 1) % 3 === 0 && (
-                <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                  <SmartAdManager 
-                    position="native-feed" 
-                    page="activities" 
-                    className="my-4" 
-                  />
-                </div>
-              )}
-            </React.Fragment>
+            <ActivityCard key={activity.id} activity={activity} />
           ))}
         </div>
 
-        {/* Footer Ad - Always visible */}
-        <SmartAdManager 
-          position="footer" 
-          page="activities" 
-          className="mt-12" 
-        />
+        {/* Footer section - ads removed */}
       </div>
 
       {/* Assignment Modal for Teachers */}

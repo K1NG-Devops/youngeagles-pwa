@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
 import { FaBell, FaEnvelope, FaExclamationCircle, FaTasks, FaClock, FaCheckCircle, FaUser } from 'react-icons/fa';
-import AdPlacement from '../components/ads/AdPlacement';
-import SmartAdManager from '../components/ads/SmartAdManager';
 
 const Notifications = () => {
   const { isDark } = useTheme();
@@ -207,13 +205,6 @@ const Notifications = () => {
           </div>
         </div>
 
-        {/* Header Ad */}
-        <SmartAdManager 
-          adUnit="header" 
-          context="notifications"
-          className="my-6"
-        />
-
         {notifications.length === 0 ? (
           <div className={`p-6 text-center rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
             <FaBell className={`text-4xl mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-gray-300'}`} />
@@ -289,27 +280,11 @@ const Notifications = () => {
                     </div>
                   </div>
                   
-                  {/* Native In-Feed Ad every 3rd notification */}
-                  {(index + 1) % 3 === 0 && (
-                    <AdPlacement
-                      adUnit="native-in-feed"
-                      className="my-4"
-                      format="native"
-                      style={{ textAlign: 'center' }}
-                    />
-                  )}
                 </div>
               );
             })}
           </div>
         )}
-        
-        {/* Content Ad */}
-        <SmartAdManager 
-          adUnit="content" 
-          context="notifications"
-          className="my-6"
-        />
         
         {/* Summary Section */}
         <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -332,13 +307,6 @@ const Notifications = () => {
             </div>
           </div>
         </div>
-
-        {/* Footer Ad */}
-        <SmartAdManager 
-          adUnit="footer" 
-          context="notifications"
-          className="my-6"
-        />
       </div>
     </div>
   );

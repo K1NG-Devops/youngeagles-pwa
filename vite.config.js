@@ -95,30 +95,7 @@ export default defineConfig({
               }
             }
           },
-          {
-            urlPattern: /^https:\/\/pagead2\.googlesyndication\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'google-ads-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
-              },
-              networkTimeoutSeconds: 3
-            }
-          },
-          {
-            urlPattern: /^https:\/\/googleads\.g\.doubleclick\.net\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'doubleclick-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
-              },
-              networkTimeoutSeconds: 3
-            }
-          }
+          // Ad-related cache configurations removed
         ]
       }
     }),
@@ -181,9 +158,7 @@ export default defineConfig({
           if (id.includes('/pages/') && (id.includes('Payment') || id.includes('Checkout'))) {
             return 'payments';
           }
-          if (id.includes('/components/ads/')) {
-            return 'ads';
-          }
+          // Ad components removed
         },
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop().replace('.jsx', '').replace('.js', '') : 'chunk';

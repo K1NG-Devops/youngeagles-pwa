@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { YoungEaglesMainDisplay } from '../components/ads';
+import { useTheme } from '../hooks/useTheme';
+import AdManager from '../components/ads/AdManager';
 import { 
-  FaGraduationCap, 
-  FaBookOpen, 
-  FaUsers, 
-  FaMobile, 
-  FaBell, 
-  FaChartLine,
+  FaGraduationCap,
+  FaBook,
+  FaUsers,
   FaArrowRight,
-  FaStar,
   FaShieldAlt,
-  FaRocket
+  FaRocket,
+  FaMobile,
+  FaChartLine,
+  FaComment,
+  FaStar,
+  FaCheck,
+  FaUserGraduate,
+  FaLaptop,
+  FaUserFriends,
+  FaBell,
+  FaLock
 } from 'react-icons/fa';
 
 const Home = () => {
@@ -45,13 +51,13 @@ const Home = () => {
 
   const features = [
     {
-      icon: FaBookOpen,
+      icon: FaBook,
       title: 'Homework Management',
       description: 'Track assignments, deadlines, and submissions with ease',
       color: 'text-blue-500'
     },
     {
-      icon: FaUsers,
+      icon: FaUserFriends,
       title: 'Teacher Communication',
       description: "Stay connected with your child's teachers and get real-time updates",
       color: 'text-green-500'
@@ -87,7 +93,7 @@ const Home = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8 py-24">
+        <div className="relative z-10 max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="mb-8">
               <FaGraduationCap className="text-8xl text-white mx-auto mb-6 animate-bounce" />
@@ -124,12 +130,18 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Ad Section - After Hero */}
+      {/* Hero Banner Ad - High Visibility */}
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
-          <YoungEaglesMainDisplay 
-            className="max-w-4xl mx-auto"
-            adType="banner"
+          <AdManager 
+            type="banner"
+            context={{ 
+              pageType: 'home', 
+              section: 'hero',
+              userType: isAuthenticated ? 'returning' : 'new'
+            }}
+            className="mb-4"
+            dismissible={true}
           />
         </div>
       </div>
@@ -144,6 +156,20 @@ const Home = () => {
             <p className={`text-xl ${isDark ? 'text-gray-300' : 'text-gray-600'} max-w-3xl mx-auto`}>
               Comprehensive tools designed to enhance the educational experience for everyone
             </p>
+          </div>
+          
+          {/* Mid-Content Rectangle Ad */}
+          <div className="flex justify-center mb-12">
+            <AdManager 
+              type="rectangle"
+              context={{ 
+                pageType: 'home', 
+                section: 'features',
+                userType: isAuthenticated ? 'returning' : 'new'
+              }}
+              size="medium"
+              className="max-w-md"
+            />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xs:gap-8">
@@ -168,21 +194,22 @@ const Home = () => {
               </div>
             ))}
           </div>
-          
-          {/* Mid-Features Ad */}
-          <div className="mt-16 mb-8">
-            <YoungEaglesMainDisplay 
-              className="max-w-4xl mx-auto"
-              adType="banner"
-            />
-          </div>
         </div>
-        
-        {/* YoungEagles Ad Section */}
-        <YoungEaglesMainDisplay 
-          className="mt-16"
-          adType="banner"
-        />
+      </div>
+
+      {/* Pre-CTA Native Ad */}
+      <div className="py-6">
+        <div className="max-w-4xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
+          <AdManager 
+            type="native"
+            context={{ 
+              pageType: 'home', 
+              section: 'pre-cta',
+              userType: isAuthenticated ? 'returning' : 'new'
+            }}
+            className="mb-6"
+          />
+        </div>
       </div>
 
       {/* CTA Section */}

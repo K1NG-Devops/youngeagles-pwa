@@ -7,6 +7,7 @@ import TopNavigation from './TopNavigation';
 import FloatingNavigation from './FloatingNavigation';
 import Footer from './Footer';
 import SubscriptionBanner from './subscription/SubscriptionBanner';
+import BottomBannerAd from './ads/BottomBannerAd';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -118,6 +119,9 @@ const Layout = () => {
       
       {/* Render navigation based on style */}
       {renderNavigation()}
+      
+      {/* Bottom Banner Ad for authenticated users */}
+      {isAuthenticated && <BottomBannerAd />}
       
       {/* Render footer on public pages */}
       {showFooter && <Footer />}

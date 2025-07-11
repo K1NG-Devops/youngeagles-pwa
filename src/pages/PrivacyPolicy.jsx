@@ -60,8 +60,8 @@ const PrivacyPolicy = () => {
               Cookies and Tracking
             </h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              We use cookies and similar tracking technologies to enhance your experience on our site. 
-              This includes advertising cookies from Google AdSense to serve relevant advertisements.
+              We use cookies to enhance your experience and improve our services. These cookies are used for essential functionality, analytics, and storing your preferences.
+              All cookies are encrypted and securely stored.
             </p>
           </section>
 

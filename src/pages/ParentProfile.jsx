@@ -290,19 +290,29 @@ const ParentProfile = () => {
                       user?.image || 
                       null;
     
-    console.log('🖼️ Profile picture URL:', {
+    console.log('🖼️ Profile picture URL debug:', {
       profilePic,
       profileData: profileData,
       userContext: user,
-      hasImage: !!profilePic
+      hasImage: !!profilePic,
+      forceUpdate
     });
     
     // Ensure the URL is properly formatted for server URLs
     if (profilePic && profilePic.startsWith('/uploads/')) {
       const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const fullUrl = `${baseUrl}${profilePic}`;
-      console.log('🔗 Full profile picture URL:', fullUrl);
+      // Add cache buster with current timestamp
+      const cacheBuster = Date.now();
+      const fullUrl = `${baseUrl}${profilePic}?t=${cacheBuster}`;
+      console.log('🔗 Full profile picture URL with cache buster:', fullUrl);
       return fullUrl;
+    }
+    
+    // If it's already a full URL, add cache buster
+    if (profilePic && (profilePic.startsWith('http://') || profilePic.startsWith('https://'))) {
+      const cacheBuster = Date.now();
+      const separator = profilePic.includes('?') ? '&' : '?';
+      return `${profilePic}${separator}t=${cacheBuster}`;
     }
     
     return profilePic;
@@ -321,7 +331,7 @@ const ParentProfile = () => {
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <section className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+      <section className="max-w-4xl mx-auto mt-12 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         {/* Back Button - Mobile Optimized */}
         <button
           onClick={() => navigate(-1)}
@@ -380,12 +390,21 @@ const ParentProfile = () => {
                     src={getProfilePictureUrl()} 
                     alt="Profile" 
                     className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
-                    onLoad={() => console.log('✅ Profile picture loaded successfully')}
+                    key={`profile-pic-${forceUpdate}-${Date.now()}`} // Force re-render
+                    onLoad={(e) => {
+                      console.log('✅ Profile picture loaded successfully:', e.target.src);
+                      e.target.style.display = 'block';
+                      // Hide the placeholder
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'none';
+                    }}
                     onError={(e) => {
                       console.error('❌ Profile picture failed to load:', e.target.src);
+                      console.error('Error details:', e);
                       // Hide the image and show placeholder
                       e.target.style.display = 'none';
-                      e.target.nextElementSibling.style.display = 'flex';
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'flex';
                     }}
                   />
                 ) : null}

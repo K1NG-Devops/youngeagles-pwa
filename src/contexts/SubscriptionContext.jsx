@@ -217,7 +217,12 @@ export const SubscriptionProvider = ({ children }) => {
   };
 
   const showAds = () => {
+    // Don't show ads while loading subscription data
+    if (isLoading) return false;
+    
+    // Default to showing ads if no subscription (free plan)
     if (!subscription) return true;
+    
     const currentPlan = getCurrentPlan();
     return currentPlan.features.ads_enabled;
   };
@@ -354,6 +359,21 @@ export const SubscriptionProvider = ({ children }) => {
     }
   };
 
+  const canAddChild = () => {
+    const currentPlan = getCurrentPlan();
+    const maxChildren = currentPlan.features.children_limit;
+    
+    if (maxChildren === null) return true; // unlimited
+    
+    const currentChildren = getFeatureUsage('children_count') || 0;
+    return currentChildren < maxChildren;
+  };
+
+  const getMaxChildren = () => {
+    const currentPlan = getCurrentPlan();
+    return currentPlan.features.children_limit;
+  };
+
   const value = {
     subscription,
     isLoading,
@@ -387,6 +407,10 @@ export const SubscriptionProvider = ({ children }) => {
     // Payment
     getPaymentHistory,
         
+    // Child management
+    canAddChild,
+    getMaxChildren,
+    
     // Refresh
     refreshSubscription: fetchSubscriptionData
   };
