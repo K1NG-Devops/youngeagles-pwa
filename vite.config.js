@@ -21,22 +21,17 @@ export default defineConfig({
     },
     extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom']
+  },
   plugins: [
     react({
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react',
-      babel: {
-        plugins: [
-          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
-        ]
-      }
+      jsxImportSource: 'react'
     }),
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.js',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'Young Eagles PWA - Minimal',
@@ -69,7 +64,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        cacheId: 'young-eagles-pwa-v1',
+        cacheId: 'young-eagles-minimal-v1.0.2',
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
@@ -161,17 +156,13 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: process.env.NODE_ENV === 'production',
-        drop_debugger: process.env.NODE_ENV === 'production',
-        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info'] : []
+        drop_debugger: process.env.NODE_ENV === 'production'
       },
       format: {
         comments: false
       }
     },
     rollupOptions: {
-      input: {
-        main: './index.html'
-      },
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
@@ -199,9 +190,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     assetsInlineLimit: 4096,
     reportCompressedSize: false,
-    cssCodeSplit: true,
-    optimizeDeps: {
-      include: ['react', 'react-dom', 'react-router-dom']
-    }
+    cssCodeSplit: true
   }
 }) 
