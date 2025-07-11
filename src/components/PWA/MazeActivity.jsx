@@ -1,18 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { FaUndo, FaPlay, FaCheckCircle } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import apiService from '../../services/apiService';
+
 const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
   const { isDark } = useTheme();
-  const [commands, setCommands] = useState([]);
-  const [robotPosition, setRobotPosition] = useState({ x: 0, y: 0 });
+  const { user } = useAuth();
+  
+  // Load saved state from localStorage
+  const loadSavedState = () => {
+    try {
+      const savedState = localStorage.getItem('mazeGameState');
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        // Only restore state if it's from the same difficulty level
+        if (state.difficulty === difficulty) {
+          // If we have a saved state, make sure we set the correct difficulty level
+          if (onLevelChange) {
+            onLevelChange(state.difficulty);
+          }
+          return state;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved state:', error);
+    }
+    return null;
+  };
+
+  // Initialize state with saved values or defaults
+  const savedState = loadSavedState();
+  const [commands, setCommands] = useState(savedState?.commands || []);
+  const [robotPosition, setRobotPosition] = useState(savedState?.robotPosition || { x: 0, y: 0 });
   const [isExecuting, setIsExecuting] = useState(false);
-  const [gameStatus, setGameStatus] = useState('idle'); // idle, running, completed, failed
-  const [score, setScore] = useState(0);
-  const [attempts, setAttempts] = useState(0);
-  const [timeElapsed, setTimeElapsed] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [gameStatus, setGameStatus] = useState(savedState?.gameStatus || 'idle');
+  const [score, setScore] = useState(savedState?.score || 0);
+  const [attempts, setAttempts] = useState(savedState?.attempts || 0);
+  const [timeElapsed, setTimeElapsed] = useState(savedState?.timeElapsed || 0);
+  const [isTimerRunning, setIsTimerRunning] = useState(savedState?.isTimerRunning || false);
   const [completedLevels, setCompletedLevels] = useState(() => {
-    // Load completed levels from localStorage
     try {
       const saved = localStorage.getItem('mazeGameProgress');
       return saved ? JSON.parse(saved) : [];
@@ -24,6 +51,25 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
   const [showNextLevelPrompt, setShowNextLevelPrompt] = useState(false);
   const [showGameComplete, setShowGameComplete] = useState(false);
   const [nextLevel, setNextLevel] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [lastSubmission, setLastSubmission] = useState(null);
+  const [attemptStatus, setAttemptStatus] = useState(null);
+
+  // Load attempt status
+  useEffect(() => {
+    const loadAttemptStatus = async () => {
+      try {
+        const response = await apiService.get('/api/activities/attempt-status/maze-robot');
+        setAttemptStatus(response.data.status);
+      } catch (error) {
+        console.error('Error loading attempt status:', error);
+      }
+    };
+
+    loadAttemptStatus();
+  }, []);
+
   // Different maze configurations based on difficulty - 5 levels total
   const mazes = {
     easy: {
@@ -150,6 +196,65 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     }
   }, []);
 
+  // Save state to localStorage
+  const saveState = () => {
+    if (gameStatus === 'completed') {
+      // Don't save completed state to avoid restoring to a completed level
+      localStorage.removeItem('mazeGameState');
+      return;
+    }
+
+    try {
+      const state = {
+        commands,
+        robotPosition,
+        gameStatus,
+        score,
+        attempts,
+        timeElapsed,
+        isTimerRunning,
+        difficulty
+      };
+      localStorage.setItem('mazeGameState', JSON.stringify(state));
+    } catch (error) {
+      console.error('Error saving state:', error);
+    }
+  };
+
+  // Save state whenever relevant values change
+  useEffect(() => {
+    if (!isExecuting) { // Only save when not executing commands
+      saveState();
+    }
+  }, [commands, robotPosition, gameStatus, score, attempts, timeElapsed, isTimerRunning, difficulty, isExecuting]);
+
+  // Timer effect
+  useEffect(() => {
+    let interval;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setTimeElapsed(prev => {
+          const newTime = prev + 1;
+          // Update saved state with new time
+          const savedState = JSON.parse(localStorage.getItem('mazeGameState') || '{}');
+          localStorage.setItem('mazeGameState', JSON.stringify({
+            ...savedState,
+            timeElapsed: newTime
+          }));
+          return newTime;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning]);
+
+  // Clear saved state when changing difficulty
+  useEffect(() => {
+    if (validDifficulty !== difficulty) {
+      localStorage.removeItem('mazeGameState');
+    }
+  }, [validDifficulty, difficulty]);
+
   const getScoreColor = () => {
     if (score >= 150) return 'text-green-500';
     if (score >= 120) return 'text-yellow-500';
@@ -162,17 +267,6 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     }
   }, [validDifficulty, difficulty, onLevelChange]);
   
-  // Timer effect
-  useEffect(() => {
-    let interval;
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setTimeElapsed(prev => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning]);
-
   // Auto-reset when component unmounts (user leaves the game)
   useEffect(() => {
     return () => {
@@ -188,8 +282,142 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       setShowGameComplete(false);
       setScore(0);
       setAttempts(0);
+      setAttemptStatus(null); // Reset attempt status
     };
   }, []);
+
+  // Load last submission
+  useEffect(() => {
+    const loadLastSubmission = async () => {
+      try {
+        const response = await apiService.get('/api/activities/history');
+        const submissions = response.data.submissions || [];
+        const lastMazeSubmission = submissions.find(s => s.activity_type === 'maze');
+        if (lastMazeSubmission) {
+          setLastSubmission(lastMazeSubmission);
+        }
+      } catch (error) {
+        console.error('Error loading submission history:', error);
+      }
+    };
+
+    loadLastSubmission();
+  }, []);
+
+  // Function to submit activity results
+  const submitActivity = async (result, isFinal = false) => {
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      const submission = {
+        activityId: 'maze-robot',
+        activityType: 'maze',
+        score: result.score,
+        timeElapsed: result.timeElapsed,
+        attempts: result.attempts,
+        commandsUsed: result.commandsUsed,
+        completed: result.completed,
+        difficulty: result.difficulty,
+        isFinal,
+        metadata: {
+          commands: result.commands,
+          robotPosition: result.robotPosition,
+          levelProgress: result.levelProgress
+        }
+      };
+
+      const response = await apiService.post('/api/activities/submit', submission);
+      
+      if (response.data.success) {
+        setLastSubmission({
+          ...submission,
+          submitted_at: new Date().toISOString()
+        });
+        setAttemptStatus(response.data.attemptStatus);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting activity:', error);
+      setSubmitError('Failed to submit activity. Please try again.');
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Modify the existing handleActivityComplete function
+  const handleActivityComplete = async (result) => {
+    try {
+      // Submit the activity result
+      await submitActivity({
+        ...result,
+        commands,
+        robotPosition,
+        levelProgress: completedLevels,
+        completed: true
+      });
+
+      // Call the original onComplete handler if provided
+      if (onComplete) {
+        onComplete(result);
+      }
+    } catch (error) {
+      console.error('Error handling activity completion:', error);
+    }
+  };
+
+  // Add submission status display
+  const renderSubmissionStatus = () => {
+    if (isSubmitting) {
+      return (
+        <div className={`text-sm ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
+          Submitting activity...
+        </div>
+      );
+    }
+
+    if (submitError) {
+      return (
+        <div className={`text-sm ${isDark ? 'text-red-300' : 'text-red-600'}`}>
+          {submitError}
+        </div>
+      );
+    }
+
+    if (lastSubmission) {
+      return (
+        <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          Last submitted: {new Date(lastSubmission.submitted_at).toLocaleString()}
+          {lastSubmission.completed && ' (Completed)'}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Add attempt status display
+  const renderAttemptStatus = () => {
+    if (!attemptStatus) return null;
+
+    const statusColor = attemptStatus.canSubmit 
+      ? isDark ? 'text-green-300' : 'text-green-600'
+      : isDark ? 'text-red-300' : 'text-red-600';
+
+    return (
+      <div className={`text-sm ${statusColor}`}>
+        {attemptStatus.hasFinalSubmission ? (
+          'Final submission completed. Waiting for admin reset.'
+        ) : (
+          `Attempts remaining: ${attemptStatus.attemptsRemaining} of 2`
+        )}
+      </div>
+    );
+  };
+
+  // Add the submission status to the UI
   const addCommand = (direction) => {
     if (commands.length < currentMaze.maxCommands && gameStatus === 'idle') {
       setCommands([...commands, direction]);
@@ -207,6 +435,7 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     if (gameStatus === 'idle') {
       setCommands([]);
       setRobotPosition({ x: 0, y: 0 });
+      // Don't clear saved state here to allow undo
     }
   };
   const resetGame = () => {
@@ -216,9 +445,19 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
     setIsExecuting(false);
     setTimeElapsed(0);
     setIsTimerRunning(false);
+    // Clear saved state when explicitly resetting
+    localStorage.removeItem('mazeGameState');
   };
+  // Modify the executeCommands function to handle attempt limits
   const executeCommands = async () => {
     if (commands.length === 0) return;
+    
+    // Check if we can still submit
+    if (!attemptStatus?.canSubmit) {
+      setGameStatus('locked');
+      return;
+    }
+
     setIsExecuting(true);
     setGameStatus('running');
     setAttempts(prev => prev + 1);
@@ -353,19 +592,65 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
       onLevelChange('easy'); // Reset to first level for replay
     }
   };
+
+  // Add a new function to handle manual state reset
+  const resetAllProgress = () => {
+    localStorage.removeItem('mazeGameState');
+    localStorage.removeItem('mazeGameProgress');
+    setCommands([]);
+    setRobotPosition({ x: 0, y: 0 });
+    setGameStatus('idle');
+    setIsExecuting(false);
+    setTimeElapsed(0);
+    setIsTimerRunning(false);
+    setScore(0);
+    setAttempts(0);
+    setCompletedLevels([]);
+    setAttemptStatus(null); // Reset attempt status
+    if (onLevelChange) {
+      onLevelChange('easy');
+    }
+  };
+
+  // Add a reset button to the UI
+  const renderResetButton = () => {
+    if (savedState) {
+      return (
+        <button
+          onClick={resetAllProgress}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            isDark 
+              ? 'bg-red-600 hover:bg-red-700 text-white' 
+              : 'bg-red-500 hover:bg-red-600 text-white'
+          }`}
+        >
+          Reset All Progress
+        </button>
+      );
+    }
+    return null;
+  };
+
+  // Update the UI to show attempt status and submission state
   return (
     <div className={`min-h-screen mt-18 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-2`}>
-      <div
-        id="maze-container"
-        className={`w-full max-w-4xl mx-auto px-3 rounded-xl ${
-          isDark ? 'bg-gray-800' : 'bg-white'
-        } shadow-lg relative transition-all duration-500 ease-in-out transform ${gameStatus === 'completed' ? 'scale-105' : ''}`}
-      >
+      <div id="maze-container" className={`w-full max-w-4xl mx-auto px-3 rounded-xl ${
+        isDark ? 'bg-gray-800' : 'bg-white'
+      } shadow-lg relative transition-all duration-500 ease-in-out transform ${gameStatus === 'completed' ? 'scale-105' : ''}`}>
         {/* Header */}
         <div className="text-center mb-4 pt-4">
-          <h2 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            🤖 Robot Maze Navigator
-          </h2>
+          <div className="flex justify-between items-center px-4">
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+              🤖 Robot Maze Navigator
+            </h2>
+            <div className="flex flex-col items-end">
+              {renderAttemptStatus()}
+              {renderSubmissionStatus()}
+            </div>
+            {renderResetButton()}
+          </div>
+          
+          {/* Rest of the existing header content */}
           <div className={`inline-flex items-center px-4 py-2 rounded-lg mb-2 ${validDifficulty === 'easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
             validDifficulty === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
               validDifficulty === 'hard' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
@@ -459,11 +744,15 @@ const MazeActivity = ({ onComplete, difficulty = 'easy', onLevelChange }) => {
             <div className="flex justify-center mb-4">
               <button
                 onClick={executeCommands}
-                disabled={isExecuting || commands.length === 0 || gameStatus === 'running'}
-                className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                disabled={isExecuting || commands.length === 0 || gameStatus === 'running' || !attemptStatus?.canSubmit}
+                className={`flex items-center px-6 py-3 rounded-lg hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed transition-colors font-medium ${
+                  attemptStatus?.canSubmit
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-400 text-white'
+                }`}
               >
                 <FaPlay className="mr-2" />
-                {isExecuting ? 'Running...' : 'Execute Commands'}
+                {isExecuting ? 'Running...' : attemptStatus?.canSubmit ? 'Execute Commands' : 'Submission Locked'}
               </button>
             </div>
 

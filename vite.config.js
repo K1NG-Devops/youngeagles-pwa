@@ -28,8 +28,11 @@ export default defineConfig({
     }),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      registerType: 'prompt',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'Young Eagles PWA - Minimal',
         short_name: 'Young Eagles',
@@ -39,6 +42,7 @@ export default defineConfig({
         display: 'standalone',
         scope: '/',
         start_url: '/',
+        orientation: 'portrait',
         icons: [
           {
             src: 'icon-192x192.png',
@@ -49,16 +53,23 @@ export default defineConfig({
             src: 'icon-512x512.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        cacheId: 'young-eagles-minimal-v1.0.1',
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        cacheId: 'young-eagles-minimal-v1.0.2',
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
         navigateFallback: 'index.html',
+        navigateFallbackAllowlist: [/^(?!\/__).*/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -68,6 +79,9 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           },
@@ -79,10 +93,41 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           },
-          // Ad-related cache configurations removed
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/api\.youngeagles\.org\.za\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
         ]
       }
     }),
@@ -106,12 +151,12 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: false,
+    sourcemap: process.env.NODE_ENV !== 'production',
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true
+        drop_console: process.env.NODE_ENV === 'production',
+        drop_debugger: process.env.NODE_ENV === 'production'
       },
       format: {
         comments: false
@@ -120,29 +165,35 @@ export default defineConfig({
     rollupOptions: {
       external: [],
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'router': ['react-router-dom'],
-          'icons': ['lucide-react', 'react-icons'],
-          'utils': ['axios', 'crypto-js']
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'vendor-react';
+            if (id.includes('react-router')) return 'vendor-router';
+            if (id.includes('react-icons')) return 'vendor-icons';
+            if (id.includes('axios')) return 'vendor-axios';
+            return 'vendor';
+          }
         },
-        chunkFileNames: 'js/[name]-[hash].js',
-        entryFileNames: 'js/[name]-[hash].js',
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
-            return `img/[name]-[hash][extname]`;
+            return `assets/img/[name]-[hash][extname]`;
           }
           if (/css/i.test(ext)) {
-            return `css/[name]-[hash][extname]`;
+            return `assets/css/[name]-[hash][extname]`;
+          }
+          if (/woff2?|ttf|eot/i.test(ext)) {
+            return `assets/fonts/[name]-[hash][extname]`;
           }
           return `assets/[name]-[hash][extname]`;
         }
       }
     },
-    target: 'es2015',
-    chunkSizeWarningLimit: 1000,
+    target: ['es2015', 'chrome87', 'safari13'],
+    chunkSizeWarningLimit: 2000,
     assetsInlineLimit: 4096,
     reportCompressedSize: false,
     cssCodeSplit: true

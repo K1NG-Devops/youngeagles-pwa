@@ -10,18 +10,17 @@ import SubscriptionBanner from './subscription/SubscriptionBanner';
 import BottomBannerAd from './ads/BottomBannerAd';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 const Layout = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   const { isDark } = useTheme();
-    
-  // Hide navigation on login page
-  const showNavigation = isAuthenticated && location.pathname !== '/login';
-    
+  const { showAds } = useSubscription();
+  
   // Show header only on pages that don't have their own header section
   const showGlobalHeader = isAuthenticated && location.pathname !== '/dashboard';
-    
+  
   // Show footer only on specific public/marketing pages, not in authenticated app areas
   const publicPages = ['/', '/login', '/signup', '/privacy-policy', '/terms-of-service', '/contact', '/about', '/help'];
   const showFooter = !isAuthenticated && publicPages.includes(location.pathname);
@@ -38,93 +37,61 @@ const Layout = () => {
   const navigationStyle = 'floating';
 
   const renderNavigation = () => {
-    if (!showNavigation) return null;
+    if (!isAuthenticated) return null;
 
     switch (navigationStyle) {
-    case 'side':
-      return <SideNavigation />;
-    case 'top':
-      return <TopNavigation />;
-    case 'floating':
-      return <FloatingNavigation />;
-    case 'bottom':
-    default:
-      return (
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-      );
+      case 'side':
+        return <SideNavigation />;
+      case 'top':
+        return <TopNavigation />;
+      case 'floating':
+        return <FloatingNavigation />;
+      case 'bottom':
+      default:
+        return (
+          <div className="fixed bottom-0 left-0 right-0 z-50">
+            <Navigation />
+          </div>
+        );
     }
   };
 
-  const getMainContentClasses = () => {
-    // Special handling for dashboard pages to go edge-to-edge
-    const isFullWidth = location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard';
+  // Calculate padding based on components present
+  const getPaddingClasses = () => {
+    let classes = 'p-4';
     
-    // Add bottom margin for fixed footer (footer height is ~70px)
-    const footerMargin = showFooter ? 'mb-20' : 'mb-4';
+    if (showGlobalHeader) classes += ' pt-16';
+    if (navigationStyle === 'bottom') classes += ' pb-24';
+    if (showAds()) classes += ' pb-32'; // Extra padding for banner ad
     
-    // Add top margin for subscription banner if shown
-    const bannerMargin = showSubscriptionBanner ? 'mt-2' : '';
-    
-    if (!showNavigation) {
-      return `min-h-full ${footerMargin} ${bannerMargin}`;
-    }
-    
-    switch (navigationStyle) {
-    case 'side':
-      return `min-h-full ${footerMargin} ${bannerMargin}`;
-    case 'top':
-      return `min-h-full ${footerMargin} ${bannerMargin}`;
-    case 'floating':
-      return `min-h-full ${footerMargin} pb-20 ${bannerMargin}`; // Extra padding for floating nav
-    case 'bottom':
-    default:
-      return `min-h-full mb-28 ${footerMargin} ${bannerMargin}`; // Extra margin for both bottom navigation and footer
-    }
+    return classes;
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors ultra-smooth-scroll ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Subscription Banner */}
-      {showSubscriptionBanner && (
-        <SubscriptionBanner 
-          position="top"
-          showOnActive={false}
-          dismissible={true}
-        />
-      )}
+    <div className={`min-h-screen flex flex-col ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Show subscription banner at the very top */}
+      {showSubscriptionBanner && <SubscriptionBanner />}
       
-      {/* Only show Header if not using top navigation */}
-      {showGlobalHeader && navigationStyle !== 'top' && <Header />}
+      {/* Show global header if needed */}
+      {showGlobalHeader && <Header />}
       
-      {/* Top Navigation (if selected) */}
-      {navigationStyle === 'top' && showNavigation && <TopNavigation />}
-      
-      {/* Main content area with proper flex behavior */}
-      <main className="flex-1 ultra-smooth-scroll">
-        <div className={getMainContentClasses()}>
-          {/* Conditionally wrap content with max-width container */}
-          {location.pathname === '/dashboard' || location.pathname === '/teacher-dashboard' || location.pathname === '/activities' ? (
-            <div className="container-perfect">
-              <Outlet />
-            </div>
-          ) : (
-            <div className="max-w-7xl mx-auto container-perfect component-spacing">
-              <Outlet />
-            </div>
-          )}
-        </div>
+      {/* Main content area */}
+      <main className={`flex-grow ${getPaddingClasses()}`}>
+        <Outlet />
       </main>
       
-      {/* Render navigation based on style */}
+      {/* Navigation */}
       {renderNavigation()}
       
-      {/* Bottom Banner Ad for authenticated users */}
-      {isAuthenticated && <BottomBannerAd />}
-      
-      {/* Render footer on public pages */}
+      {/* Footer */}
       {showFooter && <Footer />}
+      
+      {/* Banner Ad - rendered last to ensure proper z-index */}
+      {showAds() && (
+        <div className="fixed bottom-0 left-0 right-0 z-40">
+          <BottomBannerAd />
+        </div>
+      )}
     </div>
   );
 };

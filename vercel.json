@@ -1,24 +1,48 @@
+/*
 {
+  "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm ci",
   "framework": "vite",
-  "git": {
-    "deploymentEnabled": {
-      "main": true
-    }
-  },
-  "github": {
-    "autoAlias": true,
-    "autoJobCancelation": true
-  },
   "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.youngeagles.org.za/api/:path*"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).css",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
     {
       "source": "/sw.js",
       "headers": [
@@ -38,8 +62,24 @@
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "VITE_API_URL": "https://api.youngeagles.org.za",
+    "VITE_APP_ENV": "production",
+    "VITE_ADSENSE_ENABLED": "true",
+    "VITE_ADSENSE_PUBLISHER_ID": "@adsense-publisher-id",
+    "VITE_ADSENSE_BANNER_AD_UNIT": "@adsense-banner-ad-unit"
+  }
 } 
+*/ 

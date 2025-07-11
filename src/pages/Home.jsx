@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
-import AdManager from '../components/ads/AdManager';
 import { 
   FaGraduationCap,
   FaBook,
@@ -130,22 +129,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Hero Banner Ad - High Visibility */}
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
-          <AdManager 
-            type="banner"
-            context={{ 
-              pageType: 'home', 
-              section: 'hero',
-              userType: isAuthenticated ? 'returning' : 'new'
-            }}
-            className="mb-4"
-            dismissible={true}
-          />
-        </div>
-      </div>
-
       {/* Features Section */}
       <div className="py-24">
         <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
@@ -156,20 +139,6 @@ const Home = () => {
             <p className={`text-xl ${isDark ? 'text-gray-300' : 'text-gray-600'} max-w-3xl mx-auto`}>
               Comprehensive tools designed to enhance the educational experience for everyone
             </p>
-          </div>
-          
-          {/* Mid-Content Rectangle Ad */}
-          <div className="flex justify-center mb-12">
-            <AdManager 
-              type="rectangle"
-              context={{ 
-                pageType: 'home', 
-                section: 'features',
-                userType: isAuthenticated ? 'returning' : 'new'
-              }}
-              size="medium"
-              className="max-w-md"
-            />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xs:gap-8">
@@ -194,21 +163,6 @@ const Home = () => {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Pre-CTA Native Ad */}
-      <div className="py-6">
-        <div className="max-w-4xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
-          <AdManager 
-            type="native"
-            context={{ 
-              pageType: 'home', 
-              section: 'pre-cta',
-              userType: isAuthenticated ? 'returning' : 'new'
-            }}
-            className="mb-6"
-          />
         </div>
       </div>
 

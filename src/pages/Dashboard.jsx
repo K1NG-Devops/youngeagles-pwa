@@ -170,14 +170,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className={`min-h-screen ultra-smooth-scroll ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen mt-24 ultra-smooth-scroll ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
       <main className="pt-0 pb-6 px-3 sm:px-4 lg:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Welcome Section */}
           <div className="bg-gradient-to-r border-b-2 border-blue-500 rounded-xl from-blue-500 to-purple-600 text-white text-center card-enhanced shadow-lg mt-6 mb-6">
             <div className="card-content">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-12 mb-2 p-4 leading-tight">Welcome back, {user?.name}!</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-12you mb-2 p-4 leading-tight">Welcome back, {user?.name}!</h1>
               <p className="text-blue-100 text-sm md:text-base">Track your child's learning progress and stay connected</p>
             </div>
           </div>

@@ -15,44 +15,12 @@ const BottomBannerAd = ({
   const [isDismissed, setIsDismissed] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
-  // Don't show if user has premium subscription
-  if (!showAds()) {
-    return null;
-  }
-
   // Check if Google AdSense is enabled
   const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
   const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID;
   const bannerAdUnit = import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT;
 
-  // If AdSense is properly configured, use that
-  if (isAdSenseEnabled && publisherId && bannerAdUnit && bannerAdUnit !== 'your-banner-ad-unit-id-here') {
-    return (
-      <div className={`fixed bottom-0 left-0 right-0 z-40 ${isDismissed ? 'hidden' : ''} ${className}`}>
-        <div className={`relative ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t shadow-lg`}>
-          {dismissible && (
-            <button
-              onClick={() => setIsDismissed(true)}
-              className={`absolute top-1 right-1 p-1 rounded-full transition-colors z-10 ${
-                isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-              }`}
-            >
-              <FaTimes className="text-xs" />
-            </button>
-          )}
-          
-          <GoogleAdSense 
-            adSlot={bannerAdUnit}
-            adFormat="horizontal"
-            className="w-full"
-            style={{ height: '50px', minHeight: '50px' }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Fallback to custom ads
+  // Custom ads configuration
   const ads = [
     {
       id: 'upgrade-1',
@@ -96,22 +64,17 @@ const BottomBannerAd = ({
 
   // Auto-rotate ads every 45 seconds
   useEffect(() => {
-    if (!autoRotate || ads.length <= 1) return;
+    if (!autoRotate || ads.length <= 1 || !showAds()) return;
 
     const interval = setInterval(() => {
       setCurrentAdIndex((prev) => (prev + 1) % ads.length);
     }, 45000);
 
     return () => clearInterval(interval);
-  }, [autoRotate, ads.length]);
-
-  // Don't render if dismissed
-  if (isDismissed) return null;
-
-  const currentAd = ads[currentAdIndex];
-  const IconComponent = currentAd.icon;
+  }, [autoRotate, ads.length, showAds]);
 
   const handleAdClick = () => {
+    const currentAd = ads[currentAdIndex];
     console.log('Bottom banner ad clicked:', currentAd.id);
     currentAd.action();
   };
@@ -119,7 +82,7 @@ const BottomBannerAd = ({
   const handleDismiss = (e) => {
     e.stopPropagation();
     setIsDismissed(true);
-    console.log('Bottom banner ad dismissed:', currentAd.id);
+    console.log('Bottom banner ad dismissed:', ads[currentAdIndex].id);
   };
 
   const toggleMinimize = (e) => {
@@ -127,8 +90,44 @@ const BottomBannerAd = ({
     setIsMinimized(!isMinimized);
   };
 
+  // Don't show if user has premium subscription or ad is dismissed
+  if (!showAds() || isDismissed) {
+    return null;
+  }
+
+  // If AdSense is properly configured, use that
+  if (isAdSenseEnabled && publisherId && bannerAdUnit && bannerAdUnit !== 'your-banner-ad-unit-id-here') {
+    return (
+      <div className={`fixed bottom-0 left-0 right-0 z-40 ${className}`}>
+        <div className={`relative ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t shadow-lg`}>
+          {dismissible && (
+            <button
+              onClick={handleDismiss}
+              className={`absolute top-1 right-1 p-1 rounded-full transition-colors z-10 ${
+                isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+              }`}
+            >
+              <FaTimes className="text-xs" />
+            </button>
+          )}
+          
+          <GoogleAdSense 
+            adSlot={bannerAdUnit}
+            adFormat="horizontal"
+            className="w-full"
+            style={{ height: '50px', minHeight: '50px' }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to custom ads
+  const currentAd = ads[currentAdIndex];
+  const IconComponent = currentAd.icon;
+
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-40 transform transition-all duration-300 ${isDismissed ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'} ${className}`}>
+    <div className={`fixed bottom-0 left-0 right-0 z-40 transform transition-all duration-300 translate-y-0 opacity-100 ${className}`}>
       <div 
         className={`relative transition-all duration-300 cursor-pointer ${
           isMinimized ? 'h-12' : 'h-16'
