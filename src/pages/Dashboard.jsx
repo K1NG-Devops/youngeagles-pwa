@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import apiService from '../services/apiService';
-import AdManager from '../components/ads/AdManager';
+import InlineGoogleAd from '../components/ads/InlineGoogleAd';
 
 import { FaUser, FaBook, FaBrain, FaBell, FaArrowRight, FaChevronDown, FaChevronUp, FaChartLine, FaCreditCard, FaCheckCircle, FaExclamationTriangle, FaGraduationCap } from 'react-icons/fa';
 import Header from '../components/Header';
@@ -170,30 +170,26 @@ const Dashboard = () => {
   }
 
   return (
-    <div className={`min-h-screen mt-24 ultra-smooth-scroll ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen mt-16 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
-      <main className="pt-0 pb-6 px-3 sm:px-4 lg:px-6">
-        <div className="max-w-7xl mx-auto">
+      <main className="pt-0 pb-20 px-2 sm:px-3">
+        <div className="w-full">
           {/* Welcome Section */}
-          <div className="bg-gradient-to-r border-b-2 border-blue-500 rounded-xl from-blue-500 to-purple-600 text-white text-center card-enhanced shadow-lg mt-6 mb-6">
-            <div className="card-content">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-12you mb-2 p-4 leading-tight">Welcome back, {user?.name}!</h1>
-              <p className="text-blue-100 text-sm md:text-base">Track your child's learning progress and stay connected</p>
-            </div>
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-lg mb-4 p-6">
+            <h1 className="text-2xl font-bold mb-1">Welcome back, {user?.name}!</h1>
+            <p className="text-blue-100 text-sm">Track your child's learning progress and stay connected</p>
           </div>
 
-          {/* Dashboard Header Banner Ad */}
-          {/* <AdManager 
-            type="banner"
-            context={{ 
-              pageType: 'dashboard', 
-              section: 'header',
-              userRole: user?.role,
-              childrenCount: stats.children
+          {/* Inline Ad - Direct placement without container */}
+          <InlineGoogleAd 
+            adSlot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
+            adFormat="horizontal"
+            style={{ 
+              width: '100%', 
+              height: '90px',
+              marginBottom: '1.5rem'
             }}
-            className="mb-4"
-            dismissible={true}
-          /> */}
+          />
           
           {/* Quick Stats for Parents - Color Scheme:
                Blue: Information/General stats
@@ -204,54 +200,51 @@ const Dashboard = () => {
                Indigo: AI/Advanced features
           */}
           {user?.role === 'parent' && (
-            <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center sm:justify-between gap-2 sm:gap-3 w-full mb-4">
-              <div className={`card-content-compact rounded-xl shadow-lg text-center border-l-4 border-blue-500 card-enhanced touch-responsive smooth-animation hover-lift flex-1 min-w-0 sm:min-w-[140px] sm:max-w-[200px] ${
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 border-blue-500 transition-all duration-200 active:scale-95 ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className="text-xl sm:text-2xl font-bold text-blue-500">{stats.children}</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Children</div>
+                <div className="text-3xl font-bold text-blue-500">{stats.children}</div>
+                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Children</div>
               </div>
-              <div className={`card-content-compact rounded-xl shadow-lg text-center border-l-4 border-purple-500 card-enhanced touch-responsive smooth-animation hover-lift flex-1 min-w-0 sm:min-w-[140px] sm:max-w-[200px] ${
+              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 border-purple-500 transition-all duration-200 active:scale-95 ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className="text-xl sm:text-2xl font-bold text-purple-500">{stats.homework}</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Homework Assigned</div>
+                <div className="text-3xl font-bold text-purple-500">{stats.homework}</div>
+                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Homework</div>
               </div>
-              <div className={`card-content-compact rounded-xl shadow-lg text-center border-l-4 border-green-500 card-enhanced touch-responsive smooth-animation hover-lift flex-1 min-w-0 sm:min-w-[140px] sm:max-w-[200px] ${
+              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 border-green-500 transition-all duration-200 active:scale-95 ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className="text-xl sm:text-2xl font-bold text-green-500">{stats.submitted}</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Homework Submitted</div>
+                <div className="text-3xl font-bold text-green-500">{stats.submitted}</div>
+                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Submitted</div>
               </div>
-              <div className={`card-content-compact rounded-xl shadow-lg text-center border-l-4 card-enhanced touch-responsive smooth-animation hover-lift flex-1 min-w-0 sm:min-w-[140px] sm:max-w-[200px] ${stats.completionRate >= 80 ? 'border-green-500' : stats.completionRate >= 60 ? 'border-yellow-500' : 'border-orange-500'} ${
+              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 transition-all duration-200 active:scale-95 ${stats.completionRate >= 80 ? 'border-green-500' : stats.completionRate >= 60 ? 'border-yellow-500' : 'border-orange-500'} ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className={`text-xl sm:text-2xl font-bold ${stats.completionRate >= 80 ? 'text-green-500' : stats.completionRate >= 60 ? 'text-yellow-500' : 'text-orange-500'}`}>{stats.completionRate}%</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Completion Rate</div>
+                <div className={`text-3xl font-bold ${stats.completionRate >= 80 ? 'text-green-500' : stats.completionRate >= 60 ? 'text-yellow-500' : 'text-orange-500'}`}>{stats.completionRate}%</div>
+                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Complete</div>
               </div>
             </div>
           )}
 
-          {/* Dashboard Stats Rectangle Ad */}
-          <AdManager 
-            type="rectangle"
-            context={{ 
-              pageType: 'dashboard', 
-              section: 'stats',
-              userRole: user?.role,
-              homeworkCount: stats.homework,
-              completionRate: stats.completionRate
+          {/* Inline Rectangle Ad between stats */}
+          <InlineGoogleAd 
+            adSlot={import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE}
+            adFormat="rectangle"
+            className="mx-auto my-6"
+            style={{ 
+              maxWidth: '336px',
+              height: '280px'
             }}
-            size="medium"
-            className="max-w-sm mx-auto mb-4"
           />
 
           {/* Enhanced Stats Toggle */}
@@ -275,8 +268,8 @@ const Dashboard = () => {
               </button>
               
               {showMoreStats && (
-                <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap justify-center sm:justify-between gap-3 sm:gap-4 animate-in">
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-red-500 card-enhanced smooth-animation hover-lift ${
+                <div className="mt-4 grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-red-500 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
                     isDark 
                       ? 'bg-gray-800 text-white' 
                       : 'bg-white text-gray-800'
@@ -292,7 +285,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                   
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-green-500 card-enhanced smooth-animation hover-lift ${
+                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-green-500 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
                     isDark 
                       ? 'bg-gray-800 text-white' 
                       : 'bg-white text-gray-800'
@@ -389,66 +382,62 @@ const Dashboard = () => {
           {/* Quick Actions for Parents */}
           {user?.role === 'parent' && (
             <div className="mb-4">
-              {/* Quick Actions Native Ad */}
-              <div className="mb-6">
-                <AdManager 
-                  type="native"
-                  context={{ 
-                    pageType: 'dashboard', 
-                    section: 'quick-actions',
-                    userRole: user?.role,
-                    features: ['homework', 'activities', 'notifications']
-                  }}
-                  className="mb-4"
-                />
-              </div>
+              {/* Quick Actions Native Ad - Place after actions */}
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center">
                 <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-3"></div>
                 Quick Actions
               </h2>
-              <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center sm:justify-between gap-3 sm:gap-4 w-full">
-                <Link to="/children" className={`p-5 sm:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center card-enhanced smooth-animation hover-lift border-l-4 border-blue-500 group touch-responsive ${
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Link to="/children" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-blue-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 smooth-animation">
-                    <FaUser className="text-xl sm:text-2xl text-blue-500" />
+                  <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <FaUser className="text-2xl text-blue-500" />
                   </div>
-                  <span className="font-semibold text-sm sm:text-base">My Children</span>
+                  <span className="font-semibold text-base">My Children</span>
                 </Link>
-                <Link to="/homework" className={`p-5 sm:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center card-enhanced smooth-animation hover-lift border-l-4 border-purple-500 group touch-responsive ${
+                <Link to="/homework" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-purple-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 smooth-animation">
-                    <FaBook className="text-xl sm:text-2xl text-purple-500" />
+                  <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <FaBook className="text-2xl text-purple-500" />
                   </div>
-                  <span className="font-semibold text-sm sm:text-base">Homework</span>
+                  <span className="font-semibold text-base">Homework</span>
                 </Link>
-                <Link to="/activities" className={`p-5 sm:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center card-enhanced smooth-animation hover-lift border-l-4 border-indigo-500 group touch-responsive ${
+                <Link to="/activities" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-indigo-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 smooth-animation">
-                    <FaGraduationCap className="text-xl sm:text-2xl text-indigo-500" />
+                  <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <FaGraduationCap className="text-2xl text-indigo-500" />
                   </div>
-                  <span className="font-semibold text-sm sm:text-base">Activities</span>
+                  <span className="font-semibold text-base">Activities</span>
                 </Link>
-                <Link to="/notifications" className={`p-5 sm:p-6 rounded-xl shadow-lg flex flex-col items-center justify-center card-enhanced smooth-animation hover-lift border-l-4 border-green-500 group touch-responsive ${
+                <Link to="/notifications" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-green-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 smooth-animation">
-                    <FaBell className="text-xl sm:text-2xl text-green-500" />
+                  <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <FaBell className="text-2xl text-green-500" />
                   </div>
-                  <span className="font-semibold text-sm sm:text-base">Announcements</span>
-                </Link>
-              </div>
+                <span className="font-semibold text-base">Announcements</span>
+              </Link>
             </div>
+            
+            {/* Inline Native Ad - Blends with content */}
+            <InlineGoogleAd 
+              adSlot={import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE}
+              adFormat="fluid"
+              style={{ marginTop: '1.5rem' }}
+              data-ad-layout-key="-fb+5w+4e-db+86"
+            />
+          </div>
           )}
           
         </div>

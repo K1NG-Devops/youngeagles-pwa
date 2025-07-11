@@ -69,11 +69,25 @@ const GoogleAdSense = ({
 
   const adStyle = {
     display: 'block',
+    width: '100%',
+    height: 'auto',
     ...style
   };
 
+  // Container styles to prevent overflow
+  const containerStyle = {
+    overflow: 'hidden',
+    maxWidth: '100%',
+    margin: '0 auto',
+    borderRadius: '0.5rem',
+    backgroundColor: 'transparent'
+  };
+
   return (
-    <div className={`adsense-container ${className}`}>
+    <div 
+      className={`adsense-container ${className}`}
+      style={containerStyle}
+    >
       <ins
         ref={adRef}
         className="adsbygoogle"

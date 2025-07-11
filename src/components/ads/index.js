@@ -1,4 +1,6 @@
 export { default as AdManager } from './AdManager';
+export { default as InlineGoogleAd } from './InlineGoogleAd';
+export { default as GoogleAutoAds } from './GoogleAutoAds';
 export { default as BannerAd } from './BannerAd';
 export { default as RectangleAd } from './RectangleAd';
 export { default as NativeAd } from './NativeAd';

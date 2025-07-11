@@ -24,7 +24,12 @@ export default defineConfig({
   plugins: [
     react({
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react'
+      jsxImportSource: 'react',
+      babel: {
+        plugins: [
+          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+        ]
+      }
     }),
     tailwindcss(),
     VitePWA({
@@ -64,7 +69,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        cacheId: 'young-eagles-minimal-v1.0.2',
+        cacheId: 'young-eagles-pwa-v1',
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
@@ -156,23 +161,21 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: process.env.NODE_ENV === 'production',
-        drop_debugger: process.env.NODE_ENV === 'production'
+        drop_debugger: process.env.NODE_ENV === 'production',
+        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info'] : []
       },
       format: {
         comments: false
       }
     },
     rollupOptions: {
-      external: [],
+      input: {
+        main: './index.html'
+      },
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('react')) return 'vendor-react';
-            if (id.includes('react-router')) return 'vendor-router';
-            if (id.includes('react-icons')) return 'vendor-icons';
-            if (id.includes('axios')) return 'vendor-axios';
-            return 'vendor';
-          }
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-utils': ['axios', 'react-icons'],
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
@@ -196,6 +199,9 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     assetsInlineLimit: 4096,
     reportCompressedSize: false,
-    cssCodeSplit: true
+    cssCodeSplit: true,
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom']
+    }
   }
 }) 

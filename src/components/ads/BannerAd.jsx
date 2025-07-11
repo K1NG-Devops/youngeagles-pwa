@@ -89,7 +89,8 @@ const BannerAd = ({
 
   return (
     <div className={`
-      w-full relative overflow-hidden rounded-lg shadow-sm border transition-all duration-300 hover:shadow-md cursor-pointer
+      w-screen relative overflow-hidden shadow-sm border transition-all duration-300 hover:shadow-md cursor-pointer
+      -mx-[calc((100vw-100%)/2)] min-w-full
       ${isDark ? 'border-gray-700' : 'border-gray-200'}
       ${className}
     `}>
@@ -97,7 +98,7 @@ const BannerAd = ({
       <div 
         onClick={handleAdClick}
         className={`
-          relative p-3 min-h-[70px] flex items-center justify-between
+          relative p-3 min-h-[70px] flex items-center justify-between max-w-7xl mx-auto
           ${currentAd.bgColor} ${currentAd.textColor}
           bg-gradient-to-r from-opacity-90 to-opacity-80
         `}

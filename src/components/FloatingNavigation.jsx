@@ -12,11 +12,73 @@ const FloatingNavigation = () => {
     const saved = localStorage.getItem('floatingNavPosition');
     return saved ? JSON.parse(saved) : { bottom: 24, right: 24 };
   });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const floatRef = useRef(null);
+  const fabRef = useRef(null);
 
   const handleToggle = () => {
-    setIsExpanded(prev => !prev);
+    if (!isDragging) {
+      setIsExpanded(prev => !prev);
+    }
   };
+
+  // Handle drag start
+  const handleDragStart = (e) => {
+    if (isExpanded) return;
+    
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    
+    setIsDragging(true);
+    setDragStart({
+      x: clientX + position.right,
+      y: clientY + position.bottom
+    });
+    
+    e.preventDefault();
+  };
+
+  // Handle drag move
+  const handleDragMove = (e) => {
+    if (!isDragging) return;
+    
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    
+    const newRight = Math.max(0, Math.min(window.innerWidth - 56, dragStart.x - clientX));
+    const newBottom = Math.max(0, Math.min(window.innerHeight - 56, dragStart.y - clientY));
+    
+    setPosition({ right: newRight, bottom: newBottom });
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      localStorage.setItem('floatingNavPosition', JSON.stringify(position));
+    }
+  };
+
+  // Add global event listeners for drag
+  useEffect(() => {
+    if (isDragging) {
+      const handleMove = (e) => handleDragMove(e);
+      const handleEnd = () => handleDragEnd();
+      
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('mouseup', handleEnd);
+      document.addEventListener('touchmove', handleMove, { passive: false });
+      document.addEventListener('touchend', handleEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMove);
+        document.removeEventListener('mouseup', handleEnd);
+        document.removeEventListener('touchmove', handleMove);
+        document.removeEventListener('touchend', handleEnd);
+      };
+    }
+  }, [isDragging, dragStart, position]);
 
   // Handle clicks outside the floating nav to close it
   useEffect(() => {
@@ -139,14 +201,20 @@ const FloatingNavigation = () => {
 
           {/* Main FAB Button */}
           <button
+            ref={fabRef}
             onClick={handleToggle}
-            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 ${
+            onMouseDown={handleDragStart}
+            onTouchStart={handleDragStart}
+            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
+              isDragging ? 'cursor-move scale-110' : 'hover:scale-110'
+            } ${
               isExpanded 
                 ? 'bg-red-500 rotate-45 scale-105' 
                 : isDark 
                   ? 'bg-blue-600 hover:bg-blue-700' 
                   : 'bg-blue-500 hover:bg-blue-600'
             }`}
+            style={{ touchAction: 'none' }}
           >
             {isExpanded ? (
               <FaTimes className="text-white text-xl" />
@@ -158,22 +226,24 @@ const FloatingNavigation = () => {
       </div>
 
       {/* CSS for animations */}
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
+          
+          .animate-fadeInUp {
+            animation: fadeInUp 0.3s ease-out;
           }
-        }
-        
-        .animate-fadeInUp {
-          animation: fadeInUp 0.3s ease-out;
-        }
-      `}</style>
+        `}
+      </style>
     </>
   );
 };

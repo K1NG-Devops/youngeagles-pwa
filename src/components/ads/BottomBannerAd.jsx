@@ -18,7 +18,7 @@ const BottomBannerAd = ({
   // Check if Google AdSense is enabled
   const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
   const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID;
-  const bannerAdUnit = import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT;
+  const bannerAdUnit = import.meta.env.VITE_ADSENSE_FOOTER_BANNER || import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
 
   // Custom ads configuration
   const ads = [
@@ -96,7 +96,7 @@ const BottomBannerAd = ({
   }
 
   // If AdSense is properly configured, use that
-  if (isAdSenseEnabled && publisherId && bannerAdUnit && bannerAdUnit !== 'your-banner-ad-unit-id-here') {
+  if (isAdSenseEnabled && publisherId && bannerAdUnit) {
     return (
       <div className={`fixed bottom-0 left-0 right-0 z-40 ${className}`}>
         <div className={`relative ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t shadow-lg`}>

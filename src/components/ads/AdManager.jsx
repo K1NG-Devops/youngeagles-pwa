@@ -37,8 +37,14 @@ const AdManager = ({
   // Check if Google AdSense is enabled and configured
   const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
   const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID;
-  const bannerAdUnit = import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT;
-  const sidebarAdUnit = import.meta.env.VITE_ADSENSE_SIDEBAR_AD_UNIT;
+  // Map to existing Vercel environment variables
+  const headerBannerAdUnit = import.meta.env.VITE_ADSENSE_HEADER_BANNER;
+  const footerBannerAdUnit = import.meta.env.VITE_ADSENSE_FOOTER_BANNER;
+  const mobileBannerAdUnit = import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
+  const sidebarSkyscraperAdUnit = import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER;
+  const contentRectangleAdUnit = import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE;
+  const inFeedNativeAdUnit = import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE;
+  const inArticleNativeAdUnit = import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE;
   
   // Render appropriate ad component based on type
   const renderAd = () => {
@@ -46,26 +52,105 @@ const AdManager = ({
     if (isAdSenseEnabled && publisherId) {
       switch (type) {
       case 'banner':
-        if (bannerAdUnit && bannerAdUnit !== 'your-banner-ad-unit-id-here') {
+        // Use mobile banner for smaller screens, header banner for larger
+        const bannerUnit = window.innerWidth < 768 ? mobileBannerAdUnit : headerBannerAdUnit;
+        if (bannerUnit) {
+          return (
+            <div className="w-full" style={{ minHeight: '90px', maxHeight: '90px' }}>
+              <GoogleAdSense 
+                adSlot={bannerUnit}
+                adFormat="horizontal"
+                className={`w-full ${className}`}
+                style={{ height: '90px', maxHeight: '90px' }}
+                {...props}
+              />
+            </div>
+          );
+        }
+        break;
+      case 'rectangle':
+      case 'sidebar':
+        if (sidebarSkyscraperAdUnit) {
+          return (
+            <div className="w-full" style={{ minHeight: '250px', maxHeight: '600px' }}>
+              <GoogleAdSense 
+                adSlot={sidebarSkyscraperAdUnit}
+                adFormat="vertical"
+                className={`w-full ${className}`}
+                style={{ height: '250px', maxHeight: '600px' }}
+                {...props}
+              />
+            </div>
+          );
+        }
+        break;
+      case 'footer':
+        if (footerBannerAdUnit) {
+          return (
+            <div className="w-full" style={{ minHeight: '90px', maxHeight: '90px' }}>
+              <GoogleAdSense 
+                adSlot={footerBannerAdUnit}
+                adFormat="horizontal"
+                className={`w-full ${className}`}
+                style={{ height: '90px', maxHeight: '90px' }}
+                {...props}
+              />
+            </div>
+          );
+        }
+        break;
+      case 'header':
+        if (headerBannerAdUnit) {
+          return (
+            <div className="w-full" style={{ minHeight: '90px', maxHeight: '90px' }}>
+              <GoogleAdSense 
+                adSlot={headerBannerAdUnit}
+                adFormat="horizontal"
+                className={`w-full ${className}`}
+                style={{ height: '90px', maxHeight: '90px' }}
+                {...props}
+              />
+            </div>
+          );
+        }
+        break;
+      case 'content':
+        if (contentRectangleAdUnit) {
+          return (
+            <div className="w-full" style={{ minHeight: '250px', maxHeight: '250px' }}>
+              <GoogleAdSense 
+                adSlot={contentRectangleAdUnit}
+                adFormat="rectangle"
+                className={`w-full ${className}`}
+                style={{ height: '250px', maxHeight: '250px' }}
+                {...props}
+              />
+            </div>
+          );
+        }
+        break;
+      case 'native':
+      case 'in-feed':
+        if (inFeedNativeAdUnit) {
           return (
             <GoogleAdSense 
-              adSlot={bannerAdUnit}
-              adFormat="horizontal"
+              adSlot={inFeedNativeAdUnit}
+              adFormat="fluid"
+              adLayoutKey="-fb+5w+4e-db+86"
               className={`w-full ${className}`}
-              style={{ height: '90px' }}
               {...props}
             />
           );
         }
         break;
-      case 'rectangle':
-        if (sidebarAdUnit && sidebarAdUnit !== 'your-sidebar-ad-unit-id-here') {
+      case 'in-article':
+        if (inArticleNativeAdUnit) {
           return (
             <GoogleAdSense 
-              adSlot={sidebarAdUnit}
-              adFormat="rectangle"
+              adSlot={inArticleNativeAdUnit}
+              adFormat="fluid"
+              adLayoutKey="-fg+5n+6t-e7+r"
               className={`w-full ${className}`}
-              style={{ height: '250px' }}
               {...props}
             />
           );

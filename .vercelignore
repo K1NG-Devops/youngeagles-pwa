@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Testing
+*.test.js
+*.spec.js
+__tests__/
+coverage/
+
+# Development files
+.env.local
+.env.development
+*.log
+
+# Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build tools
+.eslintcache
+.stylelintcache
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Git
+.git/
+.gitignore
