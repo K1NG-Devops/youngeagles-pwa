@@ -7,37 +7,24 @@ import viteCompression from 'vite-plugin-compression'
 export default defineConfig({
   base: '/',
   define: {
-    // Properly set NODE_ENV based on actual environment, with Vercel detection
     'process.env.NODE_ENV': JSON.stringify(
-      process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production' 
+      process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production' 
         ? 'production' 
         : 'development'
     ),
-    'global': 'globalThis',
-    // Explicitly disable React development mode in production
-    '__DEV__': process.env.NODE_ENV !== 'production' && process.env.VERCEL_ENV !== 'production'
+    'global': 'globalThis'
   },
   envPrefix: 'VITE_',
+  resolve: {
+    alias: {
+      '@': '/src'
+    },
+    extensions: ['.js', '.jsx', '.ts', '.tsx']
+  },
   plugins: [
     react({
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react',
-      // Force production JSX transform regardless of environment
-      jsxDev: false,
-      // Ensure we're using the right React JSX transform
-      babel: {
-        plugins: [],
-        presets: [
-          [
-            '@babel/preset-react',
-            {
-              runtime: 'automatic',
-              development: false, // Always use production JSX transform
-              importSource: 'react'
-            }
-          ]
-        ]
-      }
+      jsxImportSource: 'react'
     }),
     tailwindcss(),
     VitePWA({
@@ -120,50 +107,27 @@ export default defineConfig({
   },
   build: {
     sourcemap: false,
-    minify: false, // Temporarily disable minification to test if this is causing the JSX issue
-    // Keep all other optimizations
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      },
+      format: {
+        comments: false
+      }
+    },
     rollupOptions: {
+      external: [],
       output: {
-        manualChunks: (id) => {
-          // Vendor chunks
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('react-router')) {
-              return 'router';
-            }
-            if (id.includes('axios') || id.includes('socket.io')) {
-              return 'network';
-            }
-            if (id.includes('lucide-react') || id.includes('react-icons')) {
-              return 'icons';
-            }
-            if (id.includes('jspdf') || id.includes('html2canvas')) {
-              return 'pdf';
-            }
-            if (id.includes('react-toastify')) {
-              return 'toast';
-            }
-            if (id.includes('crypto-js')) {
-              return 'crypto';
-            }
-            return 'vendor';
-          }
-          
-          // App chunks based on routes
-          if (id.includes('/pages/Dashboard')) {
-            return 'dashboard';
-          }
-          if (id.includes('/pages/') && (id.includes('Payment') || id.includes('Checkout'))) {
-            return 'payments';
-          }
-          // Ad components removed
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          'icons': ['lucide-react', 'react-icons'],
+          'utils': ['axios', 'crypto-js']
         },
-        chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop().replace('.jsx', '').replace('.js', '') : 'chunk';
-          return `js/[name]-[hash].js`;
-        },
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
@@ -177,12 +141,10 @@ export default defineConfig({
         }
       }
     },
-    target: 'esnext',
+    target: 'es2015',
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096,
-    // Optimize for faster loading
     reportCompressedSize: false,
-    // Enable CSS code splitting for better caching
     cssCodeSplit: true
   }
 }) 
