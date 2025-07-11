@@ -180,16 +180,19 @@ const Dashboard = () => {
             <p className="text-blue-100 text-sm">Track your child's learning progress and stay connected</p>
           </div>
 
-          {/* Inline Ad - Direct placement without container */}
-          <InlineGoogleAd 
-            adSlot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
-            adFormat="horizontal"
-            style={{ 
-              width: '100%', 
-              height: '90px',
-              marginBottom: '1.5rem'
-            }}
-          />
+          {/* Ad Container with proper spacing */}
+          <div className="relative w-full mb-6 overflow-hidden">
+            <InlineGoogleAd 
+              adSlot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
+              adFormat="horizontal"
+              className="mx-auto"
+              style={{ 
+                width: '100%', 
+                minHeight: '90px',
+                maxHeight: '120px'
+              }}
+            />
+          </div>
           
           {/* Quick Stats for Parents - Color Scheme:
                Blue: Information/General stats

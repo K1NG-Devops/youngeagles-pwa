@@ -34,21 +34,29 @@ const InlineGoogleAd = ({
     return null;
   }
 
-  // Render the ad directly without wrapper
+  // Render the ad with proper constraints
   return (
-    <ins
-      ref={adRef}
-      className={`adsbygoogle ${className}`}
-      style={{
-        display: 'block',
-        ...style
-      }}
-      data-ad-client={publisherId}
-      data-ad-slot={adSlot}
-      data-ad-format={adFormat}
-      data-full-width-responsive="true"
-      data-adtest={isTestMode ? 'on' : 'off'}
-    />
+    <div className="ad-container" style={{ 
+      width: '100%', 
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
+      <ins
+        ref={adRef}
+        className={`adsbygoogle ${className}`}
+        style={{
+          display: 'block',
+          width: '100%',
+          overflow: 'hidden',
+          ...style
+        }}
+        data-ad-client={publisherId}
+        data-ad-slot={adSlot}
+        data-ad-format={adFormat}
+        data-full-width-responsive="true"
+        data-adtest={isTestMode ? 'on' : 'off'}
+      />
+    </div>
   );
 };
 

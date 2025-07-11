@@ -297,3 +297,40 @@ body, html {
   }
 }
 
+/* Ad Container - Prevent content overflow */
+.ad-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  max-height: 120px;
+  margin: 0 auto;
+}
+
+/* Ensure ad content stays within bounds */
+.ad-container .adsbygoogle {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Prevent ads from overlapping other content */
+.ad-container iframe,
+.ad-container ins,
+.ad-container div {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Responsive ad heights */
+@media (max-width: 640px) {
+  .ad-container {
+    max-height: 100px;
+  }
+}
+
+@media (min-width: 641px) {
+  .ad-container {
+    max-height: 120px;
+  }
+}
+
