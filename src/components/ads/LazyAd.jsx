@@ -40,22 +40,25 @@ const LazyAd = ({
   }, [threshold, rootMargin]);
 
   return (
-    <div ref={adRef} className={className} style={style}>
+    <div ref={adRef} className={className} style={{ margin: 0, padding: 0, ...style }}>
       {!isVisible && placeholder ? (
         placeholder
       ) : isVisible ? (
         <GoogleAdSense 
           adSlot={adSlot}
           adFormat={adFormat}
+          style={{ margin: 0, padding: 0 }}
           {...props}
         />
       ) : (
-        // Default placeholder
+        // Default placeholder - minimal height on mobile
         <div 
           style={{
-            minHeight: style.minHeight || '90px',
+            minHeight: window.innerWidth < 768 ? '50px' : (style.minHeight || '90px'),
             backgroundColor: 'transparent',
-            display: 'block'
+            display: 'block',
+            margin: 0,
+            padding: 0
           }}
         />
       )}

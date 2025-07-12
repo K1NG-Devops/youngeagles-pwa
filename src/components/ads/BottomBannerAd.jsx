@@ -79,9 +79,9 @@ const BottomBannerAd = ({
   const IconComponent = ad.icon;
 
   return (
-    <div className={`fixed bottom-20 left-0 right-0 z-30 px-2 ${className}`}>
+    <div className={`fixed bottom-4 left-0 right-0 z-30 px-2 ${className} sm:bottom-8`}>
       <div 
-        className={`mx-auto max-w-sm rounded-lg shadow-lg border cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+        className={`mx-auto max-w-sm rounded-lg shadow-lg border cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${
           isDark 
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-white border-gray-200'
@@ -89,11 +89,11 @@ const BottomBannerAd = ({
         onClick={handleAdClick}
       >
         {/* Native ad content */}
-        <div className="p-4">
-          <div className="flex items-center space-x-3">
+        <div className="p-3">
+          <div className="flex items-center space-x-2">
             {/* Icon with gradient background */}
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${ad.color} flex items-center justify-center flex-shrink-0`}>
-              <IconComponent className="text-white text-xl" />
+            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${ad.color} flex items-center justify-center flex-shrink-0`}>
+              <IconComponent className="text-white text-lg" />
             </div>
             
             {/* Content */}
@@ -115,35 +115,35 @@ const BottomBannerAd = ({
           </div>
         </div>
         
+        {/* Dismiss button positioned outside content area */}
+        {dismissible && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDismiss();
+            }}
+            className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+              isDark 
+                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+            } shadow-md`}
+            title="Dismiss ad"
+          >
+            <FaTimes className="text-xs" />
+          </button>
+        )}
+        
         {/* Subtle ad indicator */}
-        <div className={`px-4 pb-2 flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          <span className="text-xs">Sponsored</span>
-          
-          {/* Dismiss button */}
-          {dismissible && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDismiss();
-              }}
-              className={`p-1 rounded-full transition-colors ${
-                isDark 
-                  ? 'hover:bg-gray-700 text-gray-400' 
-                  : 'hover:bg-gray-100 text-gray-500'
-              }`}
-              title="Dismiss ad"
-            >
-              <FaTimes className="text-xs" />
-            </button>
-          )}
+        <div className={`px-3 pb-1 flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+          <span className="text-[10px]">Sponsored</span>
         </div>
         
         {/* Progress dots */}
-        <div className="flex justify-center pb-2 space-x-1">
+        <div className="flex justify-center pb-1 space-x-1">
           {educationalAds.map((_, index) => (
             <div
               key={index}
-              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+              className={`w-1 h-1 rounded-full transition-colors ${
                 index === currentAd 
                   ? 'bg-blue-500' 
                   : (isDark ? 'bg-gray-600' : 'bg-gray-300')

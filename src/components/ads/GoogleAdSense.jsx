@@ -60,11 +60,11 @@ const GoogleAdSense = ({
   }
 
   return (
-    <div className={`google-adsense-container ${className}`} style={style}>
+    <div className={`google-adsense-container ${className}`} style={{ margin: 0, padding: 0, ...style }}>
       <ins
         ref={adRef}
         className="adsbygoogle"
-        style={{ display: 'block', ...style }}
+        style={{ display: 'block', margin: 0, ...style }}
         data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX'}
         data-ad-slot={adSlot}
         data-ad-format={adFormat}
