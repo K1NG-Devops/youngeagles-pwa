@@ -54,9 +54,9 @@ const Management = () => {
   const subscriptionInfo = {
     plan: currentPlan?.name || 'Free Plan',
     status: subscriptionStatus === 'active' ? 'Active' : 
-            subscriptionStatus === 'trial' ? 'Trial' : 
-            subscriptionStatus === 'trial_expired' ? 'Trial Expired' :
-            subscriptionStatus === 'expiring_soon' ? 'Expiring Soon' : 
+      subscriptionStatus === 'trial' ? 'Trial' : 
+        subscriptionStatus === 'trial_expired' ? 'Trial Expired' :
+          subscriptionStatus === 'expiring_soon' ? 'Expiring Soon' : 
             subscriptionStatus === 'cancelled' ? 'Cancelled' : 'Inactive',
     nextBilling: subscription?.subscription_end_date ? 
       new Date(subscription.subscription_end_date).toLocaleDateString() : 'N/A',
@@ -71,7 +71,7 @@ const Management = () => {
       `${currentPlan?.features.storage}MB storage`,
       currentPlan?.features.messaging ? 'Parent-teacher messaging' : 'Basic communication',
       currentPlan?.features.analytics === 'advanced' ? 'Advanced analytics' : 
-      currentPlan?.features.analytics === 'enterprise' ? 'Enterprise analytics' : 'Basic reports',
+        currentPlan?.features.analytics === 'enterprise' ? 'Enterprise analytics' : 'Basic reports',
       currentPlan?.features.ai_grading ? 'AI-powered grading' : 'Manual grading only',
       currentPlan?.features.priority_support ? 'Priority support' : 'Standard support'
     ]
@@ -259,11 +259,11 @@ const Management = () => {
               <span className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{subscriptionInfo.plan}</span>
               <span className={`px-2 py-1 rounded text-xs font-medium ${
                 subscriptionInfo.status === 'Active' ? 'bg-green-100 text-green-800' :
-                subscriptionInfo.status === 'Trial' ? 'bg-blue-100 text-blue-800' :
-                subscriptionInfo.status === 'Trial Expired' ? 'bg-red-100 text-red-800' :
-                subscriptionInfo.status === 'Expiring Soon' ? 'bg-yellow-100 text-yellow-800' :
-                subscriptionInfo.status === 'Cancelled' ? 'bg-gray-100 text-gray-800' :
-                'bg-gray-100 text-gray-800'
+                  subscriptionInfo.status === 'Trial' ? 'bg-blue-100 text-blue-800' :
+                    subscriptionInfo.status === 'Trial Expired' ? 'bg-red-100 text-red-800' :
+                      subscriptionInfo.status === 'Expiring Soon' ? 'bg-yellow-100 text-yellow-800' :
+                        subscriptionInfo.status === 'Cancelled' ? 'bg-gray-100 text-gray-800' :
+                          'bg-gray-100 text-gray-800'
               }`}>
                 {subscriptionInfo.status}
               </span>
@@ -305,8 +305,8 @@ const Management = () => {
               </div>
               <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {subscriptionInfo.paymentMethod === 'payfast' ? 'PayFast' :
-                 subscriptionInfo.paymentMethod === 'credit_card' ? 'Credit Card' :
-                 subscriptionInfo.paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'None'}
+                  subscriptionInfo.paymentMethod === 'credit_card' ? 'Credit Card' :
+                    subscriptionInfo.paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'None'}
               </div>
             </div>
           </div>
@@ -316,13 +316,13 @@ const Management = () => {
               daysRemaining <= 7 ? 
                 isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-700' :
                 daysRemaining <= 30 ?
-                isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-50 text-yellow-700' :
-                isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-50 text-green-700'
+                  isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-50 text-yellow-700' :
+                  isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-50 text-green-700'
             }`}>
               {daysRemaining > 0 ? 
                 `${daysRemaining} days remaining` : 
                 daysRemaining === 0 ? 'Expires today' : 
-                `Expired ${Math.abs(daysRemaining)} days ago`
+                  `Expired ${Math.abs(daysRemaining)} days ago`
               }
             </div>
           )}

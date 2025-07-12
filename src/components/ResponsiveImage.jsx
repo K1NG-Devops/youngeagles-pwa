@@ -16,7 +16,7 @@ export const ResponsiveImage = ({
   const defaultSources = [
     { media: '(min-width: 1024px)', srcSet: `${src}?w=1200 1200w, ${src}?w=1600 1600w` },
     { media: '(min-width: 768px)', srcSet: `${src}?w=800 800w, ${src}?w=1200 1200w` },
-    { media: '(min-width: 480px)', srcSet: `${src}?w=600 600w, ${src}?w=800 800w` },
+    { media: '(min-width: 480px)', srcSet: `${src}?w=600 600w, ${src}?w=800 800w` }
   ];
 
   const imageSources = sources.length > 0 ? sources : defaultSources;

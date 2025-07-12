@@ -300,7 +300,7 @@ const AdAnalytics = ({ timeRange = '7d', className = '' }) => {
                   <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {ad.position}
                   </span>
-                  <span className={`text-sm font-semibold text-green-600`}>
+                  <span className={'text-sm font-semibold text-green-600'}>
                     R{ad.revenue.toFixed(2)}
                   </span>
                 </div>
@@ -335,7 +335,7 @@ const AdAnalytics = ({ timeRange = '7d', className = '' }) => {
                   <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {item.source}
                   </span>
-                  <span className={`text-sm font-semibold text-green-600`}>
+                  <span className={'text-sm font-semibold text-green-600'}>
                     R{item.revenue.toFixed(2)}
                   </span>
                 </div>

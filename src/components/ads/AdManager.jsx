@@ -47,22 +47,22 @@ const AdManager = ({
   // Get appropriate ad slot based on position and format
   const getAdSlot = (format) => {
     switch (format) {
-      case 'banner':
-        return position === 'header' 
-          ? import.meta.env.VITE_ADSENSE_HEADER_BANNER
-          : position === 'footer'
+    case 'banner':
+      return position === 'header' 
+        ? import.meta.env.VITE_ADSENSE_HEADER_BANNER
+        : position === 'footer'
           ? import.meta.env.VITE_ADSENSE_FOOTER_BANNER
           : import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
-      case 'rectangle':
-        return import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE;
-      case 'native-article':
-        return import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE;
-      case 'native-feed':
-        return import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE;
-      case 'skyscraper':
-        return import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER;
-      default:
-        return import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
+    case 'rectangle':
+      return import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE;
+    case 'native-article':
+      return import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE;
+    case 'native-feed':
+      return import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE;
+    case 'skyscraper':
+      return import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER;
+    default:
+      return import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
     }
   };
 
@@ -118,22 +118,22 @@ const AdManager = ({
   // Position-based ad format selection
   const getAdFormatByPosition = (position, strategy) => {
     switch (position) {
-      case 'header':
-        return 'banner';
-      case 'sidebar':
-        return 'rectangle';
-      case 'content-top':
-        return 'banner';
-      case 'content-middle':
-        return 'native-article';
-      case 'content-bottom':
-        return 'native-feed';
-      case 'footer':
-        return 'banner';
-      case 'floating':
-        return 'rectangle';
-      default:
-        return strategy.formats[0];
+    case 'header':
+      return 'banner';
+    case 'sidebar':
+      return 'rectangle';
+    case 'content-top':
+      return 'banner';
+    case 'content-middle':
+      return 'native-article';
+    case 'content-bottom':
+      return 'native-feed';
+    case 'footer':
+      return 'banner';
+    case 'floating':
+      return 'rectangle';
+    default:
+      return strategy.formats[0];
     }
   };
 

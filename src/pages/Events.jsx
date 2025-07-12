@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaBell, FaUsers } from 'react-icons/fa';
-import { AdManager } from '../components/ads';
+import { FaCalendarAlt, FaBell, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
+import SmartAdManager from '../components/ads/SmartAdManager';
 
 const Events = () => {
   const { isDark } = useTheme();
@@ -27,7 +27,7 @@ const Events = () => {
 
   const getEventIcon = (type) => {
     switch (type) {
-    case 'meeting': return FaUsers;
+    case 'meeting': return FaCalendarAlt;
     case 'event': return FaCalendarAlt;
     case 'exhibition': return FaBell;
     case 'holiday': return FaClock;
@@ -75,15 +75,11 @@ const Events = () => {
           <p className="text-purple-100 text-sm">Stay updated with school events and important dates</p>
         </div>
 
-        {/* Top Banner Ad */}
-        <AdManager 
-          type="banner" 
-          context="events" 
+        {/* Top Banner Ad - Smart placement */}
+        <SmartAdManager 
+          position="header" 
+          pageType="events" 
           className="my-4"
-          userContext={{
-            pageType: 'events',
-            hasEvents: events.length > 0
-          }}
         />
 
         {events.length === 0 ? (
@@ -134,19 +130,12 @@ const Events = () => {
                   <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-relaxed`}>{event.description}</p>
                 </div>
 
-                {/* Rectangle Ad after every 2nd event */}
-                {(index + 1) % 2 === 0 && (
-                  <AdManager 
-                    type="rectangle" 
-                    context="events" 
+                {/* Rectangle Ad after every 4th event - reduced frequency */}
+                {(index + 1) % 4 === 0 && index < events.length - 1 && (
+                  <SmartAdManager 
+                    position="content-list" 
+                    pageType="events" 
                     className="my-4"
-                    size="medium"
-                    dismissible
-                    userContext={{
-                      pageType: 'events',
-                      eventType: event.type,
-                      position: `after-event-${index + 1}`
-                    }}
                   />
                 )}
               </React.Fragment>
@@ -154,16 +143,7 @@ const Events = () => {
           })
         )}
         
-        {/* Native Ad before Admin Updates */}
-        <AdManager 
-          type="native" 
-          context="events" 
-          className="my-4"
-          userContext={{
-            pageType: 'events',
-            section: 'before-admin-updates'
-          }}
-        />
+        {/* Native Ad - Removed to reduce ad density */}
 
         {/* Admin Updates Section */}
         <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -178,19 +158,7 @@ const Events = () => {
           </div>
         </div>
 
-        {/* Bottom Rectangle Ad */}
-        <AdManager 
-          type="rectangle" 
-          context="events" 
-          className="my-6"
-          size="large"
-          dismissible
-          userContext={{
-            pageType: 'events',
-            section: 'bottom',
-            hasEvents: events.length > 0
-          }}
-        />
+        {/* Bottom Rectangle Ad - Removed to improve user experience */}
       </div>
     </div>
   );

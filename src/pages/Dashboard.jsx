@@ -10,7 +10,7 @@ import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 import TeacherDashboard from './TeacherDashboard';
 import AdminDashboard from './AdminDashboard';
-import LocalAdTester from '../components/ads/LocalAdTester';
+import LazyAd from '../components/ads/LazyAd';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -44,56 +44,84 @@ const Dashboard = () => {
       try {
         setIsLoading(true);
         
-        // Fetch different data based on user role
-        if (user?.role === 'parent') {
+        // Fetch different data based on user role (handle both 'role' and 'userType' fields)
+        const userRole = user?.role || user?.userType;
+        if (userRole === 'parent') {
           // For parents, get their children and homework data
-          const childrenResponse = await apiService.children.getByParent(user.id);
-          const childrenData = childrenResponse.data.children || [];
-          setChildren(childrenData);
-          
-          // Fetch homework data for the parent
           try {
-            const homeworkResponse = await apiService.homework.getByParent(user.id);
-            const homework = homeworkResponse.data.homework || [];
-            setHomeworkData(homework);
+            const childrenResponse = await apiService.children.getByParent(user.id);
+            const childrenData = childrenResponse.data.children || [];
+            setChildren(childrenData);
             
-            // Calculate homework stats
-            const totalHomework = homework.length;
-            const submittedHomework = homework.filter(hw => hw.status === 'submitted' || hw.status === 'graded').length;
-            const completionRate = totalHomework > 0 ? Math.round((submittedHomework / totalHomework) * 100) : 0;
-            const graded = homework.filter(hw => hw.status === 'graded').length;
-            const overdue = homework.filter(hw => hw.status === 'overdue').length;
-            
-            setStats({
-              children: childrenData.length,
-              classes: 0,
-              homework: totalHomework,
-              pending: totalHomework - submittedHomework,
-              submitted: submittedHomework,
-              completionRate
-            });
+            // Fetch homework data for the parent
+            try {
+              const homeworkResponse = await apiService.homework.getByParent(user.id);
+              const homework = homeworkResponse.data.homework || [];
+              setHomeworkData(homework);
+              
+              // Calculate homework stats
+              const totalHomework = homework.length;
+              const submittedHomework = homework.filter(hw => hw.status === 'submitted' || hw.status === 'graded').length;
+              const completionRate = totalHomework > 0 ? Math.round((submittedHomework / totalHomework) * 100) : 0;
+              const graded = homework.filter(hw => hw.status === 'graded').length;
+              const overdue = homework.filter(hw => hw.status === 'overdue').length;
+              
+              setStats({
+                children: childrenData.length,
+                classes: 0,
+                homework: totalHomework,
+                pending: totalHomework - submittedHomework,
+                submitted: submittedHomework,
+                completionRate
+              });
 
-            // Set expanded stats
-            setExpandedStats({
-              totalAssignments: totalHomework,
-              overdue: overdue,
-              graded: graded,
-              avgScore: 85, // Mock data
-              weeklyProgress: 12,
-              monthlyProgress: 45,
-              paymentStatus: 'paid',
-              aiUsage: 8,
-              lastLogin: new Date()
-            });
-          } catch {
-            console.log('Homework API not available, using empty state');
+              // Set expanded stats
+              setExpandedStats({
+                totalAssignments: totalHomework,
+                overdue: overdue,
+                graded: graded,
+                avgScore: 85, // Mock data
+                weeklyProgress: 12,
+                monthlyProgress: 45,
+                paymentStatus: 'paid',
+                aiUsage: 8,
+                lastLogin: new Date()
+              });
+            } catch (hwError) {
+              console.log('Homework API error:', hwError);
+              // Set stats with children count but empty homework
+              setStats({
+                children: childrenData.length,
+                classes: 0,
+                homework: 0,
+                pending: 0,
+                submitted: 0,
+                completionRate: 0
+              });
+            }
+          } catch (childrenError) {
+            console.error('Error fetching children:', childrenError);
+            // If children API fails, set everything to defaults
             setStats({
-              children: childrenData.length,
+              children: 0,
               classes: 0,
               homework: 0,
               pending: 0,
               submitted: 0,
               completionRate: 0
+            });
+            
+            // Set default expanded stats
+            setExpandedStats({
+              totalAssignments: 0,
+              overdue: 0,
+              graded: 0,
+              avgScore: 0,
+              weeklyProgress: 0,
+              monthlyProgress: 0,
+              paymentStatus: 'pending',
+              aiUsage: 0,
+              lastLogin: new Date()
             });
           }
         } else {
@@ -161,13 +189,16 @@ const Dashboard = () => {
     );
   }
 
+  // Get user role (handle both 'role' and 'userType' fields)
+  const userRole = user?.role || user?.userType;
+  
   // Route teachers to TeacherDashboard
-  if (user?.role === 'teacher') {
+  if (userRole === 'teacher') {
     return <TeacherDashboard />;
   }
 
   // Route admins to AdminDashboard
-  if (user?.role === 'admin') {
+  if (userRole === 'admin') {
     return <AdminDashboard />;
   }
 
@@ -176,8 +207,15 @@ const Dashboard = () => {
       <Header />
       <main className="pt-0 pb-4 px-2 sm:px-3">
         <div className="w-full">
-          {/* Top Banner Ad - Only at page start (30% chance) */}
-          <LocalAdTester format="banner" className="mb-6" />
+          {/* Top Banner Ad - Lazy loaded */}
+          <LazyAd 
+            adSlot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
+            adFormat="horizontal"
+            className="mb-6"
+            style={{ minHeight: '90px' }}
+            threshold={0.5}
+            rootMargin="100px"
+          />
 
           {/* Welcome Section - Enhanced */}
           <div className="bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
@@ -273,7 +311,7 @@ const Dashboard = () => {
           </div>
           
           {/* Quick Stats for Parents - Enhanced */}
-          {user?.role === 'parent' && (
+          {userRole === 'parent' && (
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className={`p-6 rounded-lg shadow-md text-center border-l-4 border-blue-500 transition-all duration-200 hover:shadow-lg ${
                 isDark 
@@ -310,16 +348,33 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Sidebar Rectangle Ad - Only in desktop sidebar (30% chance) */}
+          {/* Sidebar Rectangle Ad - Desktop only, lazy loaded */}
           <div className="hidden lg:block mb-6">
-            <LocalAdTester format="rectangle" className="max-w-sm mx-auto" />
+            <LazyAd 
+              adSlot={import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER}
+              adFormat="rectangle"
+              className="max-w-sm mx-auto"
+              style={{ minHeight: '250px' }}
+              threshold={0.1}
+              rootMargin="200px"
+            />
           </div>
 
-          {/* Native Ad - Only between major content sections (30% chance) */}
-          <LocalAdTester format="native-article" className="my-8" />
+          {/* Native In-Feed Ad - Lazy loaded, placed strategically */}
+          {userRole === 'parent' && stats.children > 0 && (
+            <LazyAd 
+              adSlot={import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE}
+              adFormat="fluid"
+              adLayout="in-article"
+              className="my-8"
+              style={{ minHeight: '100px' }}
+              threshold={0.3}
+              rootMargin="150px"
+            />
+          )}
 
           {/* Enhanced Stats Toggle */}
-          {user?.role === 'parent' && (
+          {userRole === 'parent' && (
             <div className="mb-6">
               <button
                 onClick={() => setShowMoreStats(!showMoreStats)}
@@ -395,7 +450,7 @@ const Dashboard = () => {
           )}
           
           {/* Quick Actions for Parents - Enhanced */}
-          {user?.role === 'parent' && (
+          {userRole === 'parent' && (
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
                 <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-4"></div>
@@ -449,8 +504,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Bottom Banner - Only at natural end point (30% chance) */}
-          <LocalAdTester format="banner" className="mt-8" />
+          {/* Bottom Banner Ad - Removed to reduce ad density */}
           
         </div>
       </main>

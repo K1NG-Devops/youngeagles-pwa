@@ -198,14 +198,14 @@ const ParentTeacherLink = () => {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <FaChild className={`text-blue-500`} />
+                      <FaChild className={'text-blue-500'} />
                       <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {link.child_name}
                       </h4>
                     </div>
                     
                     <div className="flex items-center space-x-3 mb-2">
-                      <FaUser className={`text-green-500`} />
+                      <FaUser className={'text-green-500'} />
                       <div>
                         <p className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
                           {link.teacher_name}
@@ -217,7 +217,7 @@ const ParentTeacherLink = () => {
                     </div>
                     
                     <div className="flex items-center space-x-3">
-                      <FaKey className={`text-purple-500`} />
+                      <FaKey className={'text-purple-500'} />
                       <div>
                         <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                           Class: {link.token_name}
@@ -303,7 +303,7 @@ const ParentTeacherLink = () => {
                     : 'bg-yellow-100 border border-yellow-200'
                 }`}>
                   <div className="flex items-center space-x-2 mb-2">
-                    <FaCheck className={`text-green-600`} />
+                    <FaCheck className={'text-green-600'} />
                     <p className="font-medium text-green-800">
                       Valid Token - {tokenValidation.teacherName}
                     </p>

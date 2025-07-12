@@ -13,7 +13,7 @@ export const getProfileImageUrl = (user) => {
   if (!user) return null;
   
   // Check multiple possible profile image fields
-  let profilePic = user.profilePicture || user.profile_picture || user.avatar || user.image || null;
+  const profilePic = user.profilePicture || user.profile_picture || user.avatar || user.image || null;
   
   if (!profilePic) return null;
   

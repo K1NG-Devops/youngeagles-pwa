@@ -15,38 +15,38 @@ const ResponsiveAd = ({
     if (adSlot) return adSlot; // Use custom slot if provided
     
     switch (adType) {
-      case 'header-banner':
-        return import.meta.env.VITE_ADSENSE_HEADER_BANNER;
-      case 'footer-banner':
-        return import.meta.env.VITE_ADSENSE_FOOTER_BANNER;
-      case 'mobile-banner':
-        return import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
-      case 'sidebar-skyscraper':
-        return import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER;
-      case 'content-rectangle':
-        return import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE;
-      case 'native-feed':
-        return import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE;
-      case 'native-article':
-        return import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE;
-      default:
-        return import.meta.env.VITE_ADSENSE_MOBILE_BANNER; // Default to mobile banner
+    case 'header-banner':
+      return import.meta.env.VITE_ADSENSE_HEADER_BANNER;
+    case 'footer-banner':
+      return import.meta.env.VITE_ADSENSE_FOOTER_BANNER;
+    case 'mobile-banner':
+      return import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
+    case 'sidebar-skyscraper':
+      return import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER;
+    case 'content-rectangle':
+      return import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE;
+    case 'native-feed':
+      return import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE;
+    case 'native-article':
+      return import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE;
+    default:
+      return import.meta.env.VITE_ADSENSE_MOBILE_BANNER; // Default to mobile banner
     }
   };
 
   // Get ad format based on type
   const getAdFormat = () => {
     switch (adType) {
-      case 'native-feed':
-        return 'fluid';
-      case 'native-article':
-        return 'fluid';
-      case 'sidebar-skyscraper':
-        return 'rectangle';
-      case 'content-rectangle':
-        return 'rectangle';
-      default:
-        return 'auto';
+    case 'native-feed':
+      return 'fluid';
+    case 'native-article':
+      return 'fluid';
+    case 'sidebar-skyscraper':
+      return 'rectangle';
+    case 'content-rectangle':
+      return 'rectangle';
+    default:
+      return 'auto';
     }
   };
 
@@ -62,47 +62,47 @@ const ResponsiveAd = ({
     };
 
     switch (adType) {
-      case 'header-banner':
-        return {
-          ...baseStyle,
-          minHeight: '50px',
-          maxHeight: '90px'
-        };
-      case 'footer-banner':
-        return {
-          ...baseStyle,
-          minHeight: '50px',
-          maxHeight: '90px'
-        };
-      case 'mobile-banner':
-        return {
-          ...baseStyle,
-          minHeight: '50px',
-          maxHeight: '100px'
-        };
-      case 'sidebar-skyscraper':
-        return {
-          ...baseStyle,
-          minHeight: '250px',
-          maxHeight: '600px',
-          width: '160px'
-        };
-      case 'content-rectangle':
-        return {
-          ...baseStyle,
-          minHeight: '250px',
-          maxHeight: '250px',
-          width: '300px'
-        };
-      case 'native-feed':
-      case 'native-article':
-        return {
-          ...baseStyle,
-          minHeight: '100px',
-          maxHeight: '300px'
-        };
-      default:
-        return baseStyle;
+    case 'header-banner':
+      return {
+        ...baseStyle,
+        minHeight: '50px',
+        maxHeight: '90px'
+      };
+    case 'footer-banner':
+      return {
+        ...baseStyle,
+        minHeight: '50px',
+        maxHeight: '90px'
+      };
+    case 'mobile-banner':
+      return {
+        ...baseStyle,
+        minHeight: '50px',
+        maxHeight: '100px'
+      };
+    case 'sidebar-skyscraper':
+      return {
+        ...baseStyle,
+        minHeight: '250px',
+        maxHeight: '600px',
+        width: '160px'
+      };
+    case 'content-rectangle':
+      return {
+        ...baseStyle,
+        minHeight: '250px',
+        maxHeight: '250px',
+        width: '300px'
+      };
+    case 'native-feed':
+    case 'native-article':
+      return {
+        ...baseStyle,
+        minHeight: '100px',
+        maxHeight: '300px'
+      };
+    default:
+      return baseStyle;
     }
   };
 

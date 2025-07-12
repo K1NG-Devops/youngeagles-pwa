@@ -55,6 +55,7 @@ const AdminDashboard = () => {
     storage: 'operational'
   });
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showAdAnalytics, setShowAdAnalytics] = useState(false);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -328,7 +329,7 @@ const AdminDashboard = () => {
               </button>
               
               <button
-                onClick={() => setShowAnalytics(!showAnalytics)}
+                onClick={() => setShowAdAnalytics(!showAdAnalytics)}
                 className={`p-4 rounded-lg border transition-all hover:shadow-md ${
                   isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-200 hover:bg-gray-50'
                 }`}
@@ -349,12 +350,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Ad Analytics Section */}
-          {showAnalytics && (
-            <div className="mb-8">
-              <AdAnalytics className="shadow-lg" />
-            </div>
-          )}
+          {/* Ad Analytics Section - Moved to dedicated panel below */}
 
           {/* Admin Management Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -513,6 +509,48 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Ad Analytics Toggle */}
+          <div className={`mt-6 p-6 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <FaAd className="mr-2 text-purple-500" />
+                Ad Revenue & Analytics
+              </h3>
+              <button
+                onClick={() => setShowAdAnalytics(!showAdAnalytics)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  showAdAnalytics
+                    ? 'bg-purple-500 text-white hover:bg-purple-600'
+                    : isDark
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {showAdAnalytics ? 'Hide Analytics' : 'View Analytics'}
+              </button>
+            </div>
+            
+            {/* Ad Analytics Summary */}
+            {!showAdAnalytics ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-purple-50'}`}>
+                  <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-purple-700'}`}>Today's Revenue</p>
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-purple-900'}`}>$12.45</p>
+                </div>
+                <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-purple-50'}`}>
+                  <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-purple-700'}`}>Ad Impressions</p>
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-purple-900'}`}>1,234</p>
+                </div>
+                <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-purple-50'}`}>
+                  <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-purple-700'}`}>CTR</p>
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-purple-900'}`}>2.3%</p>
+                </div>
+              </div>
+            ) : (
+              <AdAnalytics />
+            )}
           </div>
 
           {/* System Status */}

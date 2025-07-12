@@ -230,17 +230,17 @@ const EnhancedSubscriptionManagement = () => {
       const filterDate = new Date();
       
       switch (dateRangeFilter) {
-        case '7d':
-          filterDate.setDate(now.getDate() - 7);
-          break;
-        case '30d':
-          filterDate.setDate(now.getDate() - 30);
-          break;
-        case '90d':
-          filterDate.setDate(now.getDate() - 90);
-          break;
-        default:
-          break;
+      case '7d':
+        filterDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        filterDate.setDate(now.getDate() - 30);
+        break;
+      case '90d':
+        filterDate.setDate(now.getDate() - 90);
+        break;
+      default:
+        break;
       }
       
       if (dateRangeFilter !== 'all') {
@@ -277,24 +277,24 @@ const EnhancedSubscriptionManagement = () => {
 
     try {
       switch (action) {
-        case 'activate':
-          await apiService.subscriptions.admin.bulkUpdateStatus(selectedSubscriptions, 'active');
-          nativeNotificationService.success(`${selectedSubscriptions.length} subscriptions activated`);
-          break;
-        case 'suspend':
-          await apiService.subscriptions.admin.bulkUpdateStatus(selectedSubscriptions, 'suspended');
-          nativeNotificationService.success(`${selectedSubscriptions.length} subscriptions suspended`);
-          break;
-        case 'cancel':
-          await apiService.subscriptions.admin.bulkUpdateStatus(selectedSubscriptions, 'cancelled');
-          nativeNotificationService.success(`${selectedSubscriptions.length} subscriptions cancelled`);
-          break;
-        case 'extend':
-          // Show extend modal
-          setShowBulkExtendModal(true);
-          return;
-        default:
-          break;
+      case 'activate':
+        await apiService.subscriptions.admin.bulkUpdateStatus(selectedSubscriptions, 'active');
+        nativeNotificationService.success(`${selectedSubscriptions.length} subscriptions activated`);
+        break;
+      case 'suspend':
+        await apiService.subscriptions.admin.bulkUpdateStatus(selectedSubscriptions, 'suspended');
+        nativeNotificationService.success(`${selectedSubscriptions.length} subscriptions suspended`);
+        break;
+      case 'cancel':
+        await apiService.subscriptions.admin.bulkUpdateStatus(selectedSubscriptions, 'cancelled');
+        nativeNotificationService.success(`${selectedSubscriptions.length} subscriptions cancelled`);
+        break;
+      case 'extend':
+        // Show extend modal
+        setShowBulkExtendModal(true);
+        return;
+      default:
+        break;
       }
       
       setSelectedSubscriptions([]);
@@ -901,31 +901,31 @@ const EnhancedSubscriptionRow = ({ subscription, onUpdateStatus, onViewDetails, 
   
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active':
-        return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20';
-      case 'trial':
-        return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20';
-      case 'cancelled':
-        return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
-      case 'expired':
-        return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20';
-      case 'suspended':
-        return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20';
-      default:
-        return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
+    case 'active':
+      return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20';
+    case 'trial':
+      return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20';
+    case 'cancelled':
+      return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
+    case 'expired':
+      return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20';
+    case 'suspended':
+      return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20';
+    default:
+      return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
     }
   };
 
   const getPlanColor = (planId) => {
     switch (planId) {
-      case 'institution':
-        return 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/20';
-      case 'family':
-        return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20';
-      case 'student':
-        return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20';
-      default:
-        return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
+    case 'institution':
+      return 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/20';
+    case 'family':
+      return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20';
+    case 'student':
+      return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20';
+    default:
+      return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20';
     }
   };
 

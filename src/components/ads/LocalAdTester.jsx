@@ -30,40 +30,40 @@ const LocalAdTester = ({ format = 'banner', className = '' }) => {
 
   const getAdDimensions = () => {
     switch (format) {
-      case 'banner':
-        return { width: '728px', height: '90px' };
-      case 'rectangle':
-        return { width: '300px', height: '250px' };
-      case 'skyscraper':
-        return { width: '160px', height: '600px' };
-      case 'native-feed':
-        return { width: '100%', height: '120px' };
-      case 'native-article':
-        return { width: '100%', height: '200px' };
-      default:
-        return { width: '320px', height: '50px' };
+    case 'banner':
+      return { width: '728px', height: '90px' };
+    case 'rectangle':
+      return { width: '300px', height: '250px' };
+    case 'skyscraper':
+      return { width: '160px', height: '600px' };
+    case 'native-feed':
+      return { width: '100%', height: '120px' };
+    case 'native-article':
+      return { width: '100%', height: '200px' };
+    default:
+      return { width: '320px', height: '50px' };
     }
   };
 
   const getAdContent = () => {
     const educationalAds = [
       {
-        title: "Khan Academy Kids",
-        description: "Free educational games and activities for children",
-        cta: "Learn More",
-        color: "#4CAF50"
+        title: 'Khan Academy Kids',
+        description: 'Free educational games and activities for children',
+        cta: 'Learn More',
+        color: '#4CAF50'
       },
       {
-        title: "Educational Resources",
-        description: "Discover premium learning materials for your child",
-        cta: "Explore",
-        color: "#2196F3"
+        title: 'Educational Resources',
+        description: 'Discover premium learning materials for your child',
+        cta: 'Explore',
+        color: '#2196F3'
       },
       {
-        title: "STEM Learning Kit",
-        description: "Hands-on science experiments for young minds",
-        cta: "Shop Now",
-        color: "#FF9800"
+        title: 'STEM Learning Kit',
+        description: 'Hands-on science experiments for young minds',
+        cta: 'Shop Now',
+        color: '#FF9800'
       }
     ];
 

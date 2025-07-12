@@ -79,7 +79,7 @@ const BottomBannerAd = ({
   const IconComponent = ad.icon;
 
   return (
-    <div className={`fixed bottom-16 left-0 right-0 z-30 px-2 ${className}`}>
+    <div className={`fixed bottom-20 left-0 right-0 z-30 px-2 ${className}`}>
       <div 
         className={`mx-auto max-w-sm rounded-lg shadow-lg border cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 ${
           isDark 

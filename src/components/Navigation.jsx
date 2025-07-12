@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaCalendarAlt, FaGraduationCap, FaBell, FaRobot } from 'react-icons/fa';
+import { FaHome, FaCalendarAlt, FaGraduationCap, FaRobot } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -19,8 +19,7 @@ const Navigation = () => {
         ...baseItems,
         { path: '/homework', icon: FaGraduationCap, label: 'Homework' },
         { path: '/activities', icon: FaRobot, label: 'Activities' },
-        { path: '/events', icon: FaCalendarAlt, label: 'Events' },
-        { path: '/notifications', icon: FaBell, label: 'Updates' }
+        { path: '/events', icon: FaCalendarAlt, label: 'Events' }
       ];
     } else {
       // For teachers and admin
@@ -47,7 +46,7 @@ const Navigation = () => {
             key={path}
             to={path}
             className={({ isActive }) => 
-              `flex flex-col items-center py-1 px-2 rounded-lg transition-all duration-200 min-w-0 flex-1 touch-responsive mobile-gap-xs hover-lift ${
+              `relative flex flex-col items-center py-1 px-2 rounded-lg transition-all duration-200 min-w-0 flex-1 touch-responsive mobile-gap-xs hover-lift ${
                 isActive 
                   ? (isDark ? 'text-blue-400 bg-blue-900/20 transform scale-105' : 'text-blue-600 bg-blue-50 transform scale-105')
                   : (isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800')
