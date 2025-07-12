@@ -1,16 +1,31 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaCreditCard, FaUpload, FaFileInvoice, FaHistory, FaShieldAlt, FaStar, FaCrown, FaPaperPlane, FaEnvelope, FaReceipt, FaUsers } from 'react-icons/fa';
+import { FaCreditCard, FaUpload, FaFileInvoice, FaHistory, FaShieldAlt, FaStar, FaCrown, FaPaperPlane, FaEnvelope, FaReceipt, FaUsers, FaChartLine, FaCog } from 'react-icons/fa';
 import nativeNotificationService from '../services/nativeNotificationService.js';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
+import { HeaderAd, ContentMiddleAd, SidebarAd, ContentBottomAd } from '../components/ads';
+import EnhancedSubscriptionManagement from '../components/admin/EnhancedSubscriptionManagement';
 
 const Management = () => {
   const { isDark } = useTheme();
   const { user } = useAuth();
-  const { subscription, getCurrentPlan, getDaysRemaining, plans, updateUsage } = useSubscription();
+  const { 
+    subscription, 
+    getCurrentPlan, 
+    getDaysRemaining, 
+    getSubscriptionStatus, 
+    getNextBillingAmount, 
+    getNextBillingDate,
+    getUsagePercentage,
+    plans, 
+    updateUsage,
+    usage,
+    error,
+    lastUpdated
+  } = useSubscription();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('subscription');
   const [actualChildrenCount, setActualChildrenCount] = useState(0);
@@ -29,21 +44,36 @@ const Management = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isSendingInvoice, setIsSendingInvoice] = useState(false);
-
-  // Get current subscription info
+  
   const currentPlan = getCurrentPlan();
   const daysRemaining = getDaysRemaining();
+  const subscriptionStatus = getSubscriptionStatus();
+  const nextBillingAmount = getNextBillingAmount();
+  const nextBillingDate = getNextBillingDate();
+  
   const subscriptionInfo = {
-    plan: currentPlan?.name || 'Basic',
-    status: subscription?.status === 'active' ? 'Active' : subscription?.status === 'trial' ? 'Trial' : 'Inactive',
-    nextBilling: subscription?.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A',
-    amount: `R${currentPlan?.price}/${currentPlan?.period}`,
+    plan: currentPlan?.name || 'Free Plan',
+    status: subscriptionStatus === 'active' ? 'Active' : 
+            subscriptionStatus === 'trial' ? 'Trial' : 
+            subscriptionStatus === 'trial_expired' ? 'Trial Expired' :
+            subscriptionStatus === 'expiring_soon' ? 'Expiring Soon' : 
+            subscriptionStatus === 'cancelled' ? 'Cancelled' : 'Inactive',
+    nextBilling: subscription?.subscription_end_date ? 
+      new Date(subscription.subscription_end_date).toLocaleDateString() : 'N/A',
+    amount: nextBillingAmount > 0 ? `R${nextBillingAmount}/${subscription?.billing_cycle || 'month'}` : 'Free',
+    billingCycle: subscription?.billing_cycle || 'monthly',
+    autoRenew: subscription?.auto_renew || false,
+    paymentMethod: subscription?.payment_method || 'none',
+    trialEndDate: subscription?.trial_end_date ? new Date(subscription.trial_end_date).toLocaleDateString() : null,
     features: [
       `Up to ${currentPlan?.features.maxChildren === -1 ? 'unlimited' : currentPlan?.features.maxChildren} children`,
       `${currentPlan?.features.maxFileSize}MB file uploads`,
       `${currentPlan?.features.storage}MB storage`,
       currentPlan?.features.messaging ? 'Parent-teacher messaging' : 'Basic communication',
-      currentPlan?.features.analytics === 'advanced' ? 'Advanced analytics' : 'Basic progress reports'
+      currentPlan?.features.analytics === 'advanced' ? 'Advanced analytics' : 
+      currentPlan?.features.analytics === 'enterprise' ? 'Enterprise analytics' : 'Basic reports',
+      currentPlan?.features.ai_grading ? 'AI-powered grading' : 'Manual grading only',
+      currentPlan?.features.priority_support ? 'Priority support' : 'Standard support'
     ]
   };
 
@@ -52,7 +82,10 @@ const Management = () => {
     { id: 'payments', label: 'Payments', icon: FaCreditCard },
     { id: 'proofs', label: 'Payment Proofs', icon: FaUpload },
     { id: 'invoices', label: 'Invoices', icon: FaFileInvoice },
-    ...((user?.role === 'admin' || user?.userType === 'admin') ? [{ id: 'send-invoices', label: 'Send Invoices/Receipts', icon: FaPaperPlane }] : []),
+    ...((user?.role === 'admin' || user?.userType === 'admin') ? [
+      { id: 'send-invoices', label: 'Send Invoices/Receipts', icon: FaPaperPlane },
+      { id: 'enhanced-subscriptions', label: 'Enhanced Subscriptions', icon: FaChartLine }
+    ] : []),
     { id: 'history', label: 'History', icon: FaHistory }
   ];
 
@@ -71,11 +104,13 @@ const Management = () => {
           response = await apiService.children.getAll();
         }
         
-        const childrenCount = response.data.children?.length || 0;
+        // Handle different possible response structures
+        const childrenData = response.data?.children || response.data || [];
+        const childrenCount = Array.isArray(childrenData) ? childrenData.length : 0;
         setActualChildrenCount(childrenCount);
         
         // Sync with subscription usage if different
-        if (subscription && subscription.usage.children !== childrenCount) {
+        if (subscription && subscription.usage && subscription.usage.children !== childrenCount) {
           updateUsage({ children: childrenCount });
         }
       } catch (error) {
@@ -221,16 +256,82 @@ const Management = () => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
               <FaCrown className="text-yellow-500" />
-              <span className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{subscriptionInfo.plan} Plan</span>
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+              <span className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{subscriptionInfo.plan}</span>
+              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                subscriptionInfo.status === 'Active' ? 'bg-green-100 text-green-800' :
+                subscriptionInfo.status === 'Trial' ? 'bg-blue-100 text-blue-800' :
+                subscriptionInfo.status === 'Trial Expired' ? 'bg-red-100 text-red-800' :
+                subscriptionInfo.status === 'Expiring Soon' ? 'bg-yellow-100 text-yellow-800' :
+                subscriptionInfo.status === 'Cancelled' ? 'bg-gray-100 text-gray-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
                 {subscriptionInfo.status}
               </span>
+              {error && (
+                <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">
+                  Demo Mode
+                </span>
+              )}
             </div>
             <div className="text-right">
               <div className={`font-bold text-xl ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>{subscriptionInfo.amount}</div>
-              <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Next billing: {subscriptionInfo.nextBilling}</div>
+              <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {subscriptionInfo.status === 'Trial' && subscriptionInfo.trialEndDate ? 
+                  `Trial ends: ${subscriptionInfo.trialEndDate}` :
+                  `Next billing: ${subscriptionInfo.nextBilling}`
+                }
+              </div>
+              {subscriptionInfo.autoRenew && (
+                <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Auto-renew enabled
+                </div>
+              )}
             </div>
           </div>
+          
+          {/* Enhanced subscription details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Billing Cycle
+              </div>
+              <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {subscriptionInfo.billingCycle === 'annual' ? 'Annual' : 'Monthly'}
+              </div>
+            </div>
+            <div>
+              <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Payment Method
+              </div>
+              <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {subscriptionInfo.paymentMethod === 'payfast' ? 'PayFast' :
+                 subscriptionInfo.paymentMethod === 'credit_card' ? 'Credit Card' :
+                 subscriptionInfo.paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'None'}
+              </div>
+            </div>
+          </div>
+          
+          {daysRemaining !== null && (
+            <div className={`text-sm mb-3 p-2 rounded ${
+              daysRemaining <= 7 ? 
+                isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-700' :
+                daysRemaining <= 30 ?
+                isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-50 text-yellow-700' :
+                isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-50 text-green-700'
+            }`}>
+              {daysRemaining > 0 ? 
+                `${daysRemaining} days remaining` : 
+                daysRemaining === 0 ? 'Expires today' : 
+                `Expired ${Math.abs(daysRemaining)} days ago`
+              }
+            </div>
+          )}
+          
+          {lastUpdated && (
+            <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} mb-3`}>
+              Last updated: {lastUpdated.toLocaleString()}
+            </div>
+          )}
           <div className="space-y-1">
             {subscriptionInfo.features.map((feature, index) => (
               <div key={index} className={`flex items-center space-x-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -241,31 +342,129 @@ const Management = () => {
           </div>
         </div>
 
-        {/* Usage Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {/* Enhanced Usage Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-            <div className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-              {isLoadingChildren ? (
-                <div className="animate-pulse">-</div>
-              ) : (
-                `${actualChildrenCount}/${currentPlan?.features.maxChildren === -1 ? '∞' : currentPlan?.features.maxChildren}`
-              )}
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                {isLoadingChildren ? (
+                  <div className="animate-pulse">-</div>
+                ) : (
+                  `${actualChildrenCount}/${currentPlan?.features.maxChildren === -1 ? '∞' : currentPlan?.features.maxChildren}`
+                )}
+              </div>
+              <FaUsers className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
             </div>
-            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Children Added</div>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>Children Added</div>
+            {currentPlan?.features.maxChildren !== -1 && (
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${Math.min(100, (actualChildrenCount / (currentPlan?.features.maxChildren || 1)) * 100)}%` 
+                  }}
+                ></div>
+              </div>
+            )}
           </div>
+          
           <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-            <div className={`text-2xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-              {subscription?.usage?.storage || 0}MB
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-2xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                {usage?.storage || 0}MB
+              </div>
+              <FaShieldAlt className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
             </div>
-            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
               Storage Used ({currentPlan?.features.storage}MB limit)
             </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ 
+                  width: `${getUsagePercentage ? getUsagePercentage('storage') : 0}%` 
+                }}
+              ></div>
+            </div>
           </div>
+          
           <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-            <div className={`text-2xl font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>{daysRemaining} days</div>
-            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Days Remaining</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-2xl font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                {usage?.homework || 0}
+              </div>
+              <FaFileInvoice className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </div>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
+              Homework Assigned
+              {currentPlan?.features.maxHomework !== -1 && ` (${currentPlan?.features.maxHomework} limit)`}
+            </div>
+            {currentPlan?.features.maxHomework !== -1 && (
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${getUsagePercentage ? getUsagePercentage('homework') : 0}%` 
+                  }}
+                ></div>
+              </div>
+            )}
+          </div>
+          
+          <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-2xl font-bold ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                {usage?.activities || 0}
+              </div>
+              <FaStar className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+            </div>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
+              Activities Created
+              {currentPlan?.features.maxActivities !== -1 && ` (${currentPlan?.features.maxActivities} limit)`}
+            </div>
+            {currentPlan?.features.maxActivities !== -1 && (
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${getUsagePercentage ? getUsagePercentage('activities') : 0}%` 
+                  }}
+                ></div>
+              </div>
+            )}
           </div>
         </div>
+        
+        {/* Additional metrics for paid plans */}
+        {currentPlan?.id !== 'free' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className={`text-xl font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                  {usage?.ai_usage || 0}
+                </div>
+                <FaCog className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+              </div>
+              <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                AI Grading Sessions This Month
+              </div>
+            </div>
+            
+            {currentPlan?.features.api_access && (
+              <div className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`text-xl font-bold ${isDark ? 'text-pink-400' : 'text-pink-600'}`}>
+                    {usage?.api_calls || 0}
+                  </div>
+                  <FaShieldAlt className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                </div>
+                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  API Calls This Month
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Available Plans */}
@@ -681,6 +880,9 @@ const Management = () => {
   return (
     <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pt-20 md:pt-6">
+        {/* Header Ad - Premium placement for high-value management page */}
+        <HeaderAd pageType="management" className="mb-8" />
+        
         {/* Header */}
         <div className="mb-8">
           <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Account Management</h1>
@@ -716,10 +918,17 @@ const Management = () => {
           </div>
         </div>
 
+        {/* Content Middle Ad - Between tabs and content */}
+        <ContentMiddleAd pageType="management" className="my-6" />
+
         {/* Tab Content */}
         {activeTab === 'subscription' && renderSubscriptionTab()}
         {activeTab === 'proofs' && renderPaymentProofsTab()}
         {activeTab === 'send-invoices' && renderSendInvoicesTab()}
+        {activeTab === 'enhanced-subscriptions' && <EnhancedSubscriptionManagement />}
+        
+        {/* Bottom Content Ad - After tab content */}
+        <ContentBottomAd pageType="management" className="mt-8" />
         {['payments', 'invoices', 'history'].includes(activeTab) && renderComingSoonTab()}
       </div>
     </div>

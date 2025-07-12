@@ -20,6 +20,7 @@ import {
   FaBell,
   FaLock
 } from 'react-icons/fa';
+import { HeaderAd, ContentMiddleAd, ContentBottomAd } from '../components/ads';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -89,6 +90,9 @@ const Home = () => {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} px-2 xs:px-4`}>
+      {/* Header Ad - Premium placement for landing page */}
+      <HeaderAd pageType="home" className="mb-6" />
+      
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"></div>
@@ -128,6 +132,9 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* Content Middle Ad - Between hero and features */}
+      <ContentMiddleAd pageType="home" className="my-12" />
 
       {/* Features Section */}
       <div className="py-24">
@@ -184,6 +191,9 @@ const Home = () => {
           </Link>
         </div>
       </div>
+      
+      {/* Bottom Content Ad - Before footer */}
+      <ContentBottomAd pageType="home" className="mt-12" />
     </div>
   );
 };

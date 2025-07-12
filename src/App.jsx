@@ -8,7 +8,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import PrivateRoute from './components/PrivateRoute';
 import PWAEnhancements from './components/PWAEnhancements';
 import Layout from './components/Layout';
-import GoogleAutoAds from './components/ads/GoogleAutoAds';
+import AutoAds from './components/ads/AutoAds';
 import './index.css';
 
 // Lazy load components for better performance
@@ -171,7 +171,7 @@ function App() {
                     <PWAEnhancements />
                     
                     {/* Google Auto Ads - Let Google place ads automatically */}
-                    <GoogleAutoAds />
+                    <AutoAds />
                   </div>
                 </ErrorBoundary>
               </SubscriptionProvider>

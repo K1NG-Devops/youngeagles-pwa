@@ -1,187 +1,266 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSubscription } from '../../contexts/SubscriptionContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useAuth } from '../../contexts/AuthContext';
-import BannerAd from './BannerAd';
-import RectangleAd from './RectangleAd';
-import NativeAd from './NativeAd';
-import InterstitialAd from './InterstitialAd';
 import GoogleAdSense from './GoogleAdSense';
 
 const AdManager = ({ 
-  type = 'banner', 
-  position = 'top',
-  context = 'general',
+  position = 'content', 
+  pageType = 'general',
   className = '',
-  userContext = {},
-  ...props 
+  priority = 'medium'
 }) => {
-  const { showAds, getCurrentPlan, isLoading } = useSubscription();
-  const { isDark } = useTheme();
-  const { user } = useAuth();
+  const location = useLocation();
+  const { showAds, getCurrentPlan } = useSubscription();
+  const [shouldShowAd, setShouldShowAd] = useState(false);
+  const [adFormat, setAdFormat] = useState('banner');
+  const [adFrequency, setAdFrequency] = useState('medium');
+  const [adSlot, setAdSlot] = useState(null);
 
-  // Don't show ads if subscription is still loading or user has premium subscription
-  if (isLoading || !showAds()) {
-    return null;
-  }
+  // High-value pages for premium ad placement
+  const highValuePages = [
+    '/dashboard',
+    '/homework',
+    '/activities',
+    '/children',
+    '/management',
+    '/checkout'
+  ];
 
-  // Get user context for ad targeting
-  const adContext = {
-    userRole: user?.role || 'parent',
-    planType: getCurrentPlan()?.id || 'free',
-    theme: isDark ? 'dark' : 'light',
-    context,
-    ...userContext
-  };
+  // Medium-value pages for standard ad placement
+  const mediumValuePages = [
+    '/classes',
+    '/notifications',
+    '/settings',
+    '/events',
+    '/submit-work'
+  ];
 
-  // Check if Google AdSense is enabled and configured
-  const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
-  const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID;
-  // Map to existing Vercel environment variables
-  const headerBannerAdUnit = import.meta.env.VITE_ADSENSE_HEADER_BANNER;
-  const footerBannerAdUnit = import.meta.env.VITE_ADSENSE_FOOTER_BANNER;
-  const mobileBannerAdUnit = import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
-  const sidebarSkyscraperAdUnit = import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER;
-  const contentRectangleAdUnit = import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE;
-  const inFeedNativeAdUnit = import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE;
-  const inArticleNativeAdUnit = import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE;
-  
-  // Render appropriate ad component based on type
-  const renderAd = () => {
-    // Prefer Google AdSense if available and configured
-    if (isAdSenseEnabled && publisherId) {
-      switch (type) {
+  // Low-value pages for minimal ad placement
+  const lowValuePages = [
+    '/login',
+    '/signup',
+    '/register',
+    '/privacy-policy',
+    '/terms-of-service'
+  ];
+
+  // Get appropriate ad slot based on position and format
+  const getAdSlot = (format) => {
+    switch (format) {
       case 'banner':
-        // Use mobile banner for smaller screens, header banner for larger
-        const bannerUnit = window.innerWidth < 768 ? mobileBannerAdUnit : headerBannerAdUnit;
-        if (bannerUnit) {
-          return (
-            <div className="w-full" style={{ minHeight: '90px', maxHeight: '90px' }}>
-              <GoogleAdSense 
-                adSlot={bannerUnit}
-                adFormat="horizontal"
-                className={`w-full ${className}`}
-                style={{ height: '90px', maxHeight: '90px' }}
-                {...props}
-              />
-            </div>
-          );
-        }
-        break;
+        return position === 'header' 
+          ? import.meta.env.VITE_ADSENSE_HEADER_BANNER
+          : position === 'footer'
+          ? import.meta.env.VITE_ADSENSE_FOOTER_BANNER
+          : import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
       case 'rectangle':
-      case 'sidebar':
-        if (sidebarSkyscraperAdUnit) {
-          return (
-            <div className="w-full" style={{ minHeight: '250px', maxHeight: '600px' }}>
-              <GoogleAdSense 
-                adSlot={sidebarSkyscraperAdUnit}
-                adFormat="vertical"
-                className={`w-full ${className}`}
-                style={{ height: '250px', maxHeight: '600px' }}
-                {...props}
-              />
-            </div>
-          );
-        }
-        break;
-      case 'footer':
-        if (footerBannerAdUnit) {
-          return (
-            <div className="w-full" style={{ minHeight: '90px', maxHeight: '90px' }}>
-              <GoogleAdSense 
-                adSlot={footerBannerAdUnit}
-                adFormat="horizontal"
-                className={`w-full ${className}`}
-                style={{ height: '90px', maxHeight: '90px' }}
-                {...props}
-              />
-            </div>
-          );
-        }
-        break;
-      case 'header':
-        if (headerBannerAdUnit) {
-          return (
-            <div className="w-full" style={{ minHeight: '90px', maxHeight: '90px' }}>
-              <GoogleAdSense 
-                adSlot={headerBannerAdUnit}
-                adFormat="horizontal"
-                className={`w-full ${className}`}
-                style={{ height: '90px', maxHeight: '90px' }}
-                {...props}
-              />
-            </div>
-          );
-        }
-        break;
-      case 'content':
-        if (contentRectangleAdUnit) {
-          return (
-            <div className="w-full" style={{ minHeight: '250px', maxHeight: '250px' }}>
-              <GoogleAdSense 
-                adSlot={contentRectangleAdUnit}
-                adFormat="rectangle"
-                className={`w-full ${className}`}
-                style={{ height: '250px', maxHeight: '250px' }}
-                {...props}
-              />
-            </div>
-          );
-        }
-        break;
-      case 'native':
-      case 'in-feed':
-        if (inFeedNativeAdUnit) {
-          return (
-            <GoogleAdSense 
-              adSlot={inFeedNativeAdUnit}
-              adFormat="fluid"
-              adLayoutKey="-fb+5w+4e-db+86"
-              className={`w-full ${className}`}
-              {...props}
-            />
-          );
-        }
-        break;
-      case 'in-article':
-        if (inArticleNativeAdUnit) {
-          return (
-            <GoogleAdSense 
-              adSlot={inArticleNativeAdUnit}
-              adFormat="fluid"
-              adLayoutKey="-fg+5n+6t-e7+r"
-              className={`w-full ${className}`}
-              {...props}
-            />
-          );
-        }
-        break;
-      }
-    }
-    
-    // Fallback to custom ad components
-    switch (type) {
-    case 'banner':
-      return <BannerAd position={position} context={adContext} {...props} />;
-    case 'rectangle':
-      return <RectangleAd context={adContext} {...props} />;
-    case 'native':
-      return <NativeAd context={adContext} {...props} />;
-    case 'interstitial':
-      return <InterstitialAd context={adContext} {...props} />;
-    default:
-      return <BannerAd position={position} context={adContext} {...props} />;
+        return import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE;
+      case 'native-article':
+        return import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE;
+      case 'native-feed':
+        return import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE;
+      case 'skyscraper':
+        return import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER;
+      default:
+        return import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
     }
   };
 
-  const adComponent = renderAd();
-  
-  // Don't render wrapper if no ad to show
-  if (!adComponent) {
+  // Revenue optimization strategy
+  const getAdStrategy = () => {
+    const currentPath = location.pathname;
+    const plan = getCurrentPlan();
+    
+    // Premium users see fewer ads
+    if (plan?.name === 'Premium' || plan?.name === 'Enterprise') {
+      return {
+        frequency: 'low',
+        priority: 'low',
+        formats: ['native-article']
+      };
+    }
+
+    // High-value pages get premium ad treatment
+    if (highValuePages.includes(currentPath)) {
+      return {
+        frequency: 'high',
+        priority: 'high',
+        formats: ['banner', 'rectangle', 'native-article', 'native-feed']
+      };
+    }
+
+    // Medium-value pages get standard treatment
+    if (mediumValuePages.includes(currentPath)) {
+      return {
+        frequency: 'medium',
+        priority: 'medium',
+        formats: ['banner', 'native-article']
+      };
+    }
+
+    // Low-value pages get minimal ads
+    if (lowValuePages.includes(currentPath)) {
+      return {
+        frequency: 'low',
+        priority: 'low',
+        formats: ['banner']
+      };
+    }
+
+    // Default strategy
+    return {
+      frequency: 'medium',
+      priority: 'medium',
+      formats: ['banner', 'native-article']
+    };
+  };
+
+  // Position-based ad format selection
+  const getAdFormatByPosition = (position, strategy) => {
+    switch (position) {
+      case 'header':
+        return 'banner';
+      case 'sidebar':
+        return 'rectangle';
+      case 'content-top':
+        return 'banner';
+      case 'content-middle':
+        return 'native-article';
+      case 'content-bottom':
+        return 'native-feed';
+      case 'footer':
+        return 'banner';
+      case 'floating':
+        return 'rectangle';
+      default:
+        return strategy.formats[0];
+    }
+  };
+
+  // Ad frequency calculation
+  const calculateAdFrequency = (strategy) => {
+    const baseFrequency = {
+      'low': 0.2,    // 20% chance
+      'medium': 0.4, // 40% chance
+      'high': 0.6    // 60% chance
+    };
+
+    // Boost frequency for high-priority positions
+    let frequency = baseFrequency[strategy.frequency];
+    
+    if (priority === 'high') {
+      frequency *= 1.5;
+    } else if (priority === 'low') {
+      frequency *= 0.7;
+    }
+
+    // Cap at 80% to avoid ad fatigue
+    return Math.min(frequency, 0.8);
+  };
+
+  useEffect(() => {
+    if (!showAds()) {
+      setShouldShowAd(false);
+      return;
+    }
+
+    const strategy = getAdStrategy();
+    const format = getAdFormatByPosition(position, strategy);
+    const frequency = calculateAdFrequency(strategy);
+    const slot = getAdSlot(format);
+    
+    setAdFormat(format);
+    setAdFrequency(strategy.frequency);
+    setAdSlot(slot);
+    
+    // Determine if ad should show based on frequency
+    setShouldShowAd(Math.random() < frequency);
+  }, [location.pathname, position, priority, showAds]);
+
+  // Don't show ads if user has premium subscription or ads are disabled
+  if (!showAds() || !shouldShowAd || !adSlot) {
     return null;
   }
-  
-  return adComponent;
+
+  return (
+    <div className={`ad-manager ad-position-${position} ${className}`}>
+      <GoogleAdSense 
+        adSlot={adSlot}
+        adFormat={adFormat === 'banner' ? 'auto' : adFormat === 'rectangle' ? 'rectangle' : 'fluid'}
+        fullWidthResponsive={true}
+        className={`ad-${pageType} ad-${priority}-priority`}
+        style={{
+          display: 'block',
+          textAlign: 'center',
+          margin: '16px 0'
+        }}
+      />
+    </div>
+  );
 };
+
+// Strategic ad placement components for different page sections
+export const HeaderAd = ({ pageType, className = '' }) => (
+  <AdManager 
+    position="header" 
+    pageType={pageType} 
+    priority="high"
+    className={className}
+  />
+);
+
+export const SidebarAd = ({ pageType, className = '' }) => (
+  <AdManager 
+    position="sidebar" 
+    pageType={pageType} 
+    priority="medium"
+    className={className}
+  />
+);
+
+export const ContentTopAd = ({ pageType, className = '' }) => (
+  <AdManager 
+    position="content-top" 
+    pageType={pageType} 
+    priority="high"
+    className={className}
+  />
+);
+
+export const ContentMiddleAd = ({ pageType, className = '' }) => (
+  <AdManager 
+    position="content-middle" 
+    pageType={pageType} 
+    priority="medium"
+    className={className}
+  />
+);
+
+export const ContentBottomAd = ({ pageType, className = '' }) => (
+  <AdManager 
+    position="content-bottom" 
+    pageType={pageType} 
+    priority="low"
+    className={className}
+  />
+);
+
+export const FooterAd = ({ pageType, className = '' }) => (
+  <AdManager 
+    position="footer" 
+    pageType={pageType} 
+    priority="low"
+    className={className}
+  />
+);
+
+export const FloatingAd = ({ pageType, className = '' }) => (
+  <AdManager 
+    position="floating" 
+    pageType={pageType} 
+    priority="medium"
+    className={className}
+  />
+);
 
 export default AdManager;

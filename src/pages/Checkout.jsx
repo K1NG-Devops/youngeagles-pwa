@@ -39,7 +39,7 @@ const Checkout = () => {
 
   useEffect(() => {
     if (!selectedPlan) {
-      navigate('/manage');
+      navigate('/management');
     }
   }, [selectedPlan, navigate]);
 
@@ -237,7 +237,7 @@ const Checkout = () => {
         <div className="mb-8">
           <div className="flex justify-between items-start mb-4">
             <button
-              onClick={() => navigate('/manage')}
+              onClick={() => navigate('/management')}
               className={`inline-flex items-center text-sm transition-colors ${
                 isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -247,7 +247,7 @@ const Checkout = () => {
             </button>
             
             <button
-              onClick={() => navigate('/manage')}
+              onClick={() => navigate('/management')}
               className={`p-2 rounded-lg transition-colors ${
                 isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
@@ -476,7 +476,7 @@ const Checkout = () => {
               <div className="flex gap-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => navigate('/manage')}
+                  onClick={() => navigate('/management')}
                   className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
                     isDark
                       ? 'bg-gray-700 hover:bg-gray-600 text-white'

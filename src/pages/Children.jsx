@@ -7,6 +7,7 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 import { FaChild, FaCalendarAlt, FaUser, FaArrowLeft, FaPhone, FaPlus, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import FeatureGuard, { useFeatureAccess } from '../components/FeatureGuard';
+import { HeaderAd, ContentMiddleAd, SidebarAd, ContentBottomAd } from '../components/ads';
 
 const Children = () => {
   const { user } = useAuth();
@@ -96,6 +97,9 @@ const Children = () => {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-6`}>
       <div className="max-w-6xl mx-auto px-2 sm:px-6 space-y-6">
+        {/* Header Ad - High visibility */}
+        <HeaderAd pageType="children" className="mb-6" />
+        
         {/* Header */}       
         <div className={`p-2 mt-18 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center justify-between">
@@ -156,6 +160,9 @@ const Children = () => {
             </div>
           </div>
         </div>
+
+        {/* Content Middle Ad - Between header and children grid */}
+        <ContentMiddleAd pageType="children" className="my-6" />
 
         {/* Children Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -280,6 +287,9 @@ const Children = () => {
             </div>
           </div>
         )}
+        
+        {/* Bottom Content Ad */}
+        <ContentBottomAd pageType="children" className="mt-8" />
       </div>
     </div>
   );

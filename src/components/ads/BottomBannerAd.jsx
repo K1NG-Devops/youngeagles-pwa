@@ -1,210 +1,155 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
-import { FaTimes, FaExternalLinkAlt, FaGift, FaStar, FaArrowUp } from 'react-icons/fa';
-import GoogleAdSense from './GoogleAdSense';
+import { FaTimes, FaGraduationCap, FaBookOpen, FaUsers } from 'react-icons/fa';
 
 const BottomBannerAd = ({ 
   dismissible = true,
-  autoRotate = true,
+  context = 'general',
   className = '' 
 }) => {
   const { isDark } = useTheme();
-  const { showAds } = useSubscription();
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const { shouldShowAd, recordAdShown } = useSubscription();
   const [isDismissed, setIsDismissed] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [currentAd, setCurrentAd] = useState(0);
 
-  // Check if Google AdSense is enabled
-  const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
-  const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID;
-  const bannerAdUnit = import.meta.env.VITE_ADSENSE_FOOTER_BANNER || import.meta.env.VITE_ADSENSE_MOBILE_BANNER;
-
-  // Custom ads configuration
-  const ads = [
+  // Educational-focused native ads
+  const educationalAds = [
     {
-      id: 'upgrade-1',
-      title: 'Upgrade to Premium',
-      description: 'Remove ads and unlock all features!',
-      cta: 'Upgrade',
-      bgColor: 'bg-gradient-to-r from-blue-500 to-purple-600',
-      textColor: 'text-white',
-      icon: FaStar,
-      action: () => {
-        // Navigate to upgrade page
-        window.location.href = '/pricing';
-      }
+      id: 'upgrade-premium',
+      title: 'Unlock Premium Features',
+      description: 'Remove ads • Unlimited homework • Priority support',
+      icon: FaGraduationCap,
+      color: 'from-blue-500 to-purple-600',
+      cta: 'Upgrade Now',
+      action: () => window.location.href = '/checkout'
     },
     {
-      id: 'education-1',
+      id: 'learning-resources',
       title: 'Free Learning Resources',
-      description: 'Discover educational content for your child',
+      description: 'Access educational worksheets and activities',
+      icon: FaBookOpen,
+      color: 'from-green-500 to-teal-600',
       cta: 'Explore',
-      bgColor: 'bg-gradient-to-r from-green-500 to-blue-500',
-      textColor: 'text-white',
-      icon: FaGift,
-      action: () => {
-        window.open('https://example.com/resources', '_blank');
-      }
+      action: () => window.location.href = '/activities'
     },
     {
-      id: 'feedback-1',
-      title: 'Love the App?',
-      description: 'Rate us 5 stars and help other families!',
-      cta: 'Rate Now',
-      bgColor: 'bg-gradient-to-r from-yellow-500 to-orange-500',
-      textColor: 'text-white',
-      icon: FaStar,
-      action: () => {
-        // Open app store rating
-        console.log('Open app store rating');
-      }
+      id: 'parent-community',
+      title: 'Join Parent Community',
+      description: 'Connect with other parents and share experiences',
+      icon: FaUsers,
+      color: 'from-purple-500 to-pink-600',
+      cta: 'Join Now',
+      action: () => window.open('https://community.youngeagles.com', '_blank')
     }
   ];
 
-  // Auto-rotate ads every 45 seconds
+  // Check if we should show ad based on context and frequency
+  const shouldDisplay = shouldShowAd(context);
+
+  // Record that ad was shown - MOVED BEFORE EARLY RETURN
   useEffect(() => {
-    if (!autoRotate || ads.length <= 1 || !showAds()) return;
+    if (shouldDisplay) {
+      recordAdShown(context);
+    }
+  }, [shouldDisplay, context, recordAdShown]);
 
+  // Auto-rotate ads every 30 seconds - MOVED BEFORE EARLY RETURN
+  useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentAdIndex((prev) => (prev + 1) % ads.length);
-    }, 45000);
-
+      setCurrentAd((prev) => (prev + 1) % educationalAds.length);
+    }, 30000);
     return () => clearInterval(interval);
-  }, [autoRotate, ads.length, showAds]);
+  }, [educationalAds.length]);
 
-  const handleAdClick = () => {
-    const currentAd = ads[currentAdIndex];
-    console.log('Bottom banner ad clicked:', currentAd.id);
-    currentAd.action();
-  };
-
-  const handleDismiss = (e) => {
-    e.stopPropagation();
-    setIsDismissed(true);
-    console.log('Bottom banner ad dismissed:', ads[currentAdIndex].id);
-  };
-
-  const toggleMinimize = (e) => {
-    e.stopPropagation();
-    setIsMinimized(!isMinimized);
-  };
-
-  // Don't show if user has premium subscription or ad is dismissed
-  if (!showAds() || isDismissed) {
+  // Don't show if dismissed or shouldn't display - MOVED AFTER ALL HOOKS
+  if (isDismissed || !shouldDisplay) {
     return null;
   }
 
-  // If AdSense is properly configured, use that
-  if (isAdSenseEnabled && publisherId && bannerAdUnit) {
-    return (
-      <div className={`fixed bottom-0 left-0 right-0 z-40 ${className}`}>
-        <div className={`relative ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t shadow-lg`}>
+  const handleDismiss = () => {
+    setIsDismissed(true);
+  };
+
+  const handleAdClick = () => {
+    educationalAds[currentAd].action();
+  };
+
+  const ad = educationalAds[currentAd];
+  const IconComponent = ad.icon;
+
+  return (
+    <div className={`fixed bottom-16 left-0 right-0 z-30 px-2 ${className}`}>
+      <div 
+        className={`mx-auto max-w-sm rounded-lg shadow-lg border cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+          isDark 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-white border-gray-200'
+        }`}
+        onClick={handleAdClick}
+      >
+        {/* Native ad content */}
+        <div className="p-4">
+          <div className="flex items-center space-x-3">
+            {/* Icon with gradient background */}
+            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${ad.color} flex items-center justify-center flex-shrink-0`}>
+              <IconComponent className="text-white text-xl" />
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {ad.title}
+              </h3>
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                {ad.description}
+              </p>
+            </div>
+            
+            {/* CTA Button */}
+            <div className="flex-shrink-0">
+              <div className={`px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${ad.color} text-white`}>
+                {ad.cta}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Subtle ad indicator */}
+        <div className={`px-4 pb-2 flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+          <span className="text-xs">Sponsored</span>
+          
+          {/* Dismiss button */}
           {dismissible && (
             <button
-              onClick={handleDismiss}
-              className={`absolute top-1 right-1 p-1 rounded-full transition-colors z-10 ${
-                isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDismiss();
+              }}
+              className={`p-1 rounded-full transition-colors ${
+                isDark 
+                  ? 'hover:bg-gray-700 text-gray-400' 
+                  : 'hover:bg-gray-100 text-gray-500'
               }`}
+              title="Dismiss ad"
             >
               <FaTimes className="text-xs" />
             </button>
           )}
-          
-          <GoogleAdSense 
-            adSlot={bannerAdUnit}
-            adFormat="horizontal"
-            className="w-full"
-            style={{ height: '50px', minHeight: '50px' }}
-          />
         </div>
-      </div>
-    );
-  }
-
-  // Fallback to custom ads
-  const currentAd = ads[currentAdIndex];
-  const IconComponent = currentAd.icon;
-
-  return (
-    <div className={`fixed bottom-0 left-0 right-0 z-40 transform transition-all duration-300 translate-y-0 opacity-100 ${className}`}>
-      <div 
-        className={`relative transition-all duration-300 cursor-pointer ${
-          isMinimized ? 'h-12' : 'h-16'
-        } ${currentAd.bgColor} ${currentAd.textColor} shadow-lg`}
-        onClick={handleAdClick}
-      >
-        {/* Ad Content */}
-        <div className="flex items-center justify-between h-full px-4">
-          {/* Left: Icon and Text */}
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <div className="flex-shrink-0">
-              <IconComponent className={`${isMinimized ? 'text-lg' : 'text-xl'} opacity-90`} />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className={`font-semibold ${isMinimized ? 'text-sm' : 'text-base'} truncate`}>
-                {currentAd.title}
-              </div>
-              {!isMinimized && (
-                <div className="text-xs opacity-80 truncate">
-                  {currentAd.description}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right: CTA and Controls */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className={`
-              px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-              bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm
-            `}>
-              {currentAd.cta}
-              <FaExternalLinkAlt className="ml-1 text-xs" />
-            </button>
-            
-            {/* Minimize/Maximize Button */}
-            <button
-              onClick={toggleMinimize}
-              className="p-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors"
-            >
-              <FaArrowUp className={`text-xs transition-transform ${isMinimized ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {/* Dismiss Button */}
-            {dismissible && (
-              <button
-                onClick={handleDismiss}
-                className="p-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors"
-              >
-                <FaTimes className="text-xs" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Progress Indicators */}
-        {ads.length > 1 && autoRotate && !isMinimized && (
-          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
-            {ads.map((_, index) => (
-              <div
-                key={index}
-                className={`
-                  w-1 h-1 rounded-full transition-all duration-300
-                  ${index === currentAdIndex 
-                ? 'bg-white bg-opacity-80' 
-                : 'bg-white bg-opacity-30'
-              }
-                `}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Ad Label */}
-        <div className="absolute top-1 left-2 text-xs opacity-60">
-          Ad
+        
+        {/* Progress dots */}
+        <div className="flex justify-center pb-2 space-x-1">
+          {educationalAds.map((_, index) => (
+            <div
+              key={index}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                index === currentAd 
+                  ? 'bg-blue-500' 
+                  : (isDark ? 'bg-gray-600' : 'bg-gray-300')
+              }`}
+            />
+          ))}
         </div>
       </div>
     </div>

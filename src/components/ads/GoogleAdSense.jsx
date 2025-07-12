@@ -1,103 +1,77 @@
 import React, { useEffect, useRef } from 'react';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 
-const GoogleAdSense = ({ 
-  adSlot, 
+const GoogleAdSense = ({
+  adSlot,
   adFormat = 'auto',
-  adLayoutKey,
+  adLayout = '',
+  adLayoutKey = '',
+  fullWidthResponsive = true,
   className = '',
   style = {},
-  responsive = true
+  dataAdTest = 'off' // Set to 'on' for testing
 }) => {
   const { showAds } = useSubscription();
   const adRef = useRef(null);
-  const isLoaded = useRef(false);
-
-  const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID;
-  const isEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
-  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
+  const isScriptLoaded = useRef(false);
 
   useEffect(() => {
-    // Don't show ads if user has premium subscription
-    if (!showAds() || !isEnabled || !publisherId) {
+    // Don't load script if ads shouldn't be shown
+    if (!showAds() || !adSlot) {
       return;
     }
 
-    // Load AdSense script if not already loaded
-    if (!window.adsbygoogle && !isLoaded.current) {
+    // Load Google AdSense script if not already loaded
+    if (!isScriptLoaded.current && !document.querySelector('script[src*="adsbygoogle.js"]')) {
       const script = document.createElement('script');
       script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
       script.async = true;
       script.crossOrigin = 'anonymous';
-      script.setAttribute('data-ad-client', publisherId);
-      
-      script.onload = () => {
-        isLoaded.current = true;
-        // Initialize ads after script loads
-        if (adRef.current) {
-          try {
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-          } catch (error) {
-            console.error('AdSense error:', error);
-          }
-        }
-      };
-
-      script.onerror = () => {
-        console.warn('Failed to load AdSense script');
-      };
-
+      script.setAttribute('data-ad-client', import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX');
       document.head.appendChild(script);
-    } else if (window.adsbygoogle && adRef.current) {
-      // Script already loaded, just push the ad
+      isScriptLoaded.current = true;
+    }
+
+    // Initialize adsbygoogle array
+    window.adsbygoogle = window.adsbygoogle || [];
+
+    // Push ads to Google AdSense after a short delay to ensure script is loaded
+    const timer = setTimeout(() => {
       try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        if (window.adsbygoogle && adRef.current) {
+          window.adsbygoogle.push({});
+        }
       } catch (error) {
         console.error('AdSense error:', error);
       }
-    }
+    }, 100);
 
-    return () => {
-      // Cleanup if needed
-    };
-  }, [showAds, isEnabled, publisherId, adSlot]);
+    return () => clearTimeout(timer);
+  }, [adSlot, showAds]);
 
-  // Don't render if ads are disabled
-  if (!showAds() || !isEnabled || !publisherId) {
+  // Don't render ads if user has premium subscription
+  if (!showAds()) {
     return null;
   }
 
-  const adStyle = {
-    display: 'block',
-    width: '100%',
-    height: 'auto',
-    ...style
-  };
-
-  // Container styles to prevent overflow
-  const containerStyle = {
-    overflow: 'hidden',
-    maxWidth: '100%',
-    margin: '0 auto',
-    borderRadius: '0.5rem',
-    backgroundColor: 'transparent'
-  };
+  // Don't render if no ad slot provided
+  if (!adSlot) {
+    return null;
+  }
 
   return (
-    <div 
-      className={`adsense-container ${className}`}
-      style={containerStyle}
-    >
+    <div className={`google-adsense-container ${className}`} style={style}>
       <ins
         ref={adRef}
         className="adsbygoogle"
-        style={adStyle}
-        data-ad-client={publisherId}
+        style={{ display: 'block', ...style }}
+        data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX'}
         data-ad-slot={adSlot}
         data-ad-format={adFormat}
+        data-ad-layout={adLayout}
         data-ad-layout-key={adLayoutKey}
-        data-full-width-responsive={responsive ? 'true' : 'false'}
-        data-adtest={isTestMode ? 'on' : 'off'}
+        data-full-width-responsive={fullWidthResponsive}
+        data-ad-test={import.meta.env.VITE_ADSENSE_TEST_MODE === 'true' ? 'on' : dataAdTest}
       />
     </div>
   );

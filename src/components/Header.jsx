@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import UserDropdown from './UserDropdown';
-import ProfileImage from './common/ProfileImage';
 import ProfilePictureModal from './common/ProfilePictureModal';
 
 const Header = () => {
@@ -25,26 +24,9 @@ const Header = () => {
         
         {isAuthenticated && user && (
           <div className="flex items-center mobile-gap-md">
-            {/* Settings Gear - UserDropdown */}
+            {/* User Dropdown - Only one profile picture */}
             <div className="flex-shrink-0">
               <UserDropdown onLogout={logout} />
-            </div>
-            
-            {/* Profile Picture - Using ProfileImage component */}
-            <div className="flex items-center mobile-gap-sm touch-responsive">
-              <ProfileImage 
-                user={user}
-                size="large"
-                onClick={() => setIsProfileModalOpen(true)}
-                className="border-2 border-white/20 hover:border-white/50 hover:ring-2 hover:ring-white/50"
-              />
-              
-              {/* User Name - Hidden on small screens */}
-              <span className={`hidden sm:inline-block text-sm font-medium ${
-                isDark ? 'text-white' : 'text-white'
-              }`}>
-                {user.name}
-              </span>
             </div>
           </div>
         )}

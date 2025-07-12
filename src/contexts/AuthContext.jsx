@@ -14,32 +14,122 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('authToken'));
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth state
+  // Define isAuthenticated function early
+  const isAuthenticated = !!token && !!user;
+
+  // Define refreshUserProfile function before useEffect hooks
+  const refreshUserProfile = async () => {
+    try {
+      console.log('🔄 Refreshing user profile from server...');
+      
+      // Use the auth/profile endpoint directly instead of users/profile
+      const response = await apiService.get('/api/auth/profile');
+      
+      if (response.data.success && response.data.user) {
+        const userData = response.data.user;
+        console.log('✅ User profile refreshed successfully');
+        
+        // Update user state with fresh data
+        setUser(userData);
+        
+        // Update localStorage with fresh data
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        return userData;
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing user profile:', error);
+      
+      // If profile refresh fails, don't clear auth - user might be offline
+      // Just log the error and continue with cached data
+      console.log('⚠️ Using cached user data due to profile refresh failure');
+      
+      throw error;
+    }
+  };
+
+  // Initialize auth state from localStorage
   useEffect(() => {
     const initAuth = async () => {
-      const savedToken = localStorage.getItem('authToken');
-      const savedUser = localStorage.getItem('user');
-      
-      if (savedToken && savedUser) {
-        try {
-          setToken(savedToken);
-          setUser(JSON.parse(savedUser));
-          // Set default auth header
-          apiService.setAuthToken(savedToken);
-        } catch (error) {
-          console.error('Error parsing saved user:', error);
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
+      try {
+        const storedToken = localStorage.getItem('authToken');
+        const storedUser = localStorage.getItem('user');
+        
+        if (storedToken && storedUser) {
+          const userData = JSON.parse(storedUser);
+          setToken(storedToken);
+          setUser(userData);
+          apiService.setAuthToken(storedToken);
         }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();
   }, []);
+
+  // Auto-sync profile periodically when user is active
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    // Initial sync after login
+    setTimeout(() => {
+      refreshUserProfile();
+    }, 1000);
+
+    // Periodic sync every 5 minutes when tab is active
+    const syncInterval = setInterval(() => {
+      if (!document.hidden) {
+        refreshUserProfile();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Sync when tab becomes visible (user switches back to app)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setTimeout(() => {
+          refreshUserProfile();
+        }, 1000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(syncInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated, user?.id]);
+
+  // Listen for storage changes (when user updates profile on another tab)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'user' && e.newValue) {
+        try {
+          const updatedUser = JSON.parse(e.newValue);
+          if (updatedUser.id === user?.id) {
+            setUser(updatedUser);
+            console.log('🔄 Profile updated from another tab');
+          }
+        } catch (error) {
+          console.error('Error parsing user data from storage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user?.id]);
 
   const login = async (credentials, userType = 'parent') => {
     try {
@@ -122,70 +212,42 @@ export const AuthProvider = ({ children }) => {
     nativeNotificationService.info('Logged out successfully');
   };
 
-  const updateUser = (updatedFields) => {
-    const updatedUser = { 
-      ...user, 
-      ...updatedFields,
-      // Add updated timestamp for cache busting
-      updated_at: new Date().toISOString()
-    };
+  const updateUser = (updates) => {
+    if (!user) return;
+    
+    // Ensure profile picture consistency across all possible field names
+    const normalizedUpdates = { ...updates };
+    
+    // If any profile picture field is updated, sync all variants
+    const profilePicFields = ['profilePicture', 'profile_picture', 'avatar', 'image'];
+    const profilePicValue = profilePicFields.find(field => updates[field]);
+    
+    if (profilePicValue) {
+      const imageUrl = updates[profilePicValue];
+      profilePicFields.forEach(field => {
+        normalizedUpdates[field] = imageUrl;
+      });
+    }
+    
+    // Add timestamp for cache busting
+    normalizedUpdates.updated_at = new Date().toISOString();
+    
+    const updatedUser = { ...user, ...normalizedUpdates };
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
+    
+    // Force a re-render of profile images across the app
+    window.dispatchEvent(new CustomEvent('profilePictureUpdated', { 
+      detail: { user: updatedUser, imageUrl: profilePicValue ? normalizedUpdates[profilePicValue] : null }
+    }));
+    
+    console.log('✅ User updated with profile picture sync:', {
+      original: updates,
+      normalized: normalizedUpdates,
+      imageUrl: profilePicValue ? normalizedUpdates[profilePicValue] : null
+    });
   };
   
-  const refreshUserProfile = async () => {
-    if (!token || !user?.id) return;
-    
-    try {
-      // Try different possible endpoints for user profile
-      let response;
-      const possibleEndpoints = [
-        '/api/auth/profile',
-        `/api/users/${user.id}`,
-        '/api/users/profile',
-        `/api/users/${user.id}/profile`
-      ];
-      
-      for (const endpoint of possibleEndpoints) {
-        try {
-          response = await apiService.get(endpoint);
-          if (response.data.success || response.data.user) {
-            break;
-          }
-        } catch (endpointError) {
-          // Continue to next endpoint
-          continue;
-        }
-      }
-      
-      if (response && (response.data.success || response.data.user)) {
-        const freshUser = {
-          ...user, // Keep existing user data
-          ...(response.data.user || response.data), // Merge new data
-          updated_at: new Date().toISOString()
-        };
-        setUser(freshUser);
-        localStorage.setItem('user', JSON.stringify(freshUser));
-        console.log('✅ User profile refreshed successfully');
-      } else {
-        console.log('ℹ️ No suitable profile endpoint found, keeping existing user data');
-      }
-    } catch (error) {
-      console.log('ℹ️ Profile refresh not available, keeping existing user data');
-      // Don't throw error, just update timestamp for cache busting
-      const updatedUser = {
-        ...user,
-        updated_at: new Date().toISOString()
-      };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-    }
-  };
-
-  const isAuthenticated = () => {
-    return !!token && !!user;
-  };
-
   const value = {
     user,
     token,
@@ -195,7 +257,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     refreshUserProfile,
-    isAuthenticated: isAuthenticated()
+    isAuthenticated: isAuthenticated
   };
 
   return (

@@ -19,6 +19,7 @@ import {
   FaGamepad,
   FaArrowLeft
 } from 'react-icons/fa';
+import { HeaderAd, ContentMiddleAd, SidebarAd, ContentBottomAd } from '../components/ads';
 
 const Homework = () => {
   const { user } = useAuth();
@@ -244,6 +245,7 @@ const Homework = () => {
     <div className={`min-h-screen pt-24 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header Ad - High visibility */}
+        <HeaderAd />
         
 
         {/* Back Button */}
@@ -334,6 +336,7 @@ const Homework = () => {
         </div>
 
         {/* Content Rectangle Ad - High engagement area */}
+        <ContentMiddleAd />
         
 
         {/* Child/Student Selector */}
@@ -522,6 +525,7 @@ const Homework = () => {
             ))}
           </div>
         )}
+        <ContentBottomAd />
       </div>
     </div>
   );

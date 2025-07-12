@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import apiService from '../services/apiService';
-import InlineGoogleAd from '../components/ads/InlineGoogleAd';
+// Remove excessive inline ads
+// import InlineGoogleAd from '../components/ads/InlineGoogleAd';
 
 import { FaUser, FaBook, FaBrain, FaBell, FaArrowRight, FaChevronDown, FaChevronUp, FaChartLine, FaCreditCard, FaCheckCircle, FaExclamationTriangle, FaGraduationCap } from 'react-icons/fa';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 import TeacherDashboard from './TeacherDashboard';
 import AdminDashboard from './AdminDashboard';
+import LocalAdTester from '../components/ads/LocalAdTester';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -172,208 +174,218 @@ const Dashboard = () => {
   return (
     <div className={`min-h-screen mt-16 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
-      <main className="pt-0 pb-20 px-2 sm:px-3">
+      <main className="pt-0 pb-4 px-2 sm:px-3">
         <div className="w-full">
-          {/* Welcome Section */}
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-lg mb-4 p-6">
-            <h1 className="text-2xl font-bold mb-1">Welcome back, {user?.name}!</h1>
-            <p className="text-blue-100 text-sm">Track your child's learning progress and stay connected</p>
-          </div>
+          {/* Top Banner Ad - Only at page start (30% chance) */}
+          <LocalAdTester format="banner" className="mb-6" />
 
-          {/* Ad Container with proper spacing */}
-          <div className="relative w-full mb-6 overflow-hidden">
-            <InlineGoogleAd 
-              adSlot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
-              adFormat="horizontal"
-              className="mx-auto"
-              style={{ 
-                width: '100%', 
-                minHeight: '90px',
-                maxHeight: '120px'
-              }}
-            />
+          {/* Welcome Section - Enhanced */}
+          <div className="bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-4 left-4 w-20 h-20 rounded-full bg-white/20"></div>
+              <div className="absolute bottom-4 right-4 w-16 h-16 rounded-full bg-white/10"></div>
+              <div className="absolute top-1/2 right-8 w-12 h-12 rounded-full bg-white/15"></div>
+            </div>
+            
+            <div className="relative z-10 p-6 sm:p-8">
+              {/* Header Section */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex-1">
+                  <div className="flex items-center mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                      <FaGraduationCap className="text-2xl text-white" />
+                    </div>
+                    <div>
+                      <h1 className="text-lg sm:text-3xl font-bold mb-1">
+                        Welcome back, {user?.name}!
+                      </h1>
+                      <p className="text-blue-100 text-sm sm:text-base opacity-90">
+                        Track your child's learning progress and stay connected
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Stats Preview */}
+                <div className="hidden sm:flex flex-col items-end space-y-2">
+                  <div className="bg-white/20 rounded-lg px-3 py-2 text-center backdrop-blur-sm">
+                    <div className="text-xl font-bold">{stats.children}</div>
+                    <div className="text-xs text-blue-100">Children</div>
+                  </div>
+                  <div className="bg-white/20 rounded-lg px-3 py-2 text-center backdrop-blur-sm">
+                    <div className="text-xl font-bold">{stats.pending}</div>
+                    <div className="text-xs text-blue-100">Pending</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Quick Actions Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                <Link 
+                  to="/homework" 
+                  className="group bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                >
+                  <div className="flex items-center mb-2">
+                    <FaBook className="text-lg mr-2 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-sm sm:text-base">Homework</span>
+                  </div>
+                  <p className="text-xs text-blue-100 opacity-80">View assignments</p>
+                </Link>
+                
+                <Link 
+                  to="/children" 
+                  className="group bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                >
+                  <div className="flex items-center mb-2">
+                    <FaUser className="text-lg mr-2 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-sm sm:text-base">My Children</span>
+                  </div>
+                  <p className="text-xs text-blue-100 opacity-80">Manage profiles</p>
+                </Link>
+                
+                <Link 
+                  to="/activities" 
+                  className="group bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg col-span-2 sm:col-span-1"
+                >
+                  <div className="flex items-center mb-2">
+                    <FaBrain className="text-lg mr-2 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-sm sm:text-base">Activities</span>
+                  </div>
+                  <p className="text-xs text-blue-100 opacity-80">Learning games</p>
+                </Link>
+              </div>
+              
+              {/* Progress Indicator */}
+              <div className="mt-6 bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Overall Progress</span>
+                  <span className="text-sm font-bold">{stats.completionRate}%</span>
+                </div>
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${stats.completionRate}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
           </div>
           
-          {/* Quick Stats for Parents - Color Scheme:
-               Blue: Information/General stats
-               Purple: Academic/Homework related  
-               Green: Completed/Success/Positive metrics
-               Yellow/Orange: Pending/In Progress
-               Red: Urgent/Overdue/Issues
-               Indigo: AI/Advanced features
-          */}
+          {/* Quick Stats for Parents - Enhanced */}
           {user?.role === 'parent' && (
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 border-blue-500 transition-all duration-200 active:scale-95 ${
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className={`p-6 rounded-lg shadow-md text-center border-l-4 border-blue-500 transition-all duration-200 hover:shadow-lg ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className="text-3xl font-bold text-blue-500">{stats.children}</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Children</div>
+                <div className="text-4xl font-bold text-blue-500 mb-2">{stats.children}</div>
+                <div className={`text-sm font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Children</div>
               </div>
-              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 border-purple-500 transition-all duration-200 active:scale-95 ${
+              <div className={`p-6 rounded-lg shadow-md text-center border-l-4 border-purple-500 transition-all duration-200 hover:shadow-lg ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className="text-3xl font-bold text-purple-500">{stats.homework}</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Homework</div>
+                <div className="text-4xl font-bold text-purple-500 mb-2">{stats.homework}</div>
+                <div className={`text-sm font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Homework</div>
               </div>
-              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 border-green-500 transition-all duration-200 active:scale-95 ${
+              <div className={`p-6 rounded-lg shadow-md text-center border-l-4 border-green-500 transition-all duration-200 hover:shadow-lg ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className="text-3xl font-bold text-green-500">{stats.submitted}</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Submitted</div>
+                <div className="text-4xl font-bold text-green-500 mb-2">{stats.submitted}</div>
+                <div className={`text-sm font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Submitted</div>
               </div>
-              <div className={`p-4 rounded-lg shadow-md text-center border-l-4 transition-all duration-200 active:scale-95 ${stats.completionRate >= 80 ? 'border-green-500' : stats.completionRate >= 60 ? 'border-yellow-500' : 'border-orange-500'} ${
+              <div className={`p-6 rounded-lg shadow-md text-center border-l-4 transition-all duration-200 hover:shadow-lg ${stats.completionRate >= 80 ? 'border-green-500' : stats.completionRate >= 60 ? 'border-yellow-500' : 'border-orange-500'} ${
                 isDark 
                   ? 'bg-gray-800 text-white' 
                   : 'bg-white text-gray-800'
               }`}> 
-                <div className={`text-3xl font-bold ${stats.completionRate >= 80 ? 'text-green-500' : stats.completionRate >= 60 ? 'text-yellow-500' : 'text-orange-500'}`}>{stats.completionRate}%</div>
-                <div className={`text-xs mt-1 font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Complete</div>
+                <div className={`text-4xl font-bold mb-2 ${stats.completionRate >= 80 ? 'text-green-500' : stats.completionRate >= 60 ? 'text-yellow-500' : 'text-orange-500'}`}>{stats.completionRate}%</div>
+                <div className={`text-sm font-medium uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Complete</div>
               </div>
             </div>
           )}
 
-          {/* Inline Rectangle Ad between stats */}
-          <InlineGoogleAd 
-            adSlot={import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE}
-            adFormat="rectangle"
-            className="mx-auto my-6"
-            style={{ 
-              maxWidth: '336px',
-              height: '280px'
-            }}
-          />
+          {/* Sidebar Rectangle Ad - Only in desktop sidebar (30% chance) */}
+          <div className="hidden lg:block mb-6">
+            <LocalAdTester format="rectangle" className="max-w-sm mx-auto" />
+          </div>
+
+          {/* Native Ad - Only between major content sections (30% chance) */}
+          <LocalAdTester format="native-article" className="my-8" />
 
           {/* Enhanced Stats Toggle */}
           {user?.role === 'parent' && (
-            <div className="mb-4">
+            <div className="mb-6">
               <button
                 onClick={() => setShowMoreStats(!showMoreStats)}
-                className={`w-full p-4 sm:p-5 rounded-xl shadow-lg flex items-center justify-between smooth-animation hover-lift border-l-4 border-indigo-500 ${
+                className={`w-full p-6 rounded-xl shadow-lg flex items-center justify-between transition-all duration-200 hover:shadow-xl border-l-4 border-indigo-500 ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <span className="font-semibold flex items-center">
+                <span className="font-semibold flex items-center text-lg">
                   <FaChartLine className="mr-3 text-indigo-500" />
                   {showMoreStats ? 'Hide' : 'View'} Detailed Stats
                 </span>
-                <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
                   {showMoreStats ? <FaChevronUp className="text-indigo-500" /> : <FaChevronDown className="text-indigo-500" />}
                 </div>
               </button>
               
               {showMoreStats && (
-                <div className="mt-4 grid grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-red-500 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+                <div className="mt-6 grid grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Enhanced detailed stats with better spacing */}
+                  <div className={`p-6 rounded-xl shadow-lg border-l-4 border-red-500 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
                     isDark 
                       ? 'bg-gray-800 text-white' 
                       : 'bg-white text-gray-800'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Overdue</div>
-                        <div className="text-xl sm:text-2xl font-bold text-red-500">{expandedStats.overdue}</div>
+                        <div className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Overdue</div>
+                        <div className="text-3xl font-bold text-red-500">{expandedStats.overdue}</div>
                       </div>
-                      <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center">
-                        <FaExclamationTriangle className="text-red-500 text-lg" />
+                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center">
+                        <FaExclamationTriangle className="text-red-500 text-xl" />
                       </div>
                     </div>
                   </div>
                   
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-green-500 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+                  {/* Add more enhanced stats cards */}
+                  <div className={`p-6 rounded-xl shadow-lg border-l-4 border-green-500 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
                     isDark 
                       ? 'bg-gray-800 text-white' 
                       : 'bg-white text-gray-800'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Graded</div>
-                        <div className="text-xl sm:text-2xl font-bold text-green-500">{expandedStats.graded}</div>
+                        <div className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Graded</div>
+                        <div className="text-3xl font-bold text-green-500">{expandedStats.graded}</div>
                       </div>
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center">
-                        <FaCheckCircle className="text-green-500 text-lg" />
+                      <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center">
+                        <FaCheckCircle className="text-green-500 text-xl" />
                       </div>
                     </div>
                   </div>
                   
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-blue-500 card-enhanced smooth-animation hover-lift ${
+                  <div className={`p-6 rounded-xl shadow-lg border-l-4 border-indigo-500 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
                     isDark 
                       ? 'bg-gray-800 text-white' 
                       : 'bg-white text-gray-800'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Avg Score</div>
-                        <div className="text-xl sm:text-2xl font-bold text-blue-500">{expandedStats.avgScore}%</div>
+                        <div className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>AI Usage</div>
+                        <div className="text-3xl font-bold text-indigo-500">{expandedStats.aiUsage}</div>
                       </div>
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
-                        <FaChartLine className="text-blue-500 text-lg" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-purple-500 card-enhanced smooth-animation hover-lift ${
-                    isDark 
-                      ? 'bg-gray-800 text-white' 
-                      : 'bg-white text-gray-800'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Weekly Progress</div>
-                        <div className="text-xl sm:text-2xl font-bold text-purple-500">{expandedStats.weeklyProgress}</div>
-                      </div>
-                      <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center">
-                        <FaArrowRight className="text-purple-500 text-lg" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 card-enhanced smooth-animation hover-lift ${
-                    expandedStats.paymentStatus === 'paid' ? 'border-green-500' : 'border-yellow-500'
-                  } ${
-                    isDark 
-                      ? 'bg-gray-800 text-white' 
-                      : 'bg-white text-gray-800'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Payment Status</div>
-                        <div className={`text-lg sm:text-xl font-bold ${
-                          expandedStats.paymentStatus === 'paid' ? 'text-green-500' : 'text-yellow-500'
-                        }`}>
-                          {expandedStats.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
-                        </div>
-                      </div>
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                        expandedStats.paymentStatus === 'paid' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'
-                      }`}>
-                        <FaCreditCard className={`text-lg ${
-                          expandedStats.paymentStatus === 'paid' ? 'text-green-500' : 'text-yellow-500'
-                        }`} />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={`p-5 rounded-xl shadow-lg border-l-4 border-indigo-500 card-enhanced smooth-animation hover-lift ${
-                    isDark 
-                      ? 'bg-gray-800 text-white' 
-                      : 'bg-white text-gray-800'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>AI Usage</div>
-                        <div className="text-xl sm:text-2xl font-bold text-indigo-500">{expandedStats.aiUsage}</div>
-                      </div>
-                      <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center">
-                        <FaBrain className="text-indigo-500 text-lg" />
+                      <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center">
+                        <FaBrain className="text-indigo-500 text-xl" />
                       </div>
                     </div>
                   </div>
@@ -382,66 +394,63 @@ const Dashboard = () => {
             </div>
           )}
           
-          {/* Quick Actions for Parents */}
+          {/* Quick Actions for Parents - Enhanced */}
           {user?.role === 'parent' && (
-            <div className="mb-4">
-              {/* Quick Actions Native Ad - Place after actions */}
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center">
-                <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-3"></div>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-4"></div>
                 Quick Actions
               </h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <Link to="/children" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-blue-500 group ${
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <Link to="/children" className={`p-8 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-blue-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <FaUser className="text-2xl text-blue-500" />
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <FaUser className="text-3xl text-blue-500" />
                   </div>
-                  <span className="font-semibold text-base">My Children</span>
+                  <span className="font-semibold text-lg">My Children</span>
                 </Link>
-                <Link to="/homework" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-purple-500 group ${
+
+                <Link to="/homework" className={`p-8 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-purple-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <FaBook className="text-2xl text-purple-500" />
+                  <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <FaBook className="text-3xl text-purple-500" />
                   </div>
-                  <span className="font-semibold text-base">Homework</span>
+                  <span className="font-semibold text-lg">Homework</span>
                 </Link>
-                <Link to="/activities" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-indigo-500 group ${
+
+                <Link to="/activities" className={`p-8 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-orange-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <FaGraduationCap className="text-2xl text-indigo-500" />
+                  <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <FaBrain className="text-3xl text-orange-500" />
                   </div>
-                  <span className="font-semibold text-base">Activities</span>
+                  <span className="font-semibold text-lg">Activities</span>
                 </Link>
-                <Link to="/notifications" className={`p-6 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-green-500 group ${
+
+                <Link to="/notifications" className={`p-8 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-green-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
                     : 'bg-white text-gray-800 hover:bg-gray-50'
                 }`}> 
-                  <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <FaBell className="text-2xl text-green-500" />
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <FaBell className="text-3xl text-green-500" />
                   </div>
-                <span className="font-semibold text-base">Announcements</span>
-              </Link>
+                  <span className="font-semibold text-lg">Updates</span>
+                </Link>
+              </div>
             </div>
-            
-            {/* Inline Native Ad - Blends with content */}
-            <InlineGoogleAd 
-              adSlot={import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE}
-              adFormat="fluid"
-              style={{ marginTop: '1.5rem' }}
-              data-ad-layout-key="-fb+5w+4e-db+86"
-            />
-          </div>
           )}
+
+          {/* Bottom Banner - Only at natural end point (30% chance) */}
+          <LocalAdTester format="banner" className="mt-8" />
           
         </div>
       </main>

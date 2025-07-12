@@ -3,16 +3,39 @@ import { FaCog, FaSignOutAlt, FaUserCircle, FaChevronDown, FaQuestionCircle, FaI
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { getProfileImageUrl, getUserInitials } from '../utils/imageUtils';
 import ProfilePictureModal from './common/ProfilePictureModal';
 
 const UserDropdown = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+
+  // Update profile image URL when user changes
+  useEffect(() => {
+    const newUrl = getProfileImageUrl(user);
+    setProfileImageUrl(newUrl);
+  }, [user?.profilePicture, user?.profile_picture, user?.avatar, user?.image, user?.updated_at, forceUpdate]);
+
+  // Listen for profile picture updates
+  useEffect(() => {
+    const handleProfilePictureUpdate = (event) => {
+      const { user: updatedUser, imageUrl } = event.detail;
+      if (updatedUser?.id === user?.id) {
+        setProfileImageUrl(imageUrl);
+        setForceUpdate(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    return () => window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+  }, [user?.id]);
 
   // Close dropdown when clicking outside or pressing escape
   useEffect(() => {
@@ -31,16 +54,11 @@ const UserDropdown = ({ onLogout }) => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscapeKey);
-      // Prevent body scroll when dropdown is open
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
@@ -51,60 +69,20 @@ const UserDropdown = ({ onLogout }) => {
 
   const handleClose = () => {
     setIsAnimating(false);
-    setTimeout(() => setIsOpen(false), 150);
+    setIsOpen(false);
+  };
+
+  const handleToggle = () => {
+    if (isOpen) {
+      handleClose();
+    } else {
+      handleOpen();
+    }
   };
 
   const handleItemClick = (action) => {
     handleClose();
     setTimeout(() => action(), 150);
-  };
-
-  const getUserInitials = () => {
-    if (!user?.name) return 'U';
-    const names = user.name.split(' ');
-    if (names.length >= 2) {
-      return `${names[0][0]}${names[1][0]}`.toUpperCase();
-    }
-    return user.name.substring(0, 2).toUpperCase();
-  };
-
-  const getProfileImage = () => {
-    // Check multiple possible profile image fields  
-    const profilePic = user?.profilePicture || user?.profile_picture || user?.avatar || user?.image || null;
-    
-    console.log('🖼️ UserDropdown profile picture debug:', {
-      profilePic: profilePic ? (profilePic.startsWith('data:') ? 'base64-image' : profilePic) : null,
-      user,
-      hasImage: !!profilePic,
-      env: {
-        VITE_API_URL: import.meta.env.VITE_API_URL,
-        VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL
-      }
-    });
-    
-    // Handle base64 images (local storage fallback)
-    if (profilePic && profilePic.startsWith('data:image/')) {
-      return profilePic;
-    }
-    
-    if (profilePic && profilePic.startsWith('/uploads/')) {
-      // Use the correct API URL from environment
-      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      // Use user ID and update timestamp for better cache control
-      const cacheKey = user?.updated_at || user?.id || Date.now();
-      const fullUrl = `${baseUrl}${profilePic}?v=${cacheKey}`;
-      console.log('🔗 UserDropdown full profile picture URL:', fullUrl);
-      return fullUrl;
-    }
-    
-    // If it's already a full URL, add version cache key
-    if (profilePic && (profilePic.startsWith('http://') || profilePic.startsWith('https://'))) {
-      const cacheKey = user?.updated_at || user?.id || Date.now();
-      const separator = profilePic.includes('?') ? '&' : '?';
-      return `${profilePic}${separator}v=${cacheKey}`;
-    }
-    
-    return profilePic;
   };
 
   const getRoleColor = (role) => {
@@ -123,6 +101,13 @@ const UserDropdown = ({ onLogout }) => {
   const menuItems = [
     {
       icon: FaUserCircle,
+      label: 'Edit Profile Picture',
+      description: 'Change your profile photo',
+      action: () => setIsProfileModalOpen(true),
+      divider: false
+    },
+    {
+      icon: FaUserCircle,
       label: 'Profile',
       description: 'View and edit your profile',
       action: () => {
@@ -139,7 +124,7 @@ const UserDropdown = ({ onLogout }) => {
       label: 'Manage Account',
       description: 'Subscriptions, payments, and billing',
       action: () => {
-        navigate('/manage');
+        navigate('/management');
       },
       divider: true
     },
@@ -182,88 +167,96 @@ const UserDropdown = ({ onLogout }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Settings Gear Button */}
+      {/* Profile Button */}
       <button
-        onClick={isOpen ? handleClose : handleOpen}
-        className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 ${
+        onClick={handleToggle}
+        className={`flex items-center space-x-2 p-2 rounded-lg transition-all duration-200 ${
           isDark 
-            ? 'hover:bg-gray-700 text-white' 
-            : 'hover:bg-blue-500 text-white hover:text-white'
-        } ${isOpen ? (isDark ? 'bg-gray-700' : 'bg-blue-500') : ''}`}
-        title="Settings & Menu"
+            ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+            : 'bg-white hover:bg-gray-50 text-gray-900'
+        } shadow-sm border ${
+          isDark ? 'border-gray-700' : 'border-gray-200'
+        }`}
+        aria-label="User menu"
       >
-        <FaCog className={`text-xl transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
+        {/* Profile Picture */}
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+          {profileImageUrl ? (
+            <img
+              src={profileImageUrl}
+              alt="Profile"
+              className="w-full h-full object-cover"
+              key={`dropdown-profile-${forceUpdate}`}
+              onError={(e) => {
+                console.error('❌ UserDropdown profile picture failed to load:', e.target.src);
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          {/* Fallback */}
+          <div 
+            className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${
+              profileImageUrl ? 'hidden' : 'flex'
+            }`}
+            style={{ display: profileImageUrl ? 'none' : 'flex' }}
+          >
+            {getUserInitials(user)}
+          </div>
+        </div>
+        
+        {/* User Name */}
+        <span className="text-sm font-medium truncate max-w-24">
+          {user?.name || 'User'}
+        </span>
+        
+        {/* Dropdown Arrow */}
+        <FaChevronDown 
+          className={`text-xs transition-transform duration-200 ${
+            isAnimating ? 'rotate-180' : ''
+          }`} 
+        />
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className={`fixed right-2 top-16 w-72 sm:w-80 max-w-[calc(100vw-2rem)] rounded-xl shadow-2xl border overflow-hidden transition-all duration-200 ${
-          isDark 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-        } ${isAnimating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
-        style={{ zIndex: 9999 }}>
+        <div className={`absolute right-0 top-full mt-2 w-64 rounded-xl shadow-xl border z-[60] overflow-hidden ${
+          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        } ${isAnimating ? 'animate-slideDown' : ''}`}>
           
           {/* User Info Header */}
-          <div className={`p-4 border-b ${
-            isDark 
-              ? 'border-gray-700 bg-gray-750' 
-              : 'border-gray-100 bg-gray-50'
-          }`}>
+          <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex items-center space-x-3">
-              {/* Profile Picture in Dropdown */}
               <button
-                onClick={() => {
-                  setIsProfileModalOpen(true);
-                  handleClose();
-                }}
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold overflow-hidden transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-blue-500/50 cursor-pointer ${
-                  isDark ? 'bg-gray-600 text-white border-2 border-gray-500' : 'bg-blue-500 text-white border-2 border-blue-400'
-                }`}
-                title="View and edit profile picture"
+                onClick={() => handleItemClick(() => setIsProfileModalOpen(true))}
+                className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center hover:scale-105 transition-transform duration-200 cursor-pointer"
+                title="Edit profile picture"
               >
-                {getProfileImage() ? (
+                {profileImageUrl ? (
                   <img 
-                    src={getProfileImage()} 
+                    src={profileImageUrl} 
                     alt="Profile" 
-                    className="w-full h-full rounded-full object-cover"
-                    key={`dropdown-profile-${Date.now()}`} // Force re-render
-                    onLoad={(e) => {
-                      console.log('✅ Dropdown profile picture loaded:', e.target.src);
-                      e.target.style.display = 'block';
-                      const placeholder = e.target.nextElementSibling;
-                      if (placeholder) placeholder.style.display = 'none';
-                    }}
-                    onError={(e) => {
-                      console.error('❌ Dropdown profile picture failed to load:', e.target.src);
-                      console.error('Error details:', e);
-                      e.target.style.display = 'none';
-                      const placeholder = e.target.nextElementSibling;
-                      if (placeholder) placeholder.style.display = 'flex';
-                    }}
+                    className="w-full h-full object-cover"
+                    key={`dropdown-profile-${forceUpdate}`}
                   />
-                ) : null}
-                <div className={`w-full h-full flex items-center justify-center ${getProfileImage() ? 'hidden' : ''}`}>
-                  {getUserInitials()}
-                </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white font-bold">
+                    {getUserInitials(user)}
+                  </div>
+                )}
               </button>
-              
               <div className="flex-1 min-w-0">
-                <h3 className={`font-semibold truncate ${
-                  isDark ? 'text-white' : 'text-gray-900'
-                }`}>
+                <h3 className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {user?.name || 'User'}
                 </h3>
-                <p className={`text-sm ${getRoleColor(user?.role)} capitalize`}>
-                  {user?.role || 'User'}
+                <p className={`text-sm truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {user?.email || 'user@example.com'}
                 </p>
-                {user?.email && (
-                  <p className={`text-xs truncate ${
-                    isDark ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    {user.email}
-                  </p>
-                )}
+                <div className="flex items-center mt-1">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user?.role)}`}>
+                    {user?.role || 'User'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -23,10 +23,13 @@ import {
   FaEdit,
   FaTrash,
   FaEye,
-  FaUserShield
+  FaUserShield,
+  FaChartLine,
+  FaAd
 } from 'react-icons/fa';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
+import AdAnalytics from '../components/ads/AdAnalytics';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -51,6 +54,7 @@ const AdminDashboard = () => {
     database: 'operational', 
     storage: 'operational'
   });
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -324,13 +328,13 @@ const AdminDashboard = () => {
               </button>
               
               <button
-                onClick={() => handleQuickAction('view_analytics')}
+                onClick={() => setShowAnalytics(!showAnalytics)}
                 className={`p-4 rounded-lg border transition-all hover:shadow-md ${
                   isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-200 hover:bg-gray-50'
                 }`}
               >
-                <FaChartBar className="text-2xl text-purple-500 mx-auto mb-2" />
-                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Analytics</p>
+                <FaChartLine className="text-2xl text-purple-500 mx-auto mb-2" />
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Ad Analytics</p>
               </button>
               
               <button
@@ -344,6 +348,13 @@ const AdminDashboard = () => {
               </button>
             </div>
           </div>
+
+          {/* Ad Analytics Section */}
+          {showAnalytics && (
+            <div className="mb-8">
+              <AdAnalytics className="shadow-lg" />
+            </div>
+          )}
 
           {/* Admin Management Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

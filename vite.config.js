@@ -27,106 +27,41 @@ export default defineConfig({
   plugins: [
     react({
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react'
+      jsxImportSource: 'react',
+      fastRefresh: true,
+      babel: {
+        plugins: [
+          ['@babel/plugin-transform-react-jsx', {
+            runtime: 'automatic',
+            importSource: 'react'
+          }]
+        ]
+      }
     }),
     tailwindcss(),
+    // Re-enable PWA with simpler config
     VitePWA({
-      registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true
+      },
       manifest: {
-        name: 'Young Eagles PWA - Minimal',
+        name: 'Young Eagles PWA',
         short_name: 'Young Eagles',
-        description: 'Young Eagles Progressive Web App - Minimal Version',
+        description: 'Young Eagles Progressive Web App',
         theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
         scope: '/',
         start_url: '/',
-        orientation: 'portrait',
         icons: [
           {
             src: 'icon-192x192.png',
             sizes: '192x192',
             type: 'image/png'
-          },
-          {
-            src: 'icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        cacheId: 'young-eagles-minimal-v1.0.2',
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
-        navigateFallback: 'index.html',
-        navigateFallbackAllowlist: [/^(?!\/__).*/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'gstatic-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/api\.youngeagles\.org\.za\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
           }
         ]
       }
@@ -151,12 +86,12 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: process.env.NODE_ENV !== 'production',
+    sourcemap: false,
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: process.env.NODE_ENV === 'production',
-        drop_debugger: process.env.NODE_ENV === 'production'
+        drop_console: true,
+        drop_debugger: true
       },
       format: {
         comments: false
@@ -165,7 +100,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-router': ['react-router-dom'],
           'vendor-utils': ['axios', 'react-icons'],
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -190,6 +126,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     assetsInlineLimit: 4096,
     reportCompressedSize: false,
-    cssCodeSplit: true
+    cssCodeSplit: true,
+    emptyOutDir: true
   }
 }) 

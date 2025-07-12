@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * Image utility functions for handling profile pictures and CORS issues
  */
@@ -40,12 +42,11 @@ export const getProfileImageUrl = (user) => {
 
 /**
  * Get user initials for fallback display
- * @param {Object} user - User object containing name
+ * @param {Object} user - User object
  * @returns {string} - User initials
  */
 export const getUserInitials = (user) => {
   if (!user?.name) return 'U';
-  
   const names = user.name.split(' ');
   if (names.length >= 2) {
     return `${names[0][0]}${names[1][0]}`.toUpperCase();
@@ -54,28 +55,120 @@ export const getUserInitials = (user) => {
 };
 
 /**
- * Handle image loading with fallback
- * @param {Event} event - Image load event
- * @param {Function} onSuccess - Success callback
- * @param {Function} onError - Error callback
+ * Profile picture hook for real-time updates
+ * @param {Object} user - User object
+ * @param {Function} forceUpdate - Function to force component re-render
  */
-export const handleImageLoad = (event, onSuccess, onError) => {
-  const img = event.target;
-  
-  // Check if image actually loaded successfully
-  if (img.complete && img.naturalWidth > 0) {
-    if (onSuccess) onSuccess(event);
-  } else {
-    if (onError) onError(event);
-  }
+export const useProfilePicture = (user, forceUpdate) => {
+  const [profileImageUrl, setProfileImageUrl] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  // Update profile image URL when user changes
+  React.useEffect(() => {
+    const newUrl = getProfileImageUrl(user);
+    setProfileImageUrl(newUrl);
+    setError(null);
+  }, [user?.profilePicture, user?.profile_picture, user?.avatar, user?.image, user?.updated_at]);
+
+  // Listen for profile picture updates
+  React.useEffect(() => {
+    const handleProfilePictureUpdate = (event) => {
+      const { user: updatedUser, imageUrl } = event.detail;
+      if (updatedUser?.id === user?.id) {
+        setProfileImageUrl(imageUrl);
+        setError(null);
+        if (forceUpdate) forceUpdate();
+      }
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    return () => window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+  }, [user?.id, forceUpdate]);
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    setError(null);
+  };
+
+  const handleImageError = () => {
+    setIsLoading(false);
+    setError(true);
+  };
+
+  return {
+    profileImageUrl,
+    isLoading,
+    error,
+    handleImageLoad,
+    handleImageError,
+    userInitials: getUserInitials(user)
+  };
 };
 
 /**
- * Handle image error with fallback
- * @param {Event} event - Image error event
- * @param {Function} onError - Error callback
+ * Validate image file for upload
+ * @param {File} file - Image file to validate
+ * @returns {Object} - Validation result
  */
-export const handleImageError = (event, onError) => {
-  console.error('Image failed to load:', event.target.src);
-  if (onError) onError(event);
+export const validateImageFile = (file) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const maxSize = 5 * 1024 * 1024; // 5MB
+
+  if (!file) {
+    return { isValid: false, error: 'No file selected' };
+  }
+
+  if (!allowedTypes.includes(file.type)) {
+    return { 
+      isValid: false, 
+      error: 'Please select a valid image file (JPEG, PNG, GIF, or WebP)' 
+    };
+  }
+
+  if (file.size > maxSize) {
+    return { 
+      isValid: false, 
+      error: 'Please select an image smaller than 5MB' 
+    };
+  }
+
+  return { isValid: true, error: null };
+};
+
+/**
+ * Create a blob URL for local image preview
+ * @param {File} file - Image file
+ * @returns {Promise<string>} - Blob URL
+ */
+export const createImagePreview = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+/**
+ * Download image from URL
+ * @param {string} imageUrl - Image URL
+ * @param {string} fileName - Download file name
+ */
+export const downloadImage = async (imageUrl, fileName = 'image.jpg') => {
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Download failed:', error);
+    throw new Error('Failed to download image');
+  }
 };

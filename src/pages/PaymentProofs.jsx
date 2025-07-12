@@ -195,7 +195,7 @@ const PaymentProofs = () => {
   }
 
   return (
-    <div className={`min-h-screen mt-18 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-12`}>
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-12`}>
       <div className={`sticky top-0 z-10 w-full rounded-xl border-b backdrop-blur-md ${isDark ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200'}`}>
         <div className="flex items-center justify-between w-full max-w-7xl mx-2 sm:mx-4 px-2 sm:px-4 py-3 sm:py-4">
           <button

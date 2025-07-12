@@ -89,7 +89,7 @@ const EnhancedScrollContainer = ({
         <button
           onClick={scrollToTop}
           className="
-            fixed bottom-20 right-4 z-50
+            fixed bottom-24 right-4 z-40
             w-12 h-12 
             bg-blue-500 hover:bg-blue-600 
             text-white 

@@ -471,6 +471,9 @@ const apiService = {
     // Get user by ID
     getById: (userId) => apiClient.get(`/api/users/${userId}`),
     
+    // Get current user profile (for profile refresh)
+    getProfile: () => apiClient.get('/api/users/profile'),
+    
     // Create new user
     create: (userData) => apiClient.post('/api/users', userData),
     
@@ -583,6 +586,50 @@ const apiService = {
       processRefund: (transactionId, amount, reason = null) => 
         apiClient.post('/api/subscriptions/admin/refund', { transactionId, amount, reason })
     }
+  },
+
+  // Parent endpoints
+  parent: {
+    // Get parent's children
+    getChildren: () => apiClient.get('/api/parent/children'),
+    
+    // Teacher token linking
+    linkToTeacher: (teacherToken, childId) => apiClient.post('/api/parent/link-to-teacher', {
+      teacherToken,
+      childId
+    }),
+    
+    getTeacherLinks: () => apiClient.get('/api/parent/teacher-links'),
+    
+    unlinkFromTeacher: (childId, teacherToken) => apiClient.post('/api/parent/unlink-from-teacher', {
+      childId,
+      teacherToken
+    }),
+    
+    validateTeacherToken: (teacherToken) => apiClient.post('/api/parent/validate-teacher-token', {
+      teacherToken
+    })
+  },
+
+  // Teacher endpoints
+  teacher: {
+    // Get teacher profile
+    getProfile: () => apiClient.get('/api/teacher/profile'),
+    
+    // Get teacher's students
+    getStudents: () => apiClient.get('/api/teacher/students'),
+    
+    // Teacher token management
+    generateToken: (tokenName, maxChildren = 20) => apiClient.post('/api/teacher/generate-token', {
+      tokenName,
+      maxChildren
+    }),
+    
+    getTokens: () => apiClient.get('/api/teacher/tokens'),
+    
+    getLinkedChildren: () => apiClient.get('/api/teacher/linked-children'),
+    
+    deactivateToken: (tokenId) => apiClient.post(`/api/teacher/deactivate-token/${tokenId}`)
   }
 };
 

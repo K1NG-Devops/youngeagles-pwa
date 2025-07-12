@@ -16,158 +16,242 @@ export const useSubscription = () => {
 export const SubscriptionProvider = ({ children }) => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [adFrequency, setAdFrequency] = useState({
+    sessionAdCount: 0,
+    lastAdShown: null,
+    maxAdsPerSession: 3,
+    minTimeBetweenAds: 5 * 60 * 1000, // 5 minutes
+    naturalBreakPoints: ['dashboard', 'homework-complete', 'lesson-end', 'navigation-change']
+  });
   const [features, setFeatures] = useState({});
-  const [usage, setUsage] = useState({});
+  const [usage, setUsage] = useState({
+    children: 0,
+    homework: 0,
+    activities: 0,
+    storage: 0,
+    ai_usage: 0,
+    api_calls: 0
+  });
   const [plans, setPlans] = useState({});
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [subscriptionHistory, setSubscriptionHistory] = useState([]);
 
-  // Default plan configurations
+  // Enhanced plan configurations with South African pricing
   const defaultPlans = {
     free: {
       id: 'free',
       name: 'Free Plan',
-      description: 'Basic features with limited access',
+      description: 'Perfect for trying out Young Eagles',
       price: 0,
       priceAnnual: 0,
+      period: 'month',
       features: {
-        children_limit: 1,
-        homework_limit: 5,
-        activities_limit: 3,
-        storage_limit: 100, // MB
-        ads_enabled: true,
-        no_ads: false,
-        progress_tracking: false,
+        maxChildren: 1,
+        maxHomework: 5,
+        maxActivities: 3,
+        maxFileSize: 5, // MB
+        storage: 50, // Changed from 100 to 50 MB
+        messaging: false, // No communication for free plan
+        analytics: 'none',
         priority_support: false,
         bulk_management: false,
-        analytics: false,
-        api_access: false
+        api_access: false,
+        ads_enabled: true,
+        ai_grading: false,
+        progress_reports: 'basic',
+        parent_portal: true,
+        mobile_app: true
       },
       popular: false,
-      trial_days: 0
+      trial_days: 0,
+      color: 'gray'
     },
     student: {
       id: 'student',
       name: 'Student Plan',
       description: 'Perfect for individual students',
-      price: 99,
-      priceAnnual: 990,
+      price: 49,
+      priceAnnual: 490,
+      period: 'month',
       features: {
-        children_limit: 1,
-        homework_limit: null, // unlimited
-        activities_limit: null,
-        storage_limit: null,
-        ads_enabled: false,
-        no_ads: true,
-        progress_tracking: true,
+        maxChildren: 1,
+        maxHomework: -1, // unlimited
+        maxActivities: -1,
+        maxFileSize: 50, // MB
+        storage: 100, // Changed from 1000 to 100 MB
+        messaging: true, // Communication enabled for student plan
+        analytics: 'basic',
         priority_support: true,
         bulk_management: false,
-        analytics: false,
-        api_access: false
+        api_access: false,
+        ads_enabled: false,
+        ai_grading: true,
+        progress_reports: 'detailed',
+        parent_portal: true,
+        mobile_app: true
       },
       popular: true,
-      trial_days: 7
+      trial_days: 14,
+      color: 'blue',
+      savings: 'Save R98/year'
     },
     family: {
       id: 'family',
       name: 'Family Plan',
       description: 'Ideal for families with multiple children',
-      price: 199,
-      priceAnnual: 1990,
+      price: 99,
+      priceAnnual: 990,
+      period: 'month',
       features: {
-        children_limit: 5,
-        homework_limit: null,
-        activities_limit: null,
-        storage_limit: null,
-        ads_enabled: false,
-        no_ads: true,
-        progress_tracking: true,
+        maxChildren: 5,
+        maxHomework: -1,
+        maxActivities: -1,
+        maxFileSize: 100, // MB
+        storage: 5000, // MB
+        messaging: true,
+        analytics: 'advanced',
         priority_support: true,
         bulk_management: true,
-        analytics: true,
-        api_access: false
+        api_access: false,
+        ads_enabled: false,
+        ai_grading: true,
+        progress_reports: 'comprehensive',
+        parent_portal: true,
+        mobile_app: true
       },
       popular: false,
-      trial_days: 14
+      trial_days: 14,
+      color: 'purple',
+      savings: 'Save R198/year'
     },
     institution: {
       id: 'institution',
       name: 'Institution Plan',
-      description: 'Comprehensive solution for schools',
-      price: 399,
-      priceAnnual: 3990,
+      description: 'Comprehensive solution for schools and educational institutions',
+      price: 199,
+      priceAnnual: 1990,
+      period: 'month',
       features: {
-        children_limit: null, // unlimited
-        homework_limit: null,
-        activities_limit: null,
-        storage_limit: null,
-        ads_enabled: false,
-        no_ads: true,
-        progress_tracking: true,
+        maxChildren: -1, // unlimited
+        maxHomework: -1,
+        maxActivities: -1,
+        maxFileSize: 500, // MB
+        storage: 50000, // MB
+        messaging: true,
+        analytics: 'enterprise',
         priority_support: true,
         bulk_management: true,
-        analytics: true,
-        api_access: true
+        api_access: true,
+        ads_enabled: false,
+        ai_grading: true,
+        progress_reports: 'enterprise',
+        parent_portal: true,
+        mobile_app: true
       },
       popular: false,
-      trial_days: 30
+      trial_days: 30,
+      color: 'gold',
+      savings: 'Save R398/year'
     }
   };
+
+  // Remove the mock data generation functions - they're no longer needed
+  // const generateRealisticSubscription = () => { ... }
+  // const generateRealisticUsage = (planId) => { ... }
+  // const generatePaymentHistory = (subscription) => { ... }
 
   useEffect(() => {
     setPlans(defaultPlans);
     if (user) {
       fetchSubscriptionData();
     } else {
-      setIsLoading(false);
+      setLoading(false);
     }
   }, [user]);
 
   const fetchSubscriptionData = async () => {
     try {
-      setIsLoading(true);
-            
-      // Fetch user subscription
+      setLoading(true);
+      setError(null);
+      
+      // Try to fetch real subscription data
       const subResponse = await apiService.subscriptions.getCurrent();
-      setSubscription(subResponse.data.subscription);
-            
-      // Fetch features and usage
-      const featuresResponse = await apiService.subscriptions.getFeatures();
-      setFeatures(featuresResponse.data.features);
-            
-      const usageResponse = await apiService.subscriptions.getUsage();
-      setUsage(usageResponse.data.usage);
-            
+      
+      if (subResponse.data.success && subResponse.data.subscription) {
+        const realSubscription = subResponse.data.subscription;
+        setSubscription(realSubscription);
+        setFeatures(defaultPlans[realSubscription.plan_id]?.features || defaultPlans.free.features);
+        
+        // Try to fetch real usage data
+        try {
+          const usageResponse = await apiService.subscriptions.getUsage();
+          setUsage(usageResponse.data.usage || { children: 0, homework: 0, activities: 0, storage: 0 });
+        } catch (usageError) {
+          setUsage({ children: 0, homework: 0, activities: 0, storage: 0 });
+        }
+        
+        // Try to fetch payment history
+        try {
+          const historyResponse = await apiService.subscriptions.getPaymentHistory();
+          setPaymentHistory(historyResponse.data.payments || []);
+        } catch (historyError) {
+          setPaymentHistory([]);
+        }
+        
+      } else {
+        // No subscription found - user is on free plan
+        setSubscription(null);
+        setFeatures(defaultPlans.free.features);
+        setUsage({ children: 0, homework: 0, activities: 0, storage: 0 });
+        setPaymentHistory([]);
+      }
+      
     } catch (error) {
       console.error('Error fetching subscription data:', error);
-      // Set default free plan if no subscription found
-      setSubscription({
-        plan_id: 'free',
-        plan_name: 'Free Plan',
-        status: 'active',
-        subscription_end_date: null,
-        auto_renew: false
-      });
+      
+      // Set to free plan if API fails
+      setSubscription(null);
       setFeatures(defaultPlans.free.features);
+      setUsage({ children: 0, homework: 0, activities: 0, storage: 0 });
+      setPaymentHistory([]);
+      setError('Failed to load subscription data');
+      
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+      setLastUpdated(new Date());
+    }
+  };
+
+  const updateUsage = async (newUsage) => {
+    try {
+      // Try to update usage on server
+      await apiService.subscriptions.updateUsage(newUsage);
+      setUsage(prev => ({ ...prev, ...newUsage }));
+    } catch (error) {
+      console.error('Error updating usage:', error);
+      // Update locally even if server fails
+      setUsage(prev => ({ ...prev, ...newUsage }));
     }
   };
 
   const hasFeature = (featureName) => {
     if (!subscription) return false;
-      
+    
     const currentPlan = subscription.plan_id || 'free';
     const planFeatures = defaultPlans[currentPlan]?.features || {};
-        
-    return planFeatures[featureName] === true || planFeatures[featureName] === null;
+    
+    return planFeatures[featureName] === true || planFeatures[featureName] === -1;
   };
 
   const getFeatureLimit = (featureName) => {
-    if (!subscription) return 0;
-        
+    if (!subscription) return defaultPlans.free.features[featureName] || 0;
+    
     const currentPlan = subscription.plan_id || 'free';
     const planFeatures = defaultPlans[currentPlan]?.features || {};
-      
+    
     return planFeatures[featureName] || 0;
   };
 
@@ -178,27 +262,15 @@ export const SubscriptionProvider = ({ children }) => {
   const canUseFeature = (featureName) => {
     const limit = getFeatureLimit(featureName);
     const currentUsage = getFeatureUsage(featureName);
-        
-    // If limit is null, feature is unlimited
-    if (limit === null) return true;
-        
+    
+    // If limit is -1, feature is unlimited
+    if (limit === -1) return true;
+    
     // If limit is 0, feature is disabled
     if (limit === 0) return false;
-
+    
     // Check if usage is within limit
     return currentUsage < limit;
-  };
-
-  const incrementUsage = async (featureName) => {
-    try {
-      await apiService.subscriptions.incrementUsage(featureName);
-      setUsage(prev => ({
-        ...prev,
-        [featureName]: (prev[featureName] || 0) + 1
-      }));
-    } catch (error) {
-      console.error('Error incrementing usage:', error);
-    }
   };
 
   const getCurrentPlan = () => {
@@ -217,23 +289,81 @@ export const SubscriptionProvider = ({ children }) => {
   };
 
   const showAds = () => {
-    // Don't show ads while loading subscription data
-    if (isLoading) return false;
-    
-    // Default to showing ads if no subscription (free plan)
+    if (loading) return false;
     if (!subscription) return true;
     
     const currentPlan = getCurrentPlan();
-    return currentPlan.features.ads_enabled;
+    return currentPlan.features.ads_enabled === true;
+  };
+
+  const getSubscriptionStatus = () => {
+    if (!subscription) return 'none';
+    
+    const now = new Date();
+    const endDate = subscription.subscription_end_date ? new Date(subscription.subscription_end_date) : null;
+    
+    if (subscription.status === 'cancelled') return 'cancelled';
+    if (subscription.status === 'expired') return 'expired';
+    if (subscription.status === 'suspended') return 'suspended';
+    if (subscription.status === 'trial') {
+      if (subscription.trial_end_date && new Date(subscription.trial_end_date) < now) {
+        return 'trial_expired';
+      }
+      return 'trial';
+    }
+    
+    if (endDate && endDate < now) return 'expired';
+    if (endDate && endDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)) return 'expiring_soon';
+    
+    return 'active';
+  };
+
+  const getDaysUntilExpiry = () => {
+    if (!subscription || !subscription.subscription_end_date) return null;
+    
+    const endDate = new Date(subscription.subscription_end_date);
+    const now = new Date();
+    const diffTime = endDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
+  const getDaysRemaining = () => {
+    return getDaysUntilExpiry();
+  };
+
+  const getUsagePercentage = (featureName) => {
+    const limit = getFeatureLimit(featureName);
+    const currentUsage = getFeatureUsage(featureName);
+    
+    if (limit === -1) return 0; // Unlimited
+    if (limit === 0) return 100; // Disabled
+    
+    return Math.min(100, (currentUsage / limit) * 100);
+  };
+
+  const getNextBillingAmount = () => {
+    if (!subscription) return 0;
+    
+    return subscription.billing_cycle === 'monthly' ? 
+      subscription.price_monthly : subscription.price_annual;
+  };
+
+  const getNextBillingDate = () => {
+    if (!subscription) return null;
+    
+    return subscription.next_billing_date ? 
+      new Date(subscription.next_billing_date).toLocaleDateString() : 
+      'Not scheduled';
   };
 
   const upgradePlan = async (planId, billingCycle = 'monthly') => {
     try {
-      setIsLoading(true);
+      setLoading(true);
       const response = await apiService.subscriptions.upgrade(planId, billingCycle);
-            
+      
       if (response.data.checkout_url) {
-        // Redirect to payment gateway
         window.location.href = response.data.checkout_url;
       } else {
         nativeNotificationService.success('Subscription upgraded successfully!');
@@ -243,13 +373,13 @@ export const SubscriptionProvider = ({ children }) => {
       console.error('Error upgrading subscription:', error);
       nativeNotificationService.error('Failed to upgrade subscription. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const cancelSubscription = async (reason = null) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
       await apiService.subscriptions.cancel(reason);
       nativeNotificationService.success('Subscription cancelled successfully');
       await fetchSubscriptionData();
@@ -257,156 +387,91 @@ export const SubscriptionProvider = ({ children }) => {
       console.error('Error cancelling subscription:', error);
       nativeNotificationService.error('Failed to cancel subscription. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const reactivateSubscription = async () => {
-    try {
-      setIsLoading(true);
-      await apiService.subscriptions.reactivate();
-      nativeNotificationService.success('Subscription reactivated successfully');
-      await fetchSubscriptionData();
-    } catch (error) {
-      console.error('Error reactivating subscription:', error);
-      nativeNotificationService.error('Failed to reactivate subscription. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getSubscriptionStatus = () => {
-    if (!subscription) return 'none';
-        
-    const now = new Date();
-    const endDate = subscription.subscription_end_date ? new Date(subscription.subscription_end_date) : null;
-        
-    if (subscription.status === 'cancelled') return 'cancelled';
-    if (subscription.status === 'expired') return 'expired';
-    if (subscription.status === 'suspended') return 'suspended';
-    if (subscription.status === 'trial') return 'trial';
-        
-    if (endDate && endDate < now) return 'expired';
-    if (endDate && endDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)) return 'expiring_soon';
-        
-    return 'active';
-  };
-
-  const getDaysUntilExpiry = () => {
-    if (!subscription || !subscription.subscription_end_date) return null;
-        
-    const endDate = new Date(subscription.subscription_end_date);
-    const now = new Date();
-    const diffTime = endDate - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-    return diffDays;
-  };
-
-  const isTrialExpired = () => {
-    if (!subscription) return false;
+  const shouldShowAd = (context = 'general') => {
+    if (!showAds()) return false;
     
-    // Check if subscription is in trial status but expired
-    if (subscription.status === 'trial' && subscription.trial_end_date) {
-      const trialEndDate = new Date(subscription.trial_end_date);
-      return trialEndDate < new Date();
-    }
-        
-    return false;
+    const now = Date.now();
+    const { sessionAdCount, lastAdShown, maxAdsPerSession, minTimeBetweenAds, naturalBreakPoints } = adFrequency;
+    
+    if (sessionAdCount >= maxAdsPerSession) return false;
+    if (lastAdShown && (now - lastAdShown) < minTimeBetweenAds) return false;
+    if (!naturalBreakPoints.includes(context)) return false;
+    
+    return true;
   };
 
-  const isSubscriptionExpired = () => {
-    if (!subscription) return false;
-        
-    const status = getSubscriptionStatus();
-    return status === 'expired';
+  const recordAdShown = (context) => {
+    setAdFrequency(prev => ({
+      ...prev,
+      sessionAdCount: prev.sessionAdCount + 1,
+      lastAdShown: Date.now()
+    }));
   };
 
-  const getDaysRemaining = () => {
-    return getDaysUntilExpiry();
-  };
-
-  const getPaymentHistory = async () => {
-    try {
-      const response = await apiService.subscriptions.getPaymentHistory();
-      return response.data.payments || [];
-    } catch (error) {
-      console.error('Error fetching payment history:', error);
-      return [];
-    }
-  };
-
-  const requestFeature = (featureName, onUpgrade = null) => {
-    const currentPlan = getCurrentPlan();
-    const availableInPlan = Object.entries(defaultPlans).find(([planId, plan]) => 
-      plan.features[featureName] === true || plan.features[featureName] === null
-    );
-        
-    if (availableInPlan) {
-      const [planId, plan] = availableInPlan;
-      nativeNotificationService.info(
-        `This feature is available in the ${plan.name}. Upgrade to unlock it!`,
-        {
-          duration: 5000,
-          action: onUpgrade ? {
-            label: 'Upgrade Now',
-            onClick: () => onUpgrade(planId)
-          } : null
-        }
-      );
-    } else {
-      nativeNotificationService.info('This feature is not available in any plan currently.');
-    }
+  const resetAdSession = () => {
+    setAdFrequency(prev => ({
+      ...prev,
+      sessionAdCount: 0,
+      lastAdShown: null
+    }));
   };
 
   const canAddChild = () => {
     const currentPlan = getCurrentPlan();
-    const maxChildren = currentPlan.features.children_limit;
+    const maxChildren = currentPlan.features.maxChildren;
     
-    if (maxChildren === null) return true; // unlimited
+    if (maxChildren === -1) return true; // unlimited
     
-    const currentChildren = getFeatureUsage('children_count') || 0;
+    const currentChildren = getFeatureUsage('children') || 0;
     return currentChildren < maxChildren;
   };
 
   const getMaxChildren = () => {
     const currentPlan = getCurrentPlan();
-    return currentPlan.features.children_limit;
+    return currentPlan.features.maxChildren;
   };
 
   const value = {
     subscription,
-    isLoading,
+    loading,
+    error,
+    lastUpdated,
+    showAds,
+    shouldShowAd,
+    recordAdShown,
+    resetAdSession,
+    adFrequency,
     features,
     usage,
     plans,
-        
+    paymentHistory,
+    subscriptionHistory,
+    
     // Feature access
     hasFeature,
     getFeatureLimit,
     getFeatureUsage,
     canUseFeature,
-    incrementUsage,
-    requestFeature,
-        
+    updateUsage,
+    
     // Plan management
     getCurrentPlan,
     isSubscriptionActive,
-    showAds,
     upgradePlan,
     cancelSubscription,
-    reactivateSubscription,
-        
-    // Status
+    
+    // Status and metrics
     getSubscriptionStatus,
     getDaysUntilExpiry,
     getDaysRemaining,
-    isTrialExpired,
-    isSubscriptionExpired,
-        
-    // Payment
-    getPaymentHistory,
-        
+    getUsagePercentage,
+    getNextBillingAmount,
+    getNextBillingDate,
+    
     // Child management
     canAddChild,
     getMaxChildren,
