@@ -1,56 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FaTimes, FaCrown, FaGraduationCap, FaInfinity, FaShieldAlt } from 'react-icons/fa';
+import { FaCrown } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 const SubscriptionBanner = () => {
   const { subscription, loading } = useSubscription();
   const { isDark } = useTheme();
-  const [isDismissed, setIsDismissed] = useState(false);
 
-  // Don't show if loading, has premium subscription, or dismissed
-  if (loading || subscription?.status === 'active' || isDismissed) {
+  // Don't show if loading or has premium subscription
+  if (loading || subscription?.status === 'active') {
     return null;
   }
 
-  const handleDismiss = () => {
-    setIsDismissed(true);
-  };
-
   return (
-    <div className={`w-full border-b ${isDark ? 'bg-gradient-to-r from-purple-900 to-blue-900 border-gray-700' : 'bg-gradient-to-r from-purple-600 to-blue-600 border-blue-700'}`}>
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <FaCrown className="text-yellow-400 text-xl" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-white font-semibold text-sm">
-                🚀 Upgrade to Premium - Remove All Ads!
-              </h3>
-              <p className="text-blue-100 text-xs mt-1">
-                Ad-free experience • Unlimited features • Priority support
-              </p>
-            </div>
+    <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+      <div className="max-w-7xl mx-auto px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            <FaCrown className="text-yellow-500 text-sm md:text-base flex-shrink-0" />
+            <p className={`text-xs md:text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <span className="font-medium">Go Premium</span>
+              <span className="hidden sm:inline"> • Ad-free experience</span>
+            </p>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <Link 
-              to="/checkout"
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm"
-            >
-              Upgrade Now
-            </Link>
-            <button
-              onClick={handleDismiss}
-              className="text-white/70 hover:text-white p-1 rounded transition-colors"
-              title="Dismiss"
-            >
-              <FaTimes className="text-sm" />
-            </button>
-          </div>
+          <Link 
+            to="/checkout"
+            className={`text-xs md:text-sm px-3 py-1 rounded transition-colors flex-shrink-0 ${
+              isDark 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            Upgrade
+          </Link>
         </div>
       </div>
     </div>
