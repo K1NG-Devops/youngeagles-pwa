@@ -206,10 +206,10 @@ const Dashboard = () => {
   }
 
   return (
-    <div className={`min-h-screen mt-16 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
       <main className="pt-0 pb-4 px-2 sm:px-3">
-        <div className="w-full">
+        <div className="w-full mb-6">
           {/* Strategic Native Ad - Mobile-friendly placement */}
           {shouldShowDashboardAd() && (
             <NativeAdContainer 
@@ -222,7 +222,7 @@ const Dashboard = () => {
           )}
 
           {/* Welcome Section - Enhanced */}
-          <div className="bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
+          <div className="bg-gradient-to-br mt-2 from-blue-500 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-4 left-4 w-20 h-20 rounded-full bg-white/20"></div>

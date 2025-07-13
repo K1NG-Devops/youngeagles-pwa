@@ -82,6 +82,13 @@ const Events = () => {
           className="my-4"
         />
 
+        {/* Content Middle Ad - Strategic placement before events list */}
+        <SmartAdManager 
+          position="content-middle" 
+          pageType="events" 
+          className="my-4"
+        />
+
         {events.length === 0 ? (
           <div className={`p-6 text-center rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
             <FaCalendarAlt className={`text-4xl mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-gray-300'}`} />
@@ -143,7 +150,19 @@ const Events = () => {
           })
         )}
         
-        {/* Native Ad - Removed to reduce ad density */}
+        {/* Native Ad - Strategic placement after events list */}
+        <SmartAdManager 
+          position="native" 
+          pageType="events" 
+          className="my-4"
+        />
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-2xl">
+          <SmartAdManager 
+            position="native" 
+            pageType="events" 
+            className="my-4"
+          />
+        </div>
 
         {/* Admin Updates Section */}
         <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>

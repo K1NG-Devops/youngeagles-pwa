@@ -118,12 +118,8 @@ const NativeAdContainer = ({
     <div className={getContainerStyles()}>
       {/* Ad label for transparency */}
       {(isVisible || position === 'native') && (
-        <div className={`text-xs text-gray-400 mb-2 ${position === 'native' ? 'text-center' : ''}`}>
-          {position === 'native' ? 'Sponsored Content' : 'Advertisement'}
-        </div>
-      )}
-      
-      <LazyAd 
+        
+        <LazyAd 
         adSlot={getAdSlotForPosition(position)}
         adFormat={getFormatForPosition(position)}
         className={`transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
@@ -133,7 +129,8 @@ const NativeAdContainer = ({
         showPlaceholderWhenEmpty={!hasError}
         threshold={0.2}
         rootMargin="100px"
-      />
+        />
+      )}
 
       {/* Native content styling for native ads */}
       {position === 'native' && isVisible && (

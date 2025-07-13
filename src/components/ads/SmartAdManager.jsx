@@ -9,13 +9,13 @@ const AD_STRATEGIES = {
     maxAdsPerView: 2,
     cooldownMinutes: 30,
     priority: ['header', 'native'],
-    mobileMaxAds: 1
+    mobileMaxAds: 2
   },
   'homework': {
     maxAdsPerView: 1,
-    cooldownMinutes: 45,
+    cooldownMinutes: 30,
     priority: ['native'],
-    mobileMaxAds: 1
+    mobileMaxAds: 2
   },
   'activities': {
     maxAdsPerView: 2,
@@ -25,9 +25,9 @@ const AD_STRATEGIES = {
   },
   'events': {
     maxAdsPerView: 2,
-    cooldownMinutes: 25,
+    cooldownMinutes: 15,
     priority: ['header', 'content-list'],
-    mobileMaxAds: 1
+    mobileMaxAds: 2
   },
   'children': {
     maxAdsPerView: 1,
@@ -36,10 +36,10 @@ const AD_STRATEGIES = {
     mobileMaxAds: 1
   },
   'default': {
-    maxAdsPerView: 1,
-    cooldownMinutes: 30,
+    maxAdsPerView: 2,
+    cooldownMinutes: 10,
     priority: ['native'],
-    mobileMaxAds: 1
+    mobileMaxAds: 2
   }
 };
 
