@@ -290,10 +290,15 @@ export const SubscriptionProvider = ({ children }) => {
 
   const showAds = () => {
     if (loading) return false;
-    if (!subscription) return true;
     
-    const currentPlan = getCurrentPlan();
-    return currentPlan.features.ads_enabled === true;
+    // TEMPORARY: Force ads to show for all users for testing
+    // TODO: Remove this override once testing is complete
+    return true;
+    
+    // Original logic (commented out for testing):
+    // if (!subscription) return true;
+    // const currentPlan = getCurrentPlan();
+    // return currentPlan.features.ads_enabled === true;
   };
 
   const getSubscriptionStatus = () => {
