@@ -25,7 +25,7 @@ const ProfilePictureModal = ({ isOpen, onClose }) => {
     }
     
     if (profilePic && profilePic.startsWith('/uploads/')) {
-      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
       const cacheKey = user?.updated_at || user?.id || Date.now();
       return `${baseUrl}${profilePic}?v=${cacheKey}`;
     }

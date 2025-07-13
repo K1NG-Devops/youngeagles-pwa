@@ -24,7 +24,7 @@ export const getProfileImageUrl = (user) => {
   
   // Handle server upload paths
   if (profilePic.startsWith('/uploads/')) {
-    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
     // Add cache buster with user update timestamp or current time
     const cacheKey = user.updated_at || user.id || Date.now();
     return `${apiUrl}${profilePic}?v=${cacheKey}`;

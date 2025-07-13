@@ -30,7 +30,7 @@ export const getEnvVar = (key, defaultValue = '') => {
 
 // Export environment variables with fallbacks
 export const ENV = {
-  API_URL: getEnvVar('VITE_API_URL', 'http://localhost:3001'),
+  API_URL: getEnvVar('VITE_API_URL', 'http://localhost:5000'),
   // AdSense variables removed
   VAPID_PUBLIC_KEY: getEnvVar('VITE_VAPID_PUBLIC_KEY', ''),
   NODE_ENV: getEnvVar('NODE_ENV', 'development'),

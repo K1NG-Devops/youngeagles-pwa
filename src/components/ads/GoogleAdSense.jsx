@@ -21,24 +21,15 @@ const GoogleAdSense = ({
       return;
     }
 
-    // Load Google AdSense script if not already loaded
-    if (!isScriptLoaded.current && !document.querySelector('script[src*="adsbygoogle.js"]')) {
-      const script = document.createElement('script');
-      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      script.setAttribute('data-ad-client', import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX');
-      document.head.appendChild(script);
-      isScriptLoaded.current = true;
-    }
-
-    // Initialize adsbygoogle array
+    // AdSense script is already loaded globally in index.html
+    // Just ensure adsbygoogle array is initialized
     window.adsbygoogle = window.adsbygoogle || [];
 
     // Push ads to Google AdSense after a short delay to ensure script is loaded
     const timer = setTimeout(() => {
       try {
         if (window.adsbygoogle && adRef.current) {
+          // Push the ad configuration (matches official snippet behavior)
           window.adsbygoogle.push({});
         }
       } catch (error) {

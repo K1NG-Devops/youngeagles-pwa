@@ -77,7 +77,7 @@ const NativeAdContainer = ({
   };
 
   // Ad placeholder component
-  const AdPlaceholder = ({ type }) => {
+  const AdPlaceholder = React.forwardRef(({ type }, ref) => {
     if (hasError) return null;
 
     const placeholderText = {
@@ -90,7 +90,7 @@ const NativeAdContainer = ({
     };
 
     return (
-      <div className={`
+      <div ref={ref} className={`
         flex items-center justify-center text-xs text-gray-400 
         ${type === 'banner' ? 'h-16' : 'h-24'}
         ${isDark ? 'bg-gray-800/30' : 'bg-gray-100/30'}
@@ -100,7 +100,7 @@ const NativeAdContainer = ({
         {placeholderText[type]}
       </div>
     );
-  };
+  });
 
   const handleAdLoaded = useCallback(() => {
     setIsVisible(true);
@@ -120,15 +120,15 @@ const NativeAdContainer = ({
       {(isVisible || position === 'native') && (
         
         <LazyAd 
-        adSlot={getAdSlotForPosition(position)}
-        adFormat={getFormatForPosition(position)}
-        className={`transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-        onAdLoaded={handleAdLoaded}
-        onAdError={handleAdError}
-        placeholder={<AdPlaceholder type={position} />}
-        showPlaceholderWhenEmpty={!hasError}
-        threshold={0.2}
-        rootMargin="100px"
+          adSlot={getAdSlotForPosition(position)}
+          adFormat={getFormatForPosition(position)}
+          className={`transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+          onAdLoaded={handleAdLoaded}
+          onAdError={handleAdError}
+          placeholder={<AdPlaceholder type={position} />}
+          showPlaceholderWhenEmpty={!hasError}
+          threshold={0.2}
+          rootMargin="100px"
         />
       )}
 

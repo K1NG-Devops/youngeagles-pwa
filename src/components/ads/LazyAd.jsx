@@ -94,20 +94,20 @@ const LazyAd = ({
     
     // Set responsive height based on format
     switch (adFormat) {
-      case 'horizontal':
-      case 'banner':
-        dimensions.minHeight = isSmall ? '50px' : '90px';
-        dimensions.maxHeight = isSmall ? '100px' : '120px';
-        break;
-      case 'rectangle':
-        dimensions.minHeight = isSmall ? '200px' : '250px';
-        dimensions.width = isSmall ? '100%' : 'auto';
-        break;
-      case 'fluid':
-        dimensions.minHeight = isSmall ? '100px' : '150px';
-        break;
-      default:
-        dimensions.minHeight = isSmall ? '50px' : (style.minHeight || '90px');
+    case 'horizontal':
+    case 'banner':
+      dimensions.minHeight = isSmall ? '50px' : '90px';
+      dimensions.maxHeight = isSmall ? '100px' : '120px';
+      break;
+    case 'rectangle':
+      dimensions.minHeight = isSmall ? '200px' : '250px';
+      dimensions.width = isSmall ? '100%' : 'auto';
+      break;
+    case 'fluid':
+      dimensions.minHeight = isSmall ? '100px' : '150px';
+      break;
+    default:
+      dimensions.minHeight = isSmall ? '50px' : (style.minHeight || '90px');
     }
     
     return dimensions;
