@@ -12,6 +12,9 @@ const BannerAd = ({
   const { isDark } = useTheme();
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [isDismissed, setIsDismissed] = useState(false);
+  
+  // Add mobile header safety class for top positioned banners
+  const positionClass = position === 'top' ? 'mobile-header-safe' : '';
 
   // Sample educational ads - replace with real ad network integration
   const ads = [
@@ -92,7 +95,7 @@ const BannerAd = ({
       w-screen relative overflow-hidden shadow-sm border transition-all duration-300 hover:shadow-md cursor-pointer
       -mx-[calc((100vw-100%)/2)] min-w-full
       ${isDark ? 'border-gray-700' : 'border-gray-200'}
-      ${className}
+      ${positionClass} ${className}
     `}>
       {/* Ad Content */}
       <div 

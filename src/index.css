@@ -359,3 +359,42 @@ body, html {
   }
 }
 
+/* Mobile Header Ad Safety - Prevent interference with fixed header */
+.mobile-header-safe {
+  position: relative;
+  z-index: 10; /* Lower than header (z-50) */
+}
+
+@media (max-width: 768px) {
+  .mobile-header-safe {
+    margin-top: 80px !important; /* Safe distance from fixed header */
+    padding-top: 8px;
+  }
+  
+  /* Header position ads specifically */
+  .ad-position-header {
+    margin-top: 80px !important;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* Prevent header ads from interfering with navigation */
+  .ad-position-header .adsbygoogle {
+    position: relative !important;
+    clear: both;
+  }
+}
+
+/* Desktop - normal spacing */
+@media (min-width: 769px) {
+  .mobile-header-safe {
+    margin-top: 16px;
+  }
+  
+  .ad-position-header {
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+}
+

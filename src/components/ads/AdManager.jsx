@@ -182,6 +182,27 @@ const AdManager = ({
     return null;
   }
 
+  // Special styling for header ads to prevent mobile interference
+  const getPositionStyles = () => {
+    if (position === 'header') {
+      return {
+        // Ensure header ad doesn't interfere with fixed header on mobile
+        marginTop: window.innerWidth < 768 ? '80px' : '16px', // Add top margin on mobile
+        marginBottom: '16px',
+        position: 'relative',
+        zIndex: 10, // Lower than header (z-50)
+        display: 'block',
+        textAlign: 'center'
+      };
+    }
+    
+    return {
+      display: 'block',
+      textAlign: 'center',
+      margin: '16px 0'
+    };
+  };
+
   return (
     <div className={`ad-manager ad-position-${position} ${className}`}>
       <GoogleAdSense 
@@ -189,11 +210,7 @@ const AdManager = ({
         adFormat={adFormat === 'banner' ? 'auto' : adFormat === 'rectangle' ? 'rectangle' : 'fluid'}
         fullWidthResponsive={true}
         className={`ad-${pageType} ad-${priority}-priority`}
-        style={{
-          display: 'block',
-          textAlign: 'center',
-          margin: '16px 0'
-        }}
+        style={getPositionStyles()}
       />
     </div>
   );
@@ -205,7 +222,7 @@ export const HeaderAd = ({ pageType, className = '' }) => (
     position="header" 
     pageType={pageType} 
     priority="high"
-    className={className}
+    className={`mobile-header-safe ${className}`}
   />
 );
 

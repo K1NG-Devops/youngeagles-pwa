@@ -59,21 +59,24 @@ const GoogleAdSense = ({
     return null;
   }
 
+  // Don't render if ad slot is placeholder text
+  if (adSlot.includes('your-') || adSlot.includes('XXXXXXXXX')) {
+    return null;
+  }
+
   return (
-    <div className={`google-adsense-container ${className}`} style={{ margin: 0, padding: 0, ...style }}>
-      <ins
-        ref={adRef}
-        className="adsbygoogle"
-        style={{ display: 'block', margin: 0, ...style }}
-        data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX'}
-        data-ad-slot={adSlot}
-        data-ad-format={adFormat}
-        data-ad-layout={adLayout}
-        data-ad-layout-key={adLayoutKey}
-        data-full-width-responsive={fullWidthResponsive}
-        data-ad-test={import.meta.env.VITE_ADSENSE_TEST_MODE === 'true' ? 'on' : dataAdTest}
-      />
-    </div>
+    <ins
+      ref={adRef}
+      className={`adsbygoogle ${className}`}
+      style={{ display: 'block', width: '100%', ...style }}
+      data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX'}
+      data-ad-slot={adSlot}
+      data-ad-format={adFormat}
+      data-ad-layout={adLayout}
+      data-ad-layout-key={adLayoutKey}
+      data-full-width-responsive={fullWidthResponsive}
+      data-ad-test={import.meta.env.VITE_ADSENSE_TEST_MODE === 'true' ? 'on' : dataAdTest}
+    />
   );
 };
 

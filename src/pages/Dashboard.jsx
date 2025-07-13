@@ -207,14 +207,14 @@ const Dashboard = () => {
       <Header />
       <main className="pt-0 pb-4 px-2 sm:px-3">
         <div className="w-full">
-          {/* Top Banner Ad - Lazy loaded */}
+          {/* Top Banner Ad - Moved higher up and lazy loaded */}
           <LazyAd 
             adSlot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
             adFormat="horizontal"
-            className="mb-6"
+            className="mb-4"
             style={{ minHeight: '90px' }}
-            threshold={0.5}
-            rootMargin="100px"
+            threshold={0.1}
+            rootMargin="50px"
           />
 
           {/* Welcome Section - Enhanced */}
@@ -357,6 +357,7 @@ const Dashboard = () => {
               style={{ minHeight: '250px' }}
               threshold={0.1}
               rootMargin="200px"
+              placeholder={<div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm">Advertisement</div>}
             />
           </div>
 
@@ -370,6 +371,7 @@ const Dashboard = () => {
               style={{ minHeight: '100px' }}
               threshold={0.3}
               rootMargin="150px"
+              placeholder={<div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-center text-gray-400 dark:text-gray-600 text-sm border border-gray-200 dark:border-gray-700">Sponsored Content</div>}
             />
           )}
 
