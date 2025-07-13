@@ -214,8 +214,8 @@ const UserDropdown = ({ onLogout }) => {
           </div>
         </div>
         
-        {/* User Name */}
-        <span className="text-sm font-medium truncate max-w-24">
+        {/* User Name - Hidden on mobile for space */}
+        <span className="hidden md:block text-sm font-medium truncate max-w-24">
           {user?.name || 'User'}
         </span>
         

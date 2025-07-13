@@ -7,7 +7,7 @@ import React, { useRef, useEffect } from 'react';
 const EnhancedScrollContainer = ({ 
   children, 
   className = '', 
-  enablePullToRefresh = false,
+  enablePullToRefresh: _enablePullToRefresh = false,
   onRefresh: _onRefresh = null,
   scrollToTopButton = true,
   ...props 

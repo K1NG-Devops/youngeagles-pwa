@@ -14,7 +14,12 @@ import {
   FaUserFriends,
   FaBell
 } from 'react-icons/fa';
-// import { HeaderAd, ContentMiddleAd, ContentBottomAd } from '../components/ads'; // Removed - ads disabled
+
+// Ad Components for revenue maximization
+import BannerAd from '../components/ads/BannerAd';
+import RectangleAd from '../components/ads/RectangleAd';
+import NativeAd from '../components/ads/NativeAd';
+import ResponsiveAd from '../components/ads/ResponsiveAd';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -84,7 +89,14 @@ const Home = () => {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} px-2 xs:px-4`}>
-      {/* Header Ad - Removed due to mobile interference */}
+      {/* Header Ad - Top Banner for maximum visibility */}
+      <div className="max-w-7xl mx-auto py-2">
+        <BannerAd 
+          adSlot="header-banner"
+          size="728x90"
+          className="mx-auto"
+        />
+      </div>
       
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -122,11 +134,19 @@ const Home = () => {
                 <span className="text-sm">Trusted by 1000+ families</span>
               </div>
             </div>
-          </div>
-        </div>
+          </div>        </div>
       </div>
 
-      {/* Content Middle Ad - Removed */}
+      {/* Native Ad After Hero Section */}
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-2 xs:px-4">
+          <NativeAd 
+            adSlot="post-hero-native"
+            contentType="education"
+            className="mx-auto"
+          />
+        </div>
+      </div>
 
       {/* Features Section */}
       <div className="py-24">
@@ -140,28 +160,63 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xs:gap-8">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className={`p-6 xs:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 ${
-                  isDark 
-                    ? 'bg-gray-800 border border-gray-700 hover:border-gray-600' 
-                    : 'bg-white border border-gray-100 hover:border-gray-200'
-                }`}
-              >
-                <div className={`inline-flex p-4 rounded-full bg-opacity-10 mb-6 ${feature.color.replace('text-', 'bg-')}`}>
-                  <feature.icon className={`text-3xl ${feature.color}`} />
+          {/* Features Grid with Ad Integration */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 xs:gap-8">
+            {/* Features Column */}
+            <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xs:gap-8">
+              {features.map((feature, index) => (
+                <div 
+                  key={index}
+                  className={`p-6 xs:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 ${
+                    isDark 
+                      ? 'bg-gray-800 border border-gray-700 hover:border-gray-600'
+                      : 'bg-white border border-gray-100 hover:border-gray-200'
+                  }`}
+                >
+                  <div className={`inline-flex p-4 rounded-full bg-opacity-10 mb-6 ${feature.color.replace('text-', 'bg-')}`}>
+                    <feature.icon className={`text-3xl ${feature.color}`} />
+                  </div>
+                  <h3 className={`text-xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {feature.title}
+                  </h3>
+                  <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className={`text-xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {feature.title}
-                </h3>
-                <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
-                  {feature.description}
-                </p>
+              ))}
+            </div>
+            
+            {/* Sidebar Ad Column */}
+            <div className="lg:col-span-1 flex flex-col space-y-6">
+              {/* Rectangle Ad */}
+              <div className="sticky top-4">
+                <RectangleAd 
+                  adSlot="sidebar-rectangle"
+                  size="300x250"
+                  className="mx-auto"
+                />
               </div>
-            ))}
+              
+              {/* Second Ad for higher revenue */}
+              <div className="hidden lg:block">
+                <ResponsiveAd 
+                  adSlot="sidebar-responsive"
+                  className="mx-auto"
+                />
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Middle Content Native Ad */}
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-2 xs:px-4">
+          <NativeAd 
+            adSlot="middle-content-native"
+            contentType="parenting"
+            className="mx-auto"
+          />
         </div>
       </div>
 
@@ -184,7 +239,26 @@ const Home = () => {
         </div>
       </div>
       
-      {/* Bottom Content Ad - Removed */}
+      {/* Bottom Banner Ad for Maximum Revenue */}
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-2 xs:px-4">
+          <BannerAd 
+            adSlot="bottom-banner"
+            size="728x90"
+            className="mx-auto"
+          />
+        </div>
+      </div>
+
+      {/* Final Native Ad */}
+      <div className="py-4 pb-8">
+        <div className="max-w-7xl mx-auto px-2 xs:px-4">
+          <ResponsiveAd 
+            adSlot="footer-responsive"
+            className="mx-auto"
+          />
+        </div>
+      </div>
     </div>
   );
 };

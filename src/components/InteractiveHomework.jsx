@@ -17,6 +17,7 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
   const [currentActivity, setCurrentActivity] = useState(0);
   const [answers, setAnswers] = useState({});
   const [score, setScore] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasBeenSubmitted, setHasBeenSubmitted] = useState(false);

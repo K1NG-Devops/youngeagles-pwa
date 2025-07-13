@@ -212,6 +212,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     apiService.setAuthToken(null);
     nativeNotificationService.info('Logged out successfully');
+    
+    // Redirect to home page for ad revenue maximization
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 500);
   };
 
   const updateUser = (updates) => {

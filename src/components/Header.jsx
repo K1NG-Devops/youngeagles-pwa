@@ -13,11 +13,24 @@ const Header = () => {
   const { notificationCount } = useWebSocket();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOfflineNotification, setShowOfflineNotification] = useState(false);
 
-  // Monitor online/offline status
+  // Monitor online/offline status with auto-clearing notification
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOfflineNotification(false);
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOfflineNotification(true);
+      
+      // Auto-clear the offline notification after 5 seconds
+      setTimeout(() => {
+        setShowOfflineNotification(false);
+      }, 5000);
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -91,6 +104,33 @@ const Header = () => {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
       />
+      
+      {/* Offline Notification Toast */}
+      {showOfflineNotification && (
+        <div className={`
+          fixed top-16 left-4 right-4 z-50 p-3 rounded-lg shadow-lg border-l-4 border-red-500
+          ${isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-200'}
+          transform transition-all duration-300 ease-in-out
+          ${showOfflineNotification ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
+        `}>
+          <div className="flex items-center">
+            <FaExclamationTriangle className="text-red-500 w-4 h-4 mr-3 flex-shrink-0" />
+            <div className="flex-grow">
+              <p className="font-semibold text-sm">You're currently offline</p>
+              <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                Some features may not work until you reconnect
+              </p>
+            </div>
+            <button
+              onClick={() => setShowOfflineNotification(false)}
+              className='ml-3 text-gray-400 hover:text-gray-600 transition-colors'
+              aria-label="Close notification"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
