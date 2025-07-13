@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import nativeNotificationService from '../services/nativeNotificationService.js';
 import { FaEye, FaEyeSlash, FaGraduationCap, FaMoon, FaSun, FaSpinner } from 'react-icons/fa';
+import Footer from '../components/Footer';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -311,6 +312,7 @@ const Login = () => {
         {/* Remove the ad space section completely */}
         
       </div>
+      <Footer />
     </div>
   );
 };

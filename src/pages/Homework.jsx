@@ -19,6 +19,7 @@ import {
   FaGamepad,
   FaArrowLeft
 } from 'react-icons/fa';
+import SmartAdManager from '../components/ads/SmartAdManager';
 
 const Homework = () => {
   const { user } = useAuth();
@@ -241,12 +242,12 @@ const Homework = () => {
   }
 
   return (
-    <div className={`min-h-screen pt-24 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-8`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pb-4`}>
+      <div className="max-w-6xl mx-auto px-2 sm:px-4">
         
 
         {/* Back Button */}
-        <div className="pt-4 mb-4">
+        <div className="pt-2 mb-4">
           <button
             onClick={() => navigate(-1)}
             className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
@@ -383,7 +384,7 @@ const Homework = () => {
         ) : (
           <div className="space-y-4 sm:space-y-6">
             {homework.map((assignment, index) => (
-              <React.Fragment key={assignment.id}>
+              <div key={assignment.id} className="homework-assignment-wrapper">
                 <div 
                   className={`rounded-lg shadow-sm border p-4 sm:p-6 hover:shadow-md transition-shadow ${
                     isDark 
@@ -514,10 +515,15 @@ const Homework = () => {
                     </p>
                   )}
                 </div>
-
-                {/* Ads removed */}
-              </React.Fragment>
+              </div>
             ))}
+            
+            {/* Ad placed once after all homework assignments */}
+            <SmartAdManager 
+              position="native" 
+              pageType="homework" 
+              className="my-4"
+            />
           </div>
         )}
       </div>

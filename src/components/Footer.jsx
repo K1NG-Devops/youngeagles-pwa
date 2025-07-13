@@ -11,18 +11,18 @@ const Footer = () => {
   const hideAuthButtons = location.pathname === '/login';
 
   return (
-    <footer className={`fixed bottom-0 left-0 right-0 z-50 py-4 px-4 border-t ${
+    <footer className={`flex flex-row justify-center fixed bottom-0 left-0 right-0 z-50 py-4 px-4 border-t ${
       isDark 
         ? 'bg-gray-900 border-gray-700 text-gray-300' 
         : 'bg-white border-gray-200 text-gray-600'
     }`}>
       <div className="max-w-7xl mx-auto">
         {/* Compact mobile-first layout */}
-        <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+        <div className="flex flex-row sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
           {/* Brand - simplified */}
-          <div className="flex items-center">
+          <div className="flex space-x-2">
             <FaGraduationCap className={`text-lg mr-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-            <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <span className={`text-sm sm:text-base mr-8 justify-left font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               YoungEagles
             </span>
           </div>
@@ -86,7 +86,7 @@ const Footer = () => {
           </div>
 
           {/* Copyright - simplified */}
-          <div className="flex items-center text-xs">
+          <div className="flex ml-12 mb-2 sm:mb-0 items-center text-xs">
             <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
               © {new Date().getFullYear()}
             </span>

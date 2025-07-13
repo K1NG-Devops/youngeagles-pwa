@@ -35,7 +35,7 @@ const Header = () => {
   }, [user]);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 container-perfect py-4 shadow-sm border-b z-50 safe-area-padding ${
+    <header className={`fixed top-0 left-0 right-0 container-perfect py-4 shadow-lg border-b z-50 safe-area-padding ${
       isDark 
         ? 'bg-gray-800 border-gray-700' 
         : 'bg-blue-600 border-blue-700'
