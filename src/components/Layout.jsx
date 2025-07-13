@@ -8,6 +8,7 @@ import FloatingNavigation from './FloatingNavigation';
 import Footer from './Footer';
 import SubscriptionBanner from './subscription/SubscriptionBanner';
 import BottomBannerAd from './ads/BottomBannerAd';
+import ServiceWorkerUpdate from './ServiceWorkerUpdate';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -113,6 +114,9 @@ const Layout = () => {
       
       {/* Footer */}
       {showFooter && <Footer />}
+      
+      {/* Service Worker Update Notification */}
+      <ServiceWorkerUpdate />
       
       {/* Clean bottom banner ad - positioned properly */}
       {showAds() && <BottomBannerAd context="navigation-change" />}
