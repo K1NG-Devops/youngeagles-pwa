@@ -20,7 +20,7 @@ import {
   FaBell,
   FaLock
 } from 'react-icons/fa';
-import { HeaderAd, ContentMiddleAd, ContentBottomAd } from '../components/ads';
+// import { HeaderAd, ContentMiddleAd, ContentBottomAd } from '../components/ads'; // Removed - ads disabled
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -90,8 +90,7 @@ const Home = () => {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} px-2 xs:px-4`}>
-      {/* Header Ad - Premium placement for landing page */}
-      <HeaderAd pageType="home" className="mb-6" />
+      {/* Header Ad - Removed due to mobile interference */}
       
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -133,8 +132,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Content Middle Ad - Between hero and features */}
-      <ContentMiddleAd pageType="home" className="my-12" />
+      {/* Content Middle Ad - Removed */}
 
       {/* Features Section */}
       <div className="py-24">
@@ -192,8 +190,7 @@ const Home = () => {
         </div>
       </div>
       
-      {/* Bottom Content Ad - Before footer */}
-      <ContentBottomAd pageType="home" className="mt-12" />
+      {/* Bottom Content Ad - Removed */}
     </div>
   );
 };

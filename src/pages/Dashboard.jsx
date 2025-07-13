@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import apiService from '../services/apiService';
-// Remove excessive inline ads
-// import InlineGoogleAd from '../components/ads/InlineGoogleAd';
 
 import { FaUser, FaBook, FaBrain, FaBell, FaArrowRight, FaChevronDown, FaChevronUp, FaChartLine, FaCreditCard, FaCheckCircle, FaExclamationTriangle, FaGraduationCap } from 'react-icons/fa';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 import TeacherDashboard from './TeacherDashboard';
 import AdminDashboard from './AdminDashboard';
-import LazyAd from '../components/ads/LazyAd';
+import NativeAdContainer from '../components/ads/NativeAdContainer';
+import ContentWithAds from '../components/ads/ContentWithAds';
+import useAdFrequency from '../hooks/useAdFrequency';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -38,6 +38,9 @@ const Dashboard = () => {
   const [, setChildren] = useState([]);
   const [, setHomeworkData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Ad frequency management
+  const { shouldShowAd: shouldShowDashboardAd, recordAdShown } = useAdFrequency('dashboard');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -207,15 +210,16 @@ const Dashboard = () => {
       <Header />
       <main className="pt-0 pb-4 px-2 sm:px-3">
         <div className="w-full">
-          {/* Top Banner Ad - Moved higher up and lazy loaded */}
-          <LazyAd 
-            adSlot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
-            adFormat="horizontal"
-            className="mb-4"
-            style={{ minHeight: '90px' }}
-            threshold={0.1}
-            rootMargin="50px"
-          />
+          {/* Strategic Native Ad - Mobile-friendly placement */}
+          {shouldShowDashboardAd() && (
+            <NativeAdContainer 
+              position="native"
+              contentType="dashboard"
+              spacing="large"
+              onAdLoaded={recordAdShown}
+              className="dashboard-welcome-ad"
+            />
+          )}
 
           {/* Welcome Section - Enhanced */}
           <div className="bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
@@ -348,30 +352,14 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Sidebar Rectangle Ad - Desktop only, lazy loaded */}
-          <div className="hidden lg:block mb-6">
-            <LazyAd 
-              adSlot={import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER}
-              adFormat="rectangle"
-              className="max-w-sm mx-auto"
-              style={{ minHeight: '250px' }}
-              threshold={0.1}
-              rootMargin="200px"
-              placeholder={<div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm">Advertisement</div>}
-            />
-          </div>
-
-          {/* Native In-Feed Ad - Lazy loaded, placed strategically */}
-          {userRole === 'parent' && stats.children > 0 && (
-            <LazyAd 
-              adSlot={import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE}
-              adFormat="fluid"
-              adLayout="in-article"
-              className="my-8"
-              style={{ minHeight: '100px' }}
-              threshold={0.3}
-              rootMargin="150px"
-              placeholder={<div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-center text-gray-400 dark:text-gray-600 text-sm border border-gray-200 dark:border-gray-700">Sponsored Content</div>}
+          {/* Native In-Content Ad - Placed strategically for user engagement */}
+          {userRole === 'parent' && stats.children > 0 && shouldShowDashboardAd() && (
+            <NativeAdContainer 
+              position="in-content"
+              contentType="dashboard"
+              spacing="medium"
+              onAdLoaded={recordAdShown}
+              className="dashboard-content-ad mb-6"
             />
           )}
 

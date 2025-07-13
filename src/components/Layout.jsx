@@ -7,7 +7,7 @@ import TopNavigation from './TopNavigation';
 import FloatingNavigation from './FloatingNavigation';
 import Footer from './Footer';
 import SubscriptionBanner from './subscription/SubscriptionBanner';
-import BottomBannerAd from './ads/BottomBannerAd';
+// import BottomBannerAd from './ads/BottomBannerAd'; // Removed - ads disabled
 import ServiceWorkerUpdate from './ServiceWorkerUpdate';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -118,8 +118,7 @@ const Layout = () => {
       {/* Service Worker Update Notification */}
       <ServiceWorkerUpdate />
       
-      {/* Clean bottom banner ad - positioned properly */}
-      {showAds() && <BottomBannerAd context="navigation-change" />}
+      {/* Bottom banner ad - Removed due to interference issues */}
     </div>
   );
 };

@@ -9,8 +9,25 @@ console.log('🌐 API Base URL:', API_BASE_URL);
 // Request cache and debouncing
 const requestCache = new Map();
 const pendingRequests = new Map();
-const CACHE_DURATION = 30000; // 30 seconds
-const REQUEST_DELAY = 100; // 100ms delay between requests
+const requestTimestamps = [];
+
+// Rate limiting helper
+const isRateLimited = () => {
+  const now = Date.now();
+  // Remove old timestamps outside the window
+  while (requestTimestamps.length > 0 && now - requestTimestamps[0] > BURST_WINDOW) {
+    requestTimestamps.shift();
+  }
+  return requestTimestamps.length >= BURST_LIMIT;
+};
+
+const recordRequest = () => {
+  requestTimestamps.push(Date.now());
+};
+const CACHE_DURATION = 60000; // 60 seconds - longer cache
+const REQUEST_DELAY = 300; // 300ms delay between requests
+const BURST_LIMIT = 5; // Max 5 requests per burst
+const BURST_WINDOW = 2000; // 2 second window
 
 // Helper function to create cache key
 const createCacheKey = (method, url, params) => {
@@ -43,9 +60,16 @@ const debouncedRequest = async (method, url, data = null, config = {}) => {
     return pendingRequests.get(cacheKey);
   }
   
+  // Check rate limiting
+  if (isRateLimited()) {
+    console.log('🚦 Rate limited, delaying request:', cacheKey);
+    await new Promise(resolve => setTimeout(resolve, BURST_WINDOW));
+  }
+  
   // Create new request with delay
   const requestPromise = new Promise((resolve, reject) => {
     setTimeout(async () => {
+      recordRequest();
       try {
         let response;
         switch (method.toLowerCase()) {
