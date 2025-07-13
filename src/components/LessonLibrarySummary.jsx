@@ -4,7 +4,6 @@ import {
   FaBook,
   FaDownload,
   FaCheckCircle,
-  FaClock,
   FaGraduationCap,
   FaTasks,
   FaUsers,

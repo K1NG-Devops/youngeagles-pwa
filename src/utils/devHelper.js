@@ -1,3 +1,5 @@
+/* global caches, CustomEvent */
+
 /**
  * Development Helper Utilities
  * Functions to help with development cache issues and debugging

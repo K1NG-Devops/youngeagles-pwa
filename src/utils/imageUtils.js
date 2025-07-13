@@ -143,6 +143,7 @@ export const validateImageFile = (file) => {
  */
 export const createImagePreview = (file) => {
   return new Promise((resolve, reject) => {
+    // eslint-disable-next-line no-undef
     const reader = new FileReader();
     reader.onload = (e) => resolve(e.target.result);
     reader.onerror = reject;

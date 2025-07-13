@@ -1,24 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { 
   FaGraduationCap,
   FaBook,
-  FaUsers,
   FaArrowRight,
   FaShieldAlt,
   FaRocket,
   FaMobile,
   FaChartLine,
-  FaComment,
   FaStar,
-  FaCheck,
-  FaUserGraduate,
-  FaLaptop,
   FaUserFriends,
-  FaBell,
-  FaLock
+  FaBell
 } from 'react-icons/fa';
 // import { HeaderAd, ContentMiddleAd, ContentBottomAd } from '../components/ads'; // Removed - ads disabled
 

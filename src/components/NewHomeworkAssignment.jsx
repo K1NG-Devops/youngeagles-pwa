@@ -13,11 +13,7 @@ import {
   FaTimes,
   FaSpinner,
   FaCheckCircle,
-  FaExclamationTriangle,
-  FaChevronDown,
-  FaStar,
-  FaLock,
-  FaUnlock
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';

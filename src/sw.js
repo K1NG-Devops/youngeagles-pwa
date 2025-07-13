@@ -1,3 +1,6 @@
+/* eslint-env serviceworker */
+/* global self, caches */
+
 import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst, NetworkFirst } from 'workbox-strategies';

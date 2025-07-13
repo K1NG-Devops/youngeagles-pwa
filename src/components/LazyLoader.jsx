@@ -57,8 +57,7 @@ const SkeletonLoader = ({ type = 'default' }) => {
 // Higher-order component for lazy loading
 const withLazyLoading = (
   Component, 
-  fallback = <LoadingSpinner />,
-  errorFallback = null
+  fallback = <LoadingSpinner />
 ) => {
   return React.forwardRef((props, ref) => (
     <ErrorBoundary>
@@ -109,6 +108,7 @@ const useLazyImage = (src, placeholder = null) => {
   React.useEffect(() => {
     if (!src) return;
 
+    // eslint-disable-next-line no-undef
     const img = new Image();
     
     img.onload = () => {

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FaCamera, FaUser, FaTimes, FaCheck, FaSpinner, FaExpand } from 'react-icons/fa';
+import { FaCamera, FaUser, FaSpinner, FaExpand } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
@@ -82,6 +82,7 @@ const ProfilePictureUpload = ({
       validateFile(file);
       
       // Create preview
+      // eslint-disable-next-line no-undef
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreviewImage(e.target.result);

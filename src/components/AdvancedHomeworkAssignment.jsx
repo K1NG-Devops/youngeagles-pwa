@@ -9,17 +9,11 @@ import {
   FaFileAlt,
   FaTags,
   FaGraduationCap,
-  FaPlus,
-  FaMinus,
   FaSave,
   FaTimes,
   FaSpinner,
   FaCheckCircle,
-  FaExclamationTriangle,
-  FaChevronDown,
-  FaStar,
-  FaLock,
-  FaUnlock
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -180,22 +174,12 @@ const AdvancedHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Get assignment from library by ID
-  const getSelectedAssignment = () => {
-    return homeworkLibrary.find(assignment => assignment.id.toString() === formData.selectedAssignment);
-  };
-
   // Check if assignment is unlocked based on prerequisites
   const isAssignmentUnlocked = (assignment) => {
     if (!assignment.prerequisites) return true;
     // For now, we'll make all assignments unlocked for demo purposes
     // In a real implementation, you'd check if prerequisite assignments are completed
     return true;
-  };
-
-  // Filter assignments by age group
-  const getFilteredAssignments = () => {
-    return homeworkLibrary.filter(assignment => isAssignmentUnlocked(assignment));
   };
 
   // Handle child selection for individual assignments

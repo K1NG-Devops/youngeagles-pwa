@@ -8,13 +8,12 @@ const EnhancedScrollContainer = ({
   children, 
   className = '', 
   enablePullToRefresh = false,
-  onRefresh = null,
+  onRefresh: _onRefresh = null,
   scrollToTopButton = true,
   ...props 
 }) => {
   const containerRef = useRef(null);
   const [showScrollTop, setShowScrollTop] = React.useState(false);
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   // Handle scroll events for scroll-to-top button
   useEffect(() => {
@@ -37,18 +36,6 @@ const EnhancedScrollContainer = ({
     });
   };
 
-  // Handle pull-to-refresh
-  const handlePullToRefresh = async () => {
-    if (!enablePullToRefresh || !onRefresh || isRefreshing) return;
-
-    setIsRefreshing(true);
-    try {
-      await onRefresh();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   return (
     <div className="relative">
       {/* Enhanced scroll container */}
@@ -68,16 +55,6 @@ const EnhancedScrollContainer = ({
         }}
         {...props}
       >
-        {/* Pull-to-refresh indicator */}
-        {enablePullToRefresh && isRefreshing && (
-          <div className="absolute top-0 left-0 right-0 z-50 bg-blue-500 text-white text-center py-2 text-sm font-medium">
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>Refreshing...</span>
-            </div>
-          </div>
-        )}
-
         {/* Content */}
         <div className="relative">
           {children}

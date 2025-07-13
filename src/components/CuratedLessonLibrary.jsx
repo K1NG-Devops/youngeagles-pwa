@@ -7,20 +7,10 @@ import {
   FaBook, 
   FaDownload, 
   FaEye, 
-  FaPlay,
   FaCheckCircle,
   FaSpinner,
-  FaFilter,
-  FaStar,
-  FaClock,
-  FaGraduationCap,
-  FaTasks,
-  FaPlus,
   FaPaperPlane,
-  FaTimes,
-  FaArrowLeft,
-  FaArrowRight,
-  FaPrint
+  FaTimes
 } from 'react-icons/fa';
 import { generateWorksheetPDF } from '../utils/pdfGenerator';
 

@@ -1,3 +1,5 @@
+/* global CustomEvent */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import nativeNotificationService from '../services/nativeNotificationService.js';

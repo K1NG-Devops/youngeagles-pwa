@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaCog, FaSignOutAlt, FaUserCircle, FaChevronDown, FaQuestionCircle, FaInfoCircle, FaCreditCard, FaMoon, FaSun } from 'react-icons/fa';
+import { FaCog, FaSignOutAlt, FaUserCircle, FaChevronDown, FaQuestionCircle, FaInfoCircle, FaCreditCard, FaMoon, FaSun, FaReceipt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -126,6 +126,15 @@ const UserDropdown = ({ onLogout }) => {
       action: () => {
         navigate('/management');
       },
+      divider: false
+    },
+    {
+      icon: FaReceipt,
+      label: 'Payment Proofs',
+      description: 'View and upload payment receipts',
+      action: () => {
+        navigate('/payment-proofs');
+      },
       divider: true
     },
     {
@@ -142,7 +151,7 @@ const UserDropdown = ({ onLogout }) => {
       label: 'Help & Support',
       description: 'Get help and contact support',
       action: () => {
-        navigate('/help');
+        navigate('/contact');
       },
       divider: false
     },
@@ -151,7 +160,7 @@ const UserDropdown = ({ onLogout }) => {
       label: 'About',
       description: 'App version and information',
       action: () => {
-        navigate('/about');
+        navigate('/settings');
       },
       divider: true
     },

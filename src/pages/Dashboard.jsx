@@ -9,7 +9,11 @@ import { useTheme } from '../contexts/ThemeContext';
 import TeacherDashboard from './TeacherDashboard';
 import AdminDashboard from './AdminDashboard';
 import NativeAdContainer from '../components/ads/NativeAdContainer';
+import EnhancedNativeAd from '../components/ads/EnhancedNativeAd';
 import ContentWithAds from '../components/ads/ContentWithAds';
+import AdaptiveLoader from '../components/loading/AdaptiveLoader';
+import NativeAppEnhancements from '../components/NativeAppEnhancements';
+import AdDiagnostic from '../components/ads/AdDiagnostic';
 import useAdFrequency from '../hooks/useAdFrequency';
 
 const Dashboard = () => {
@@ -40,7 +44,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   // Ad frequency management
-  const { shouldShowAd: shouldShowDashboardAd, recordAdShown } = useAdFrequency('dashboard');
+  const { shouldShowAd, recordAdShown, canShowMoreAds } = useAdFrequency('dashboard');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -183,12 +187,12 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Loading dashboard...</p>
-        </div>
-      </div>
+      <AdaptiveLoader 
+        isLoading={true}
+        loadingText="Loading your dashboard"
+        showProgress={false}
+        delay={100}
+      />
     );
   }
 
@@ -208,18 +212,20 @@ const Dashboard = () => {
   return (
     <div className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header />
+      <NativeAppEnhancements />
       <main className="pt-0 pb-4 px-2 sm:px-3">
         <div className="w-full mb-6">
-          {/* Strategic Native Ad - Mobile-friendly placement */}
-          {shouldShowDashboardAd() && (
-            <NativeAdContainer 
-              position="native"
-              contentType="dashboard"
-              spacing="large"
-              onAdLoaded={recordAdShown}
-              className="dashboard-welcome-ad"
-            />
-          )}
+          {/* Enhanced Strategic Native Ad - Mobile-friendly placement */}
+          <EnhancedNativeAd 
+            position="native"
+            contentType="dashboard"
+            spacing="large"
+            priority="high"
+            seamless={true}
+            showControls={true}
+            onAdLoaded={recordAdShown}
+            className="dashboard-welcome-ad"
+          />
 
           {/* Welcome Section - Enhanced */}
           <div className="bg-gradient-to-br mt-2 from-blue-500 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
@@ -352,12 +358,15 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Native In-Content Ad - Placed strategically for user engagement */}
-          {userRole === 'parent' && stats.children > 0 && shouldShowDashboardAd() && (
-            <NativeAdContainer 
-              position="in-content"
+          {/* Enhanced In-Content Ad - Placed strategically for user engagement */}
+          {userRole === 'parent' && stats.children > 0 && canShowMoreAds() && (
+            <EnhancedNativeAd 
+              position="feed"
               contentType="dashboard"
               spacing="medium"
+              priority="normal"
+              seamless={true}
+              showControls={true}
               onAdLoaded={recordAdShown}
               className="dashboard-content-ad mb-6"
             />
@@ -498,6 +507,11 @@ const Dashboard = () => {
           
         </div>
       </main>
+      
+      {/* Ad Diagnostic Tool - Only show in development */}
+      {import.meta.env.DEV && (
+        <AdDiagnostic showDiagnostic={true} />
+      )}
     </div>
   );
 };

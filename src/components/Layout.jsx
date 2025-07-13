@@ -11,16 +11,15 @@ import SubscriptionBanner from './subscription/SubscriptionBanner';
 import ServiceWorkerUpdate from './ServiceWorkerUpdate';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 
 const Layout = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   const { isDark } = useTheme();
+  const { navigationStyle, NAVIGATION_STYLES } = useNavigation();
   const { showAds } = useSubscription();
-  
-  // Navigation style based on screen size and user preference
-  const navigationStyle = 'bottom'; // Default to bottom navigation
   
   // Show components based on authentication and route
   const showGlobalHeader = isAuthenticated && location.pathname !== '/login' && location.pathname !== '/register';
@@ -75,8 +74,17 @@ const Layout = () => {
   const renderNavigation = () => {
     if (!isAuthenticated) return null;
 
-    // Force bottom navigation only - remove any potential for floating navigation
-    return <Navigation />;
+    switch (navigationStyle) {
+    case NAVIGATION_STYLES.TOP:
+      return <TopNavigation />;
+    case NAVIGATION_STYLES.SIDE:
+      return <SideNavigation />;
+    case NAVIGATION_STYLES.FLOATING:
+      return <FloatingNavigation />;
+    case NAVIGATION_STYLES.BOTTOM:
+    default:
+      return <Navigation />;
+    }
   };
 
   // Calculate proper padding for clean layout
@@ -85,12 +93,29 @@ const Layout = () => {
     
     // Add padding based on what's showing
     if (showGlobalHeader) classes += ' pt-16';
+    if (showSubscriptionBanner) classes += ' pt-10';
     
-    // Minimal bottom padding when ads are shown to reduce gap
-    if (showAds()) {
-      classes += ' pb-16'; // Reduced from pb-20 to pb-16
-    } else if (navigationStyle === 'bottom') {
-      classes += ' pb-16'; // Standard padding when no ads
+    // Add padding based on navigation style
+    switch (navigationStyle) {
+    case NAVIGATION_STYLES.TOP:
+      classes += ' pt-16'; // Top navigation needs top padding
+      break;
+    case NAVIGATION_STYLES.BOTTOM:
+      // Minimal bottom padding when ads are shown to reduce gap
+      if (showAds()) {
+        classes += ' pb-16'; // Reduced from pb-20 to pb-16
+      } else {
+        classes += ' pb-16'; // Standard padding when no ads
+      }
+      break;
+    case NAVIGATION_STYLES.SIDE:
+      classes += ' pl-0'; // Side navigation doesn't need padding as it's overlay
+      break;
+    case NAVIGATION_STYLES.FLOATING:
+      classes += ' pb-4'; // Minimal padding for floating navigation
+      break;
+    default:
+      classes += ' pb-16';
     }
     
     return classes;

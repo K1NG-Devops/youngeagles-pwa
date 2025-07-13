@@ -1,30 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FaPlay, 
-  FaCheck, 
-  FaTimes, 
-  FaRedoAlt, 
   FaStar,
   FaHeart,
   FaAppleAlt,
   FaCube,
-  FaPalette,
   FaGamepad,
   FaTrophy,
   FaSmile
 } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../contexts/AuthContext';
 import nativeNotificationService from '../services/nativeNotificationService.js';
 import apiService from '../services/apiService';
 
 const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
   const { isDark } = useTheme();
-  const { user } = useAuth();
   const [currentActivity, setCurrentActivity] = useState(0);
   const [answers, setAnswers] = useState({});
   const [score, setScore] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasBeenSubmitted, setHasBeenSubmitted] = useState(false);
