@@ -9,7 +9,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import PrivateRoute from './components/PrivateRoute';
 import PWAEnhancements from './components/PWAEnhancements';
 import Layout from './components/Layout';
-// import AutoAds from './components/ads/AutoAds'; // Removed - was causing mobile header interference
+import AutoAds from './components/ads/AutoAds';
 import './index.css';
 
 // Lazy load components for better performance
@@ -63,7 +63,11 @@ function App() {
                         <Route path="/swipe-demo" element={<SwipeDemo />} />
                           
                         {/* Protected routes with Layout */}
-                        <Route path="/" element={<Layout />}>
+                        <Route path="/" element={
+                          <WebSocketProvider>
+                            <Layout />
+                          </WebSocketProvider>
+                        }>
                           <Route path="dashboard" element={
                             <PrivateRoute>
                               <Dashboard />
@@ -171,11 +175,13 @@ function App() {
                     {/* PWA Enhancements */}
                     <PWAEnhancements />
                     
-                    {/* Google Auto Ads - Removed due to mobile header interference
-                        The auto ads were placing banners at the top that interfered 
-                        with the header on mobile devices. We use controlled ad 
-                        placement instead through HeaderAd and other components.
-                    */}
+                    {/* Google Auto Ads - Properly configured to avoid mobile header interference */}
+                    <AutoAds 
+                      enableAutoAds={true}
+                      enablePageLevelAds={true}
+                      enableAnchorAds={false}
+                      enableVignetteAds={false}
+                    />
                   </div>
                 </ErrorBoundary>
               </SubscriptionProvider>

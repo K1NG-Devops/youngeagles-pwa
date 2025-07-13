@@ -1,38 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useWebSocket } from '../contexts/WebSocketContext';
 import { FaBell } from 'react-icons/fa';
 import { NavLink } from 'react-router-dom';
 import UserDropdown from './UserDropdown';
 import ProfilePictureModal from './common/ProfilePictureModal';
-import apiService from '../services/apiService';
 
 const Header = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark } = useTheme();
+  const { notificationCount } = useWebSocket();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  
-  // Fetch unread notification count
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      try {
-        const response = await apiService.notifications.getUnreadCount();
-        setUnreadCount(response.data.count || 0);
-      } catch (error) {
-        // Use mock data if API fails
-        console.log('Using mock notification count:', error);
-        setUnreadCount(2); // Mock 2 unread notifications
-      }
-    };
-
-    if (user?.role === 'parent' || user?.userType === 'parent') {
-      fetchUnreadCount();
-      // Refresh count every 30 seconds
-      const interval = setInterval(fetchUnreadCount, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
 
   return (
     <header className={`fixed top-0 left-0 right-0 container-perfect py-4 shadow-lg border-b z-50 safe-area-padding ${
@@ -63,9 +42,9 @@ const Header = () => {
                   }
                 >
                   <FaBell className="text-lg" />
-                  {unreadCount > 0 && (
+{notificationCount > 0 && (
                     <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white">
-                      {unreadCount > 9 ? '9+' : unreadCount}
+                      {notificationCount > 9 ? '9+' : notificationCount}
                     </span>
                   )}
                 </NavLink>
