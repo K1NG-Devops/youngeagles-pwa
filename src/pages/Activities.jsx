@@ -642,8 +642,6 @@ const Activities = () => {
 
             {/* Sidebar */}
             <div className="lg:col-span-1 space-y-6">
-              {/* Sidebar Ad - Rectangle format */}
-              <SidebarAd pageType="activities" className="sticky top-6" />
 
               {/* Progress Summary */}
               <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
@@ -689,8 +687,6 @@ const Activities = () => {
             </div>
           </div>
 
-          {/* Bottom Content Ad */}
-          <ContentBottomAd pageType="activities" className="mt-12" />
         </div>
 
         {/* Assignment Modal */}

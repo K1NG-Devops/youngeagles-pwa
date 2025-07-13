@@ -6,7 +6,6 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
-import { HeaderAd, ContentMiddleAd, SidebarAd, ContentBottomAd } from '../components/ads';
 import EnhancedSubscriptionManagement from '../components/admin/EnhancedSubscriptionManagement';
 
 const Management = () => {
@@ -880,8 +879,6 @@ const Management = () => {
   return (
     <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pt-20 md:pt-6">
-        {/* Header Ad - Premium placement for high-value management page */}
-        <HeaderAd pageType="management" className="mb-8" />
         
         {/* Header */}
         <div className="mb-8">
@@ -918,8 +915,6 @@ const Management = () => {
           </div>
         </div>
 
-        {/* Content Middle Ad - Between tabs and content */}
-        <ContentMiddleAd pageType="management" className="my-6" />
 
         {/* Tab Content */}
         {activeTab === 'subscription' && renderSubscriptionTab()}
@@ -927,8 +922,6 @@ const Management = () => {
         {activeTab === 'send-invoices' && renderSendInvoicesTab()}
         {activeTab === 'enhanced-subscriptions' && <EnhancedSubscriptionManagement />}
         
-        {/* Bottom Content Ad - After tab content */}
-        <ContentBottomAd pageType="management" className="mt-8" />
         {['payments', 'invoices', 'history'].includes(activeTab) && renderComingSoonTab()}
       </div>
     </div>
