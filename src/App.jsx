@@ -11,6 +11,7 @@ import PrivateRoute from './components/PrivateRoute';
 import PWAEnhancements from './components/PWAEnhancements';
 import Layout from './components/Layout';
 import AutoAds from './components/ads/AutoAds';
+import AdSenseDebugger from './components/ads/AdSenseDebugger';
 import './index.css';
 
 // Lazy load components for better performance
@@ -185,6 +186,9 @@ function App() {
                           enableAnchorAds={false}
                           enableVignetteAds={false}
                         />
+                        
+                        {/* AdSense Debugger - Only shows in development */}
+                        <AdSenseDebugger />
                       </div>
                     </ErrorBoundary>
                   </SubscriptionProvider>
