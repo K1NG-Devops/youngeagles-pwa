@@ -58,209 +58,78 @@
   transform: scale(1.1);
 }
 
-/* Enhanced mobile responsiveness and performance optimizations */
-html, body {
-  /* Better font rendering */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Improved touch scrolling */
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  /* Optimize rendering */
-  text-rendering: optimizeLegibility;
-}
-
-/* Container constraints with better performance */
-.container {
-  contain: layout style paint; /* CSS containment for better performance */
-}
-
-/* Enhanced safe area support for modern devices */
-.safe-area-padding {
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-top: env(safe-area-inset-top);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
-
-.safe-area-top {
-  padding-top: env(safe-area-inset-top);
-}
-
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Enhanced scroll padding for better layout with navigation and ads */
-.scroll-padding {
-  scroll-padding-bottom: calc(env(safe-area-inset-bottom) + 4rem);
-  scroll-padding-top: calc(env(safe-area-inset-top) + 4rem);
-}
-
-/* Better scroll behavior with momentum scrolling */
-.smooth-scroll {
-  will-change: scroll-position; /* Optimize scroll performance */
-  scroll-behavior: smooth;
-}
-
-/* Prevent bounce scrolling on iOS */
-.no-bounce {
-  overscroll-behavior: none;
-  overscroll-behavior-y: none;
-}
-
-/* Performance optimized animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.3s ease-out;
-  animation-fill-mode: both;
-}
-
-/* Hardware accelerated transforms */
-.gpu-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-  will-change: transform, opacity;
-}
-
-/* Better touch targets for mobile */
-.touch-responsive {
-  min-height: 44px;
-  min-width: 44px;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Mobile-specific optimizations */
-@media (max-width: 768px) {
-  /* Reduce motion for better performance on low-end devices */
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-    
-    .smooth-animation {
-      will-change: auto;
-      transform: none;
-    }
-  }
-  
-  /* Better tap highlighting */
-  * {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Optimize font loading */
-  body {
-    font-display: swap;
-  }
-}
-
-/* Improved gap classes for better spacing */
-.mobile-gap-xs {
-  gap: 0.25rem;
-}
-
-.mobile-gap-sm {
-  gap: 0.5rem;
-}
-
-.mobile-gap-md {
-  gap: 0.75rem;
-}
-
-/* Hover effects only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    transition: transform 0.2s ease;
-  }
-}
-
-/* Fix line clamp compatibility */
+/* Line clamp utility for text truncation */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Better ad container styling - prevent layout shift */
-.ad-container {
-  contain: layout style paint;
-  isolation: isolate;
-  min-height: 50px;
-  background: transparent;
+/* Ensure responsive images */
+img {
+  max-width: 100%;
+  height: auto;
 }
 
-/* Improved navigation spacing to prevent ad overlap */
-@media (max-width: 768px) {
-  .bottom-nav-safe {
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
-  }
-  
-  .floating-nav-safe {
-    padding-bottom: calc(20px + env(safe-area-inset-bottom));
-  }
+/* Prevent horizontal scroll from content */
+html, body {
+  overflow-x: hidden;
 }
 
-/* Better loading states */
-.loading-shimmer {
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.1) 50%, 
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+/* Container constraints */
+.container {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-@keyframes shimmer {
+/* Enhanced Scrolling Behavior */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Account for fixed header */
+}
+
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  /* Enhanced touch scrolling for iOS */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling for all containers */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced momentum scrolling for mobile */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+}
+
+/* Prevent bounce scrolling */
+.no-bounce {
+  overscroll-behavior: none;
+}
+
+/* Custom animations for confetti */
+@keyframes pulse {
   0% {
-    background-position: -200% 0;
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
   }
   100% {
-    background-position: 200% 0;
+    transform: scale(1);
   }
-}
-
-/* Performance optimized card styles */
-.card-optimized {
-  contain: layout style paint;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* Better focus management */
-.focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* Improved button states */
-.btn-primary:active {
-  transform: translateY(1px);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
 }
 
 /* Game completion celebration animations */
@@ -298,6 +167,18 @@ html, body {
   transition: opacity 200ms, transform 200ms;
 }
 
+@keyframes celebration-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
 /* Utility class for hiding scrollbars */
 .scrollbar-hide {
   scrollbar-width: none; /* Firefox */
@@ -312,7 +193,6 @@ html, body {
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
-  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -320,7 +200,6 @@ html, body {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -328,7 +207,6 @@ html, body {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
-  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -447,5 +325,113 @@ body, html {
   min-height: unset;
   background: transparent;
   border-radius: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Ad Container - No restrictions */
+.ad-container {
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+  overflow: visible !important;
+}
+
+/* Ensure ad content has no bounds */
+.ad-container .adsbygoogle {
+  max-width: none !important;
+  max-height: none !important;
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* Allow ads to expand naturally */
+.ad-container iframe,
+.ad-container ins,
+.ad-container div {
+  max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Remove responsive ad restrictions */
+@media (max-width: 640px) {
+  .ad-container {
+    min-height: unset;
+    max-height: none;
+    overflow: visible !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .ad-container {
+    min-height: unset;
+    max-height: none;
+    overflow: visible !important;
+  }
+}
+
+/* Mobile Header Ad Safety - Prevent interference with fixed header */
+.mobile-header-safe {
+  position: relative;
+  z-index: 10; /* Lower than header (z-50) */
+}
+
+@media (max-width: 768px) {
+  .mobile-header-safe {
+    margin-top: 80px !important; /* Safe distance from fixed header */
+    padding-top: 8px;
+  }
+  
+  /* Header position ads specifically */
+  .ad-position-header {
+    margin-top: 80px !important;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* Prevent header ads from interfering with navigation */
+  .ad-position-header .adsbygoogle {
+    position: relative !important;
+    clear: both;
+  }
+}
+
+/* Desktop - normal spacing */
+@media (min-width: 769px) {
+  .mobile-header-safe {
+    margin-top: 16px;
+  }
+  
+  .ad-position-header {
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Footer safe spacing for mobile devices */
+.footer-safe-spacing {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .footer-safe-spacing {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Safe area support for the footer */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 

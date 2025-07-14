@@ -35,12 +35,12 @@ const Navigation = () => {
   const navItems = getNavItems();
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t transition-colors touch-responsive safe-area-bottom ${
+    <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t transition-colors touch-responsive safe-area-padding ${
       isDark 
         ? 'bg-gray-800 border-gray-700' 
         : 'bg-white border-gray-200'
     }`}>
-      <div className="flex justify-around px-1 py-2 mobile-gap-sm">
+      <div className="flex justify-around px-1 py-1 mobile-gap-sm">
         {navItems.map(({ path, icon: Icon, label }) => (
           <NavLink
             key={path}

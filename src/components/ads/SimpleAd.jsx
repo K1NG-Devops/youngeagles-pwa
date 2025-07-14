@@ -15,14 +15,11 @@ const SimpleAd = ({
   const adRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-
-  // Don't render if ads are disabled or no ad slot
-  if (!showAds() || !adSlot) {
-    return null;
-  }
+  
+  const shouldShowAds = showAds() && adSlot;
 
   useEffect(() => {
-    if (!adRef.current) return;
+    if (!shouldShowAds || !adRef.current) return;
 
     // Initialize AdSense
     window.adsbygoogle = window.adsbygoogle || [];
@@ -38,7 +35,7 @@ const SimpleAd = ({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [adSlot]);
+  }, [adSlot, shouldShowAds]);
 
   // Get responsive styles based on position - Mobile-optimized
   const getContainerStyles = () => {
@@ -88,8 +85,9 @@ const SimpleAd = ({
     }
   };
 
-  if (hasError) {
-    return null; // Fail silently
+  // Don't render if ads are disabled, no ad slot, or has error
+  if (!shouldShowAds || hasError) {
+    return null;
   }
 
   return (

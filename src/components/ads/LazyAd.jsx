@@ -11,27 +11,22 @@ const LazyAd = ({
   rootMargin = '50px',
   placeholder = null,
   showPlaceholderWhenEmpty = true,
-  preventLayoutShift = true,
-  minHeight = '100px',
   ...props 
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [adLoaded, setAdLoaded] = useState(false);
   const [adError, setAdError] = useState(false);
-  const [adDimensions, setAdDimensions] = useState({ width: '100%', height: minHeight });
   const adRef = useRef(null);
-  const observerRef = useRef(null);
   const { showAds } = useSubscription();
 
   useEffect(() => {
     if (!adRef.current) return;
 
-    // Create intersection observer with better performance
-    observerRef.current = new window.IntersectionObserver(
+    const observer = new window.IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observerRef.current?.disconnect();
+          observer.disconnect();
         }
       },
       { 
@@ -40,16 +35,16 @@ const LazyAd = ({
       }
     );
 
-    observerRef.current.observe(adRef.current);
+    observer.observe(adRef.current);
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
+      if (observer) {
+        observer.disconnect();
       }
     };
   }, [threshold, rootMargin]);
 
-  // Enhanced ad loading monitoring with layout shift prevention
+  // Monitor ad loading state
   useEffect(() => {
     if (isVisible && adSlot) {
       const checkAdLoaded = () => {
@@ -62,14 +57,6 @@ const LazyAd = ({
           if (adHeight > 0 && adWidth > 0) {
             setAdLoaded(true);
             setAdError(false);
-            
-            // Update dimensions for layout shift prevention
-            if (preventLayoutShift) {
-              setAdDimensions({
-                width: `${adWidth}px`,
-                height: `${adHeight}px`
-              });
-            }
           } else {
             // Ad slot exists but no content loaded
             setTimeout(() => {
@@ -81,18 +68,11 @@ const LazyAd = ({
         }
       };
 
-      // Multiple checks to ensure ad loading is detected
-      const timer1 = setTimeout(checkAdLoaded, 500);
-      const timer2 = setTimeout(checkAdLoaded, 1500);
-      const timer3 = setTimeout(checkAdLoaded, 3000);
-      
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-        clearTimeout(timer3);
-      };
+      // Check after a delay to allow ad to load
+      const timer = setTimeout(checkAdLoaded, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [isVisible, adSlot, preventLayoutShift]);
+  }, [isVisible, adSlot]);
 
   // Don't render anything if ads are disabled or no ad slot
   if (!showAds() || !adSlot) {

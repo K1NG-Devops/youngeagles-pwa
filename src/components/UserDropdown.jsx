@@ -3,17 +3,39 @@ import { FaCog, FaSignOutAlt, FaUserCircle, FaChevronDown, FaQuestionCircle, FaI
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { ProfilePicture } from './OptimizedImage';
+import { getProfileImageUrl, getUserInitials } from '../utils/imageUtils';
 import ProfilePictureModal from './common/ProfilePictureModal';
 
 const UserDropdown = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+
+  // Update profile image URL when user changes
+  useEffect(() => {
+    const newUrl = getProfileImageUrl(user);
+    setProfileImageUrl(newUrl);
+  }, [user?.profilePicture, user?.profile_picture, user?.avatar, user?.image, user?.updated_at, forceUpdate]);
+
+  // Listen for profile picture updates
+  useEffect(() => {
+    const handleProfilePictureUpdate = (event) => {
+      const { user: updatedUser, imageUrl } = event.detail;
+      if (updatedUser?.id === user?.id) {
+        setProfileImageUrl(imageUrl);
+        setForceUpdate(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    return () => window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+  }, [user?.id]);
 
   // Close dropdown when clicking outside or pressing escape
   useEffect(() => {
@@ -167,12 +189,30 @@ const UserDropdown = ({ onLogout }) => {
         aria-label="User menu"
       >
         {/* Profile Picture */}
-        <ProfilePicture
-          user={user}
-          size={32}
-          className="w-8 h-8"
-          fallbackClassName="text-sm"
-        />
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+          {profileImageUrl ? (
+            <img
+              src={profileImageUrl}
+              alt="Profile"
+              className="w-full h-full object-cover"
+              key={`dropdown-profile-${forceUpdate}`}
+              onError={(e) => {
+                console.error('❌ UserDropdown profile picture failed to load:', e.target.src);
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          {/* Fallback */}
+          <div 
+            className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${
+              profileImageUrl ? 'hidden' : 'flex'
+            }`}
+            style={{ display: profileImageUrl ? 'none' : 'flex' }}
+          >
+            {getUserInitials(user)}
+          </div>
+        </div>
         
         {/* User Name - Hidden on mobile for space */}
         <span className="hidden md:block text-sm font-medium truncate max-w-24">
@@ -196,14 +236,24 @@ const UserDropdown = ({ onLogout }) => {
           {/* User Info Header */}
           <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex items-center space-x-3">
-              <ProfilePicture
-                user={user}
-                size={48}
-                className="w-12 h-12 hover:scale-105 transition-transform duration-200 cursor-pointer"
-                fallbackClassName="text-lg"
+              <button
                 onClick={() => handleItemClick(() => setIsProfileModalOpen(true))}
+                className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center hover:scale-105 transition-transform duration-200 cursor-pointer"
                 title="Edit profile picture"
-              />
+              >
+                {profileImageUrl ? (
+                  <img 
+                    src={profileImageUrl} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                    key={`dropdown-profile-${forceUpdate}`}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white font-bold">
+                    {getUserInitials(user)}
+                  </div>
+                )}
+              </button>
               <div className="flex-1 min-w-0">
                 <h3 className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {user?.name || 'User'}

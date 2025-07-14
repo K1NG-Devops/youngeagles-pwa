@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
@@ -13,9 +13,9 @@ import AdminDashboard from './AdminDashboard';
 import AdaptiveLoader from '../components/loading/AdaptiveLoader';
 import NativeAppEnhancements from '../components/NativeAppEnhancements';
 import ChildRegistration from '../components/ChildRegistration';
-// Optimized Ad Components
-import OptimizedAdManager from '../components/ads/OptimizedAdManager';
-import { NativeAd, ContentAd } from '../components/ads/AdComponents';
+// Simplified Ad Components
+import { HeaderAd, ContentAd, NativeAd } from '../components/ads/AdComponents';
+// import AdDiagnostic from '../components/ads/AdDiagnostic';
 
 import useAdFrequency from '../hooks/useAdFrequency';
 
@@ -45,40 +45,36 @@ const Dashboard = () => {
     lastLogin: new Date()
   });
   const [showMoreStats, setShowMoreStats] = useState(false);
-  const [children, setChildren] = useState([]);
-  const [homeworkData, setHomeworkData] = useState([]);
+  const [, setChildren] = useState([]);
+  const [, setHomeworkData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showChildRegistration, setShowChildRegistration] = useState(false);
   
   // Ad frequency management
   const { shouldShowAd, recordAdShown, canShowMoreAds } = useAdFrequency('dashboard');
 
-  // Memoize navigation items to prevent unnecessary re-renders
-  const quickActionItems = useMemo(() => [
-    { path: '/homework', icon: FaBook, label: 'Homework', color: 'bg-blue-500' },
-    { path: '/activities', icon: FaBrain, label: 'Activities', color: 'bg-purple-500' },
-    { path: '/profile', icon: FaUser, label: 'Profile', color: 'bg-green-500' },
-    { path: '/notifications', icon: FaBell, label: 'Updates', color: 'bg-orange-500' }
-  ], []);
-
-  // Optimized swipe gesture handlers with throttling
-  const handleSwipe = useCallback((direction) => {
-    // Haptic feedback with throttling
+  // Swipe gesture handlers
+  const handleSwipe = (direction) => {
+    // Haptic feedback
     if ('vibrate' in navigator) {
       navigator.vibrate(50);
     }
 
     switch (direction) {
     case 'left':
+      // Navigate to homework page
       navigate('/homework');
       break;
     case 'right':
+      // Navigate to activities page
       navigate('/activities');
       break;
     case 'up':
+      // Expand stats view
       setShowMoreStats(true);
       break;
     case 'down':
+      // Collapse stats or navigate to profile
       if (showMoreStats) {
         setShowMoreStats(false);
       } else {
@@ -86,152 +82,149 @@ const Dashboard = () => {
       }
       break;
     }
-  }, [navigate, showMoreStats]);
+  };
 
   // Hook up swipe gestures
   useSwipeGestures(swipeRef, handleSwipe);
 
-  // Optimized data fetching with error handling
-  const fetchDashboardData = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      setIsLoading(true);
-      
-      const userRole = user?.role || user?.userType;
-      
-      if (userRole === 'parent') {
-        try {
-          const childrenResponse = await apiService.children.getByParent(user.id);
-          const childrenData = childrenResponse.data.children || [];
-          setChildren(childrenData);
-          
-          // Fetch homework data for the parent
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch different data based on user role (handle both 'role' and 'userType' fields)
+        const userRole = user?.role || user?.userType;
+        if (userRole === 'parent') {
+          // For parents, get their children and homework data
           try {
-            const homeworkResponse = await apiService.homework.getByParent(user.id);
-            const homework = homeworkResponse.data.homework || [];
-            setHomeworkData(homework);
+            const childrenResponse = await apiService.children.getByParent(user.id);
+            const childrenData = childrenResponse.data.children || [];
+            setChildren(childrenData);
             
-            // Calculate homework stats
-            const totalHomework = homework.length;
-            const submittedHomework = homework.filter(hw => hw.status === 'submitted' || hw.status === 'graded').length;
-            const completionRate = totalHomework > 0 ? Math.round((submittedHomework / totalHomework) * 100) : 0;
-            const graded = homework.filter(hw => hw.status === 'graded').length;
-            const overdue = homework.filter(hw => hw.status === 'overdue').length;
-            
-            setStats({
-              children: childrenData.length,
-              classes: 0,
-              homework: totalHomework,
-              pending: totalHomework - submittedHomework,
-              submitted: submittedHomework,
-              completionRate
-            });
+            // Fetch homework data for the parent
+            try {
+              const homeworkResponse = await apiService.homework.getByParent(user.id);
+              const homework = homeworkResponse.data.homework || [];
+              setHomeworkData(homework);
+              
+              // Calculate homework stats
+              const totalHomework = homework.length;
+              const submittedHomework = homework.filter(hw => hw.status === 'submitted' || hw.status === 'graded').length;
+              const completionRate = totalHomework > 0 ? Math.round((submittedHomework / totalHomework) * 100) : 0;
+              const graded = homework.filter(hw => hw.status === 'graded').length;
+              const overdue = homework.filter(hw => hw.status === 'overdue').length;
+              
+              setStats({
+                children: childrenData.length,
+                classes: 0,
+                homework: totalHomework,
+                pending: totalHomework - submittedHomework,
+                submitted: submittedHomework,
+                completionRate
+              });
 
-            // Set expanded stats
-            setExpandedStats({
-              totalAssignments: totalHomework,
-              overdue: overdue,
-              graded: graded,
-              avgScore: 85, // Mock data
-              weeklyProgress: 12,
-              monthlyProgress: 45,
-              paymentStatus: 'paid',
-              aiUsage: 8,
-              lastLogin: new Date()
-            });
-          } catch (hwError) {
-            console.log('Homework API error:', hwError);
-            // Set stats with children count but empty homework
+              // Set expanded stats
+              setExpandedStats({
+                totalAssignments: totalHomework,
+                overdue: overdue,
+                graded: graded,
+                avgScore: 85, // Mock data
+                weeklyProgress: 12,
+                monthlyProgress: 45,
+                paymentStatus: 'paid',
+                aiUsage: 8,
+                lastLogin: new Date()
+              });
+            } catch (hwError) {
+              console.log('Homework API error:', hwError);
+              // Set stats with children count but empty homework
+              setStats({
+                children: childrenData.length,
+                classes: 0,
+                homework: 0,
+                pending: 0,
+                submitted: 0,
+                completionRate: 0
+              });
+            }
+          } catch (childrenError) {
+            console.error('Error fetching children:', childrenError);
+            // If children API fails, set everything to defaults
             setStats({
-              children: childrenData.length,
+              children: 0,
               classes: 0,
               homework: 0,
               pending: 0,
               submitted: 0,
               completionRate: 0
             });
+            
+            // Set default expanded stats
+            setExpandedStats({
+              totalAssignments: 0,
+              overdue: 0,
+              graded: 0,
+              avgScore: 0,
+              weeklyProgress: 0,
+              monthlyProgress: 0,
+              paymentStatus: 'pending',
+              aiUsage: 0,
+              lastLogin: new Date()
+            });
           }
-        } catch (childrenError) {
-          console.error('Error fetching children:', childrenError);
-          // If children API fails, set everything to defaults
-          setStats({
-            children: 0,
-            classes: 0,
-            homework: 0,
-            pending: 0,
-            submitted: 0,
-            completionRate: 0
-          });
+        } else {
+          // For teachers/admin, get all children and classes
+          const [childrenResponse, classesResponse] = await Promise.all([
+            apiService.children.getAll(),
+            apiService.classes.getAll()
+          ]);
           
-          // Set default expanded stats
-          setExpandedStats({
-            totalAssignments: 0,
-            overdue: 0,
-            graded: 0,
-            avgScore: 0,
-            weeklyProgress: 0,
-            monthlyProgress: 0,
-            paymentStatus: 'pending',
-            aiUsage: 0,
-            lastLogin: new Date()
-          });
+          // Try to fetch homework data for teachers
+          try {
+            const homeworkResponse = await apiService.homework.getByTeacher(user.id);
+            const homework = homeworkResponse.data.homework || [];
+            setHomeworkData(homework);
+            
+            setStats({
+              children: childrenResponse.data.children?.length || 0,
+              classes: classesResponse.data.classes?.length || 0,
+              homework: homework.length,
+              pending: homework.filter(hw => hw.status === 'assigned').length,
+              submitted: 0,
+              completionRate: 0
+            });
+          } catch {
+            console.log('Homework API not available for teachers');
+            setStats({
+              children: childrenResponse.data.children?.length || 0,
+              classes: classesResponse.data.classes?.length || 0,
+              homework: 0,
+              pending: 0,
+              submitted: 0,
+              completionRate: 0
+            });
+          }
         }
-      } else {
-        // For teachers/admin, get all children and classes
-        const [childrenResponse, classesResponse] = await Promise.all([
-          apiService.children.getAll(),
-          apiService.classes.getAll()
-        ]);
-        
-        // Try to fetch homework data for teachers
-        try {
-          const homeworkResponse = await apiService.homework.getByTeacher(user.id);
-          const homework = homeworkResponse.data.homework || [];
-          setHomeworkData(homework);
-          
-          setStats({
-            children: childrenResponse.data.children?.length || 0,
-            classes: classesResponse.data.classes?.length || 0,
-            homework: homework.length,
-            pending: homework.filter(hw => hw.status === 'assigned').length,
-            submitted: 0,
-            completionRate: 0
-          });
-        } catch {
-          console.log('Homework API not available for teachers');
-          setStats({
-            children: childrenResponse.data.children?.length || 0,
-            classes: classesResponse.data.classes?.length || 0,
-            homework: 0,
-            pending: 0,
-            submitted: 0,
-            completionRate: 0
-          });
-        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Use empty stats when API is not available
+        setStats({
+          children: 0,
+          classes: 0,
+          homework: 0,
+          pending: 0,
+          submitted: 0,
+          completionRate: 0
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      // Use empty stats when API is not available
-      setStats({
-        children: 0,
-        classes: 0,
-        homework: 0,
-        pending: 0,
-        submitted: 0,
-        completionRate: 0
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
+    };
 
-  // Use useEffect to trigger the fetchDashboardData when user changes
-  useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user, fetchDashboardData]);
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -258,19 +251,22 @@ const Dashboard = () => {
   }
 
   return (
-    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} touch-none`}>
       <Header />
       <NativeAppEnhancements />
       
-      <main className="pt-0 pb-20 sm:pb-24 overflow-y-auto">
+      {/* Swipe Instructions - Mobile Only */}
+      <div className="md:hidden bg-blue-100 dark:bg-blue-900/20 border-l-4 border-blue-500 p-3 mx-4 sm:mx-6 lg:mx-8 mb-4 rounded-r">
+        <p className="text-xs text-blue-700 dark:text-blue-300">
+          💡 Swipe: ← Homework | → Activities | ↑ More Stats | ↓ Profile
+        </p>
+      </div>
+      
+      <main className="pt-0 pb-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Strategic Native Ad - Seamless integration */}
-          <div className="mb-6 w-full overflow-hidden">
-            <OptimizedAdManager 
-              position="content-middle"
-              pageType="dashboard"
-              className="w-full max-w-none"
-            />
+          <div className="mb-6">
+            <NativeAd />
           </div>
 
           {/* Welcome Section - Enhanced Light Blue Gradient */}
@@ -425,7 +421,7 @@ const Dashboard = () => {
 
           {/* Content Ad - Native integration */}
           {userRole === 'parent' && stats.children > 0 && (
-            <div className="mb-6 w-full overflow-hidden">
+            <div className="mb-6">
               <ContentAd />
             </div>
           )}
@@ -508,12 +504,12 @@ const Dashboard = () => {
           
           {/* Quick Actions for Parents - Enhanced with consistent spacing */}
           {userRole === 'parent' && (
-            <div className="mb-8 sm:mb-12">
+            <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
                 <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-4"></div>
                 Quick Actions
               </h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <Link to="/children" className={`p-6 sm:p-8 rounded-xl shadow-lg flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border-l-4 border-blue-500 group ${
                   isDark 
                     ? 'bg-gray-800 text-white hover:bg-gray-700' 
@@ -560,10 +556,10 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+
+          {/* Bottom Banner Ad - Removed to reduce ad density */}
+          
         </div>
-        
-        {/* Additional bottom spacing for mobile navigation */}
-        <div className="h-8 sm:h-12"></div>
       </main>
       
       {/* Child Registration Modal */}
@@ -575,8 +571,15 @@ const Dashboard = () => {
           window.location.reload();
         }}
       />
+      
+      {/* Development mode indicator - hidden in production and on mobile */}
+      {import.meta.env.DEV && window.innerWidth > 768 && (
+        <div className="hidden md:block fixed bottom-4 left-4 p-2 bg-gray-200 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-300 opacity-50 hover:opacity-100 transition-opacity">
+          Dev Mode
+        </div>
+      )}
     </div>
   );
 };
 
-export default Dashboard;
+export default Dashboard; 

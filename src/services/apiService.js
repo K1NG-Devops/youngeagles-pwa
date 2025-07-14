@@ -126,9 +126,26 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
+    const user = localStorage.getItem('user');
+    
+    // Enhanced debugging
+    console.log('🔍 Request Interceptor Debug:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      fullUrl: `${config.baseURL}${config.url}`,
+      hasToken: !!token,
+      tokenPrefix: token ? token.substring(0, 10) + '...' : 'None',
+      userInStorage: !!user,
+      headers: config.headers
+    });
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ Auth token added to request');
+    } else {
+      console.log('⚠️ No auth token found in localStorage');
     }
+    
     console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },

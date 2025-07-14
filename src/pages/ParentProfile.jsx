@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/apiService';
 import nativeNotificationService from '../services/nativeNotificationService.js';
-import { ProfilePicture } from '../components/OptimizedImage';
 import { 
   FaUser, 
   FaChild, 
@@ -47,6 +46,7 @@ const ParentProfile = () => {
     newPassword: '',
     confirmPassword: ''
   });
+  const [forceUpdate, setForceUpdate] = useState(0); // State to force re-render
 
   // Initialize profile data and refresh profile picture
   useEffect(() => {
@@ -74,6 +74,11 @@ const ParentProfile = () => {
       });
       
       fetchChildren();
+      
+      // Force profile picture refresh after a delay to ensure context is loaded
+      setTimeout(() => {
+        setForceUpdate(prev => prev + 1);
+      }, 500);
     }
   }, [user]);
 
@@ -175,6 +180,11 @@ const ParentProfile = () => {
           profile_picture: serverImageUrl,
           avatar: serverImageUrl
         }));
+        
+        // Force multiple re-renders to ensure update takes
+        setForceUpdate(prev => prev + 1);
+        setTimeout(() => setForceUpdate(prev => prev + 1), 100);
+        setTimeout(() => setForceUpdate(prev => prev + 1), 500);
         
         nativeNotificationService.success('Profile picture updated successfully!');
         
@@ -284,7 +294,8 @@ const ParentProfile = () => {
       profilePic,
       profileData: profileData,
       userContext: user,
-      hasImage: !!profilePic
+      hasImage: !!profilePic,
+      forceUpdate
     });
     
     // Ensure the URL is properly formatted for server URLs
@@ -366,17 +377,46 @@ const ParentProfile = () => {
               </button>
             </div>
           </header>
+          
           {/* Enhanced Profile Picture Section - Mobile First */}
           <div className="flex items-center justify-center mb-6 sm:mb-8">
             <div className="profile-picture-container relative group">
-              <ProfilePicture
-                user={user}
-                size={144}
-                className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 hover:scale-105 transition-transform duration-300 shadow-xl border-4 border-blue-200 dark:border-blue-800"
-                fallbackClassName="text-3xl sm:text-4xl md:text-5xl"
-                showHoverEffect={true}
-              />
-
+              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800 shadow-xl smooth-animation hover-lift"  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                {!getProfilePictureUrl() && (
+                  <div className="loading-skeleton w-full h-full absolute inset-0 rounded-full"></div>
+                )}
+                {getProfilePictureUrl() ? (
+                  <img 
+                    src={getProfilePictureUrl()} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
+                    key={`profile-pic-${forceUpdate}-${Date.now()}`} // Force re-render
+                    onLoad={(e) => {
+                      console.log('✅ Profile picture loaded successfully:', e.target.src);
+                      e.target.style.display = 'block';
+                      // Hide the placeholder
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'none';
+                    }}
+                    onError={(e) => {
+                      console.error('❌ Profile picture failed to load:', e.target.src);
+                      console.error('Error details:', e);
+                      // Hide the image and show placeholder
+                      e.target.style.display = 'none';
+                      const placeholder = e.target.nextElementSibling;
+                      if (placeholder) placeholder.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                {/* Fallback placeholder */}
+                <div 
+                  className={`w-full h-full flex items-center justify-center ${getProfilePictureUrl() ? 'hidden' : 'flex'}`}
+                  style={{ display: getProfilePictureUrl() ? 'none' : 'flex' }}
+                >
+                  <FaUser className="text-3xl sm:text-4xl md:text-5xl text-gray-400 dark:text-gray-500" />
+                </div>
+              </div>
+              
               {/* Enhanced Upload Button */}
               <div className="absolute -bottom-1 sm:-bottom-2 -right-1 sm:-right-2">
                 <label 

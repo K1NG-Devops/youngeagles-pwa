@@ -25,9 +25,10 @@ const Children = () => {
     const fetchChildren = async () => {
       try {
         setIsLoading(true);
+        
         let response;
 
-        if (user?.role === 'parent') {
+        if (user?.userType === 'parent') {
           // Parents can only see their own children
           response = await apiService.children.getByParent(user.id);
         } else {
@@ -67,12 +68,12 @@ const Children = () => {
           <FaChild className={`text-6xl mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
           <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Children Found</h2>
           <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            {user?.role === 'parent' 
+            {user?.userType === 'parent' 
               ? 'You don\'t have any children registered yet.' 
               : 'No children are currently registered in the system.'
             }
           </p>
-          {user?.role !== 'parent' && (
+          {user?.userType !== 'parent' && (
             <FeatureGuard feature="maxChildren" showUpgrade={true} blockAccess={false}>
               <button 
                 onClick={() => {
@@ -97,8 +98,6 @@ const Children = () => {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-6`}>
       <div className="max-w-6xl mx-auto px-2 sm:px-6 space-y-6">
-        {/* Header Ad - Removed */}
-        
         {/* Header */}       
         <div className={`p-2 mt-18 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center justify-between">
@@ -114,7 +113,7 @@ const Children = () => {
             </button>
             <div>
               <h2 className={`text-2xl mr-8 font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {user?.role === 'parent' ? 'My Children' : 'All Children'}
+                {user?.userType === 'parent' ? 'My Children' : 'All Children'}
               </h2>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
                 Total: {children.length} {children.length === 1 ? 'child' : 'children'}
@@ -129,7 +128,7 @@ const Children = () => {
                 )}
               </div>
               
-              {user?.role !== 'parent' && (
+              {user?.userType !== 'parent' && (
                 <button 
                   onClick={() => {
                     if (checkChildLimit()) {
@@ -159,12 +158,6 @@ const Children = () => {
             </div>
           </div>
         </div>
-
-        {/* Header Ad */}
-        <HeaderAd />
-
-        {/* Content Ad */}
-        <ContentAd />
 
         {/* Children Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -242,7 +235,7 @@ const Children = () => {
                 >
                   View Details
                 </button>
-                {user?.role !== 'parent' && (
+                {user?.userType !== 'parent' && (
                   <button 
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -258,7 +251,7 @@ const Children = () => {
         </div>
 
         {/* Quick Actions (for non-parents) */}
-        {user?.role !== 'parent' && (
+        {user?.userType !== 'parent' && (
           <div className={`p-6 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Quick Actions</h3>
             <div className="flex flex-wrap gap-3">
@@ -290,8 +283,8 @@ const Children = () => {
           </div>
         )}
         
-        {/* Bottom Content Ad */}
-        <ContentBottomAd pageType="children" className="mt-8" />
+        {/* Single Content Ad */}
+        <ContentAd />
       </div>
     </div>
   );
