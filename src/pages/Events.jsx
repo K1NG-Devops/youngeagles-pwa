@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
 import { FaCalendarAlt, FaBell, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
-import SmartAdManager from '../components/ads/SmartAdManager';
+import { HeaderAd, ContentAd, FooterAd } from '../components/ads/AdComponents';
 
 const Events = () => {
   const { isDark } = useTheme();
@@ -75,19 +75,11 @@ const Events = () => {
           <p className="text-purple-100 text-sm">Stay updated with school events and important dates</p>
         </div>
 
-        {/* Top Banner Ad - Smart placement */}
-        <SmartAdManager 
-          position="header" 
-          pageType="events" 
-          className="my-4"
-        />
+        {/* Header Ad */}
+        <HeaderAd />
 
-        {/* Content Middle Ad - Strategic placement before events list */}
-        <SmartAdManager 
-          position="content-middle" 
-          pageType="events" 
-          className="my-4"
-        />
+        {/* Content Ad */}
+        <ContentAd />
 
         {events.length === 0 ? (
           <div className={`p-6 text-center rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -137,32 +129,17 @@ const Events = () => {
                   <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-relaxed`}>{event.description}</p>
                 </div>
 
-                {/* Rectangle Ad after every 4th event - reduced frequency */}
+                {/* Content Ad after every 4th event */}
                 {(index + 1) % 4 === 0 && index < events.length - 1 && (
-                  <SmartAdManager 
-                    position="content-list" 
-                    pageType="events" 
-                    className="my-4"
-                  />
+                  <ContentAd />
                 )}
               </React.Fragment>
             );
           })
         )}
         
-        {/* Native Ad - Strategic placement after events list */}
-        <SmartAdManager 
-          position="native" 
-          pageType="events" 
-          className="my-4"
-        />
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-2xl">
-          <SmartAdManager 
-            position="native" 
-            pageType="events" 
-            className="my-4"
-          />
-        </div>
+        {/* Footer Ad */}
+        <FooterAd />
 
         {/* Admin Updates Section */}
         <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>

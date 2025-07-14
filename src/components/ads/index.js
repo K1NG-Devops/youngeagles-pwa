@@ -1,26 +1,26 @@
-// Strategic Ad Management Components
-export { default as AdManager } from './AdManager';
+// Simplified Ad Management Components (New System)
+export { default as SimpleAd } from './SimpleAd';
+export { default as UnrestrictedAd } from './UnrestrictedAd';
 export { 
   HeaderAd, 
-  SidebarAd, 
-  ContentTopAd, 
-  ContentMiddleAd, 
-  ContentBottomAd, 
   FooterAd, 
-  FloatingAd 
-} from './AdManager';
+  SidebarAd, 
+  ContentAd, 
+  NativeAd, 
+  MobileAd 
+} from './AdComponents';
 
-// Individual Ad Components
-export { default as BannerAd } from './BannerAd';
-export { default as RectangleAd } from './RectangleAd';
-export { default as NativeAd } from './NativeAd';
-export { default as InterstitialAd } from './InterstitialAd';
+// Core AdSense Component
 export { default as GoogleAdSense } from './GoogleAdSense';
-export { default as BottomBannerAd } from './BottomBannerAd';
+
+// Utility Components  
+export { default as LazyAd } from './LazyAd';
+export { default as AutoAds } from './AutoAds';
+export { default as GoogleAutoAds } from './GoogleAutoAds';
 
 // Analytics Components
 export { default as AdAnalytics } from './AdAnalytics';
 
-// Testing Components
+// Testing Components (Dev only)
 export { default as LocalAdTester } from './LocalAdTester';
 export { ProductionAdControls } from './LocalAdTester';

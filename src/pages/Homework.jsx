@@ -19,7 +19,8 @@ import {
   FaGamepad,
   FaArrowLeft
 } from 'react-icons/fa';
-import SmartAdManager from '../components/ads/SmartAdManager';
+// Simplified Ad Component
+import { NativeAd } from '../components/ads/AdComponents';
 
 const Homework = () => {
   const { user } = useAuth();
@@ -518,12 +519,10 @@ const Homework = () => {
               </div>
             ))}
             
-            {/* Ad placed once after all homework assignments */}
-            <SmartAdManager 
-              position="native" 
-              pageType="homework" 
-              className="my-4"
-            />
+            {/* Native Ad - Seamless integration */}
+            <div className="my-4">
+              <NativeAd />
+            </div>
           </div>
         )}
       </div>

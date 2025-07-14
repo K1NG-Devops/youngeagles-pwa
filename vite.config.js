@@ -91,7 +91,8 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: true,
-        drop_debugger: true
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug']
       },
       format: {
         comments: false
@@ -103,6 +104,7 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom'],
           'vendor-router': ['react-router-dom'],
           'vendor-utils': ['axios', 'react-icons'],
+          'vendor-ui': ['@headlessui/react', 'framer-motion']
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
@@ -123,10 +125,12 @@ export default defineConfig({
       }
     },
     target: ['es2015', 'chrome87', 'safari13'],
-    chunkSizeWarningLimit: 2000,
-    assetsInlineLimit: 4096,
+    chunkSizeWarningLimit: 1000, // Reduced from 2000
+    assetsInlineLimit: 2048, // Reduced from 4096
     reportCompressedSize: false,
     cssCodeSplit: true,
-    emptyOutDir: true
+    emptyOutDir: true,
+    // Enable tree shaking
+    treeshake: true
   }
 }) 

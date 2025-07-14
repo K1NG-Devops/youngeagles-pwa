@@ -286,7 +286,21 @@ const apiService = {
   children: {
     getAll: () => apiClient.get('/api/children'),
     getById: (id) => apiClient.get(`/api/children/${id}`),
-    getByParent: (parentId) => apiClient.get(`/api/children/parent/${parentId}`)
+    getByParent: (parentId) => apiClient.get(`/api/children/parent/${parentId}`),
+    
+    // Child registration endpoints
+    search: (searchTerm) => apiClient.get(`/api/children/search?q=${encodeURIComponent(searchTerm)}`),
+    register: (childData) => apiClient.post('/api/children/register', childData),
+    linkToParent: (childId, parentId) => apiClient.post('/api/children/link-parent', { childId, parentId }),
+    
+    // Create new child (complete registration)
+    create: (childData) => apiClient.post('/api/children', childData),
+    
+    // Update child information
+    update: (childId, childData) => apiClient.put(`/api/children/${childId}`, childData),
+    
+    // Delete child record
+    delete: (childId) => apiClient.delete(`/api/children/${childId}`)
   },
 
   // Classes endpoints
@@ -632,7 +646,57 @@ const apiService = {
     
     validateTeacherToken: (teacherToken) => apiClient.post('/api/parent/validate-teacher-token', {
       teacherToken
-    })
+    }),
+    
+    // Parent management (admin endpoints)
+    admin: {
+      // Get all parents with filtering and pagination
+      getAll: (filters = {}) => {
+        const params = new URLSearchParams(filters);
+        return apiClient.get(`/api/admin/parents?${params}`);
+      },
+      
+      // Get pending child registrations
+      getPendingRegistrations: () => apiClient.get('/api/admin/parents/pending-registrations'),
+      
+      // Get pending parent-child links
+      getPendingLinks: () => apiClient.get('/api/admin/parents/pending-links'),
+      
+      // Approve child registration
+      approveRegistration: (registrationId, data = {}) => 
+        apiClient.post(`/api/admin/parents/registrations/${registrationId}/approve`, data),
+      
+      // Reject child registration
+      rejectRegistration: (registrationId, data = {}) => 
+        apiClient.post(`/api/admin/parents/registrations/${registrationId}/reject`, data),
+      
+      // Approve parent-child link
+      approveLink: (linkId, data = {}) => 
+        apiClient.post(`/api/admin/parents/links/${linkId}/approve`, data),
+      
+      // Reject parent-child link
+      rejectLink: (linkId, data = {}) => 
+        apiClient.post(`/api/admin/parents/links/${linkId}/reject`, data),
+      
+      // Update parent category
+      updateCategory: (parentId, category) => 
+        apiClient.put(`/api/admin/parents/${parentId}/category`, { category }),
+      
+      // Get parent statistics
+      getStats: () => apiClient.get('/api/admin/parents/stats'),
+      
+      // Export parent data
+      exportData: (filters = {}) => {
+        const params = new URLSearchParams(filters);
+        return apiClient.get(`/api/admin/parents/export?${params}`, {
+          responseType: 'blob'
+        });
+      },
+      
+      // Send admin notification
+      sendNotification: (notificationData) => 
+        apiClient.post('/api/admin/notifications/send', notificationData)
+    }
   },
 
   // Teacher endpoints

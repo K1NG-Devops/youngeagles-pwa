@@ -2,28 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
   FaUser, 
-  FaCrown, 
   FaCalendarAlt, 
   FaMoneyBillWave, 
-  FaEdit, 
-  FaTrash, 
   FaPlus,
-  FaHistory,
   FaSync,
   FaDownload,
   FaSearch,
-  FaFilter,
-  FaChartBar,
   FaExclamationTriangle,
-  FaCheckCircle,
   FaTimesCircle,
   FaClock,
   FaArrowUp,
   FaArrowDown,
   FaEquals,
   FaEye,
-  FaUserCheck,
-  FaUserTimes,
   FaChartLine,
   FaGift,
   FaPercent
@@ -44,6 +35,7 @@ const EnhancedSubscriptionManagement = () => {
   const [dateRangeFilter, setDateRangeFilter] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
+  const [showBulkExtendModal, setShowBulkExtendModal] = useState(false);
   const [selectedSubscriptions, setSelectedSubscriptions] = useState([]);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,6 +58,8 @@ const EnhancedSubscriptionManagement = () => {
   const [upcomingRenewals, setUpcomingRenewals] = useState([]);
   const [expiringTrials, setExpiringTrials] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [showUpcomingRenewals, setShowUpcomingRenewals] = useState(false);
+  const [showExpiringTrials, setShowExpiringTrials] = useState(false);
 
   useEffect(() => {
     loadSubscriptionData();

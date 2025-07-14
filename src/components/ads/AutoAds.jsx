@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 
+// Global flag to prevent multiple Auto Ads initializations
+let isAutoAdsInitialized = false;
+
 const AutoAds = ({ 
   enableAutoAds = true,
   enablePageLevelAds = true,
@@ -20,10 +23,13 @@ const AutoAds = ({
       return;
     }
 
-    // Prevent multiple initializations
-    if (isInitialized.current) {
+    // Prevent multiple initializations globally
+    if (isAutoAdsInitialized || isInitialized.current) {
+      console.log('⚠️ AutoAds already initialized, skipping duplicate initialization');
       return;
     }
+
+    const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX';
 
     // Check if AdSense script is already loaded
     if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
@@ -32,7 +38,7 @@ const AutoAds = ({
       script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
       script.async = true;
       script.crossOrigin = 'anonymous';
-      script.setAttribute('data-ad-client', import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX');
+      script.setAttribute('data-ad-client', publisherId);
       document.head.appendChild(script);
     }
 
@@ -42,20 +48,28 @@ const AutoAds = ({
     // Only configure Auto Ads once
     if (enableAutoAds && enablePageLevelAds) {
       try {
-        window.adsbygoogle.push({
-          google_ad_client: import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX',
-          enable_page_level_ads: true,
-          overlays: {
-            bottom: enableAnchorAds
-          },
-          vignette: {
-            enable: enableVignetteAds
-          }
-        });
-        
-        // Mark as initialized to prevent duplicate calls
-        isInitialized.current = true;
-        console.log('✅ Google Auto Ads initialized successfully');
+        // Check if page-level ads config already exists using a flag
+        if (!window._autoAdsConfigured) {
+          window.adsbygoogle.push({
+            google_ad_client: publisherId,
+            enable_page_level_ads: true,
+            overlays: {
+              bottom: enableAnchorAds
+            },
+            vignette: {
+              enable: enableVignetteAds
+            }
+          });
+          
+          // Mark as initialized globally and locally
+          window._autoAdsConfigured = true;
+          isAutoAdsInitialized = true;
+          isInitialized.current = true;
+          console.log('✅ Google Auto Ads initialized successfully');
+        } else {
+          console.log('⚠️ Page-level ads already configured, skipping duplicate');
+          isInitialized.current = true;
+        }
       } catch (error) {
         console.error('❌ Error initializing Google Auto Ads:', error);
       }

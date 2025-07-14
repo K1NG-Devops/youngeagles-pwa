@@ -87,36 +87,54 @@ const Layout = () => {
     }
   };
 
-  // Calculate proper padding for clean layout
+  // Calculate proper padding for clean layout - ENHANCED FOR BETTER UX AND AD INTEGRATION
   const getContentClasses = () => {
-    let classes = 'flex-grow relative';
+    let classes = 'flex-grow relative min-h-0'; // Added min-h-0 for flex issues
     
-    // Add padding based on what's showing
+    // Add padding based on what's showing - optimized spacing
     if (showGlobalHeader) classes += ' pt-16';
-    if (showSubscriptionBanner) classes += ' pt-10';
+    if (showSubscriptionBanner) classes += ' pt-8'; // Reduced from pt-10
     
-    // Add padding based on navigation style
+    // Add padding based on navigation style - FIXED OVERLAP ISSUES
     switch (navigationStyle) {
     case NAVIGATION_STYLES.TOP:
-      classes += ' pt-16'; // Top navigation needs top padding
+      classes += ' pt-14'; // Slightly reduced for better mobile experience
       break;
-    case NAVIGATION_STYLES.BOTTOM:
-      // Minimal bottom padding when ads are shown to reduce gap
-      if (showAds()) {
-        classes += ' pb-16'; // Reduced from pb-20 to pb-16
+    case NAVIGATION_STYLES.BOTTOM: {
+      // ENHANCED: Better bottom spacing that accounts for ads and device variations
+      const isMobile = window.innerWidth < 768;
+      const hasAds = showAds() && isAuthenticated;
+      const hasSafeArea = typeof window !== 'undefined' && window.CSS && window.CSS.supports('padding-bottom', 'env(safe-area-inset-bottom)');
+      
+      if (hasAds && isMobile) {
+        classes += hasSafeArea ? ' pb-28' : ' pb-24'; // Extra space for ads + safe area on mobile
+      } else if (hasAds) {
+        classes += ' pb-20'; // Space for ads on desktop
+      } else if (isMobile && hasSafeArea) {
+        classes += ' pb-20'; // Safe area padding on mobile without ads
       } else {
         classes += ' pb-16'; // Standard padding when no ads
       }
       break;
+    }
     case NAVIGATION_STYLES.SIDE:
-      classes += ' pl-0'; // Side navigation doesn't need padding as it's overlay
+      classes += ' pl-0 md:pl-64'; // Responsive side navigation padding
       break;
     case NAVIGATION_STYLES.FLOATING:
-      classes += ' pb-4'; // Minimal padding for floating navigation
+      classes += ' pb-6'; // Slightly more space for floating nav
       break;
-    default:
-      classes += ' pb-16';
+    default: {
+      const defaultHasAds = showAds() && isAuthenticated;
+      classes += defaultHasAds ? ' pb-20' : ' pb-16';
+      break;
     }
+    }
+    
+    // Add safe area padding for iOS devices with enhanced support
+    classes += ' safe-area-padding';
+    
+    // Add scroll padding for better scrolling experience
+    classes += ' scroll-padding';
     
     return classes;
   };

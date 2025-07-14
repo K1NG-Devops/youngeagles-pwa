@@ -16,6 +16,7 @@
     "test:build": "npm run build && npm run preview"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
     "axios": "^1.10.0",
     "crypto-js": "^4.2.0",
     "framer-motion": "^12.23.3",

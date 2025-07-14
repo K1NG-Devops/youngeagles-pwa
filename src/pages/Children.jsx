@@ -7,7 +7,7 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 import { FaChild, FaCalendarAlt, FaUser, FaArrowLeft, FaPhone, FaPlus, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import FeatureGuard, { useFeatureAccess } from '../components/FeatureGuard';
-// import { HeaderAd, ContentMiddleAd } from '../components/ads'; // Removed - ads disabled
+import { HeaderAd, ContentAd } from '../components/ads/AdComponents';
 
 const Children = () => {
   const { user } = useAuth();
@@ -160,7 +160,11 @@ const Children = () => {
           </div>
         </div>
 
-        {/* Content Middle Ad - Removed */}
+        {/* Header Ad */}
+        <HeaderAd />
+
+        {/* Content Ad */}
+        <ContentAd />
 
         {/* Children Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

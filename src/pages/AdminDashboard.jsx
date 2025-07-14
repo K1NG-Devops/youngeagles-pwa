@@ -25,11 +25,15 @@ import {
   FaEye,
   FaUserShield,
   FaChartLine,
-  FaAd
+  FaAd,
+  FaUserCog,
+  FaUserCheck,
+  FaArrowLeft
 } from 'react-icons/fa';
 import Header from '../components/Header';
 import { useTheme } from '../contexts/ThemeContext';
 import AdAnalytics from '../components/ads/AdAnalytics';
+import ParentManagement from '../components/admin/ParentManagement';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -56,6 +60,7 @@ const AdminDashboard = () => {
   });
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showAdAnalytics, setShowAdAnalytics] = useState(false);
+  const [showParentManagement, setShowParentManagement] = useState(false);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -184,6 +189,33 @@ const AdminDashboard = () => {
           <FaUserShield className="text-6xl text-red-500 mx-auto mb-4" />
           <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Access Denied</h2>
           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>You need admin privileges to access this page.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show ParentManagement if selected
+  if (showParentManagement) {
+    return (
+      <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <Header />
+        <div className="pt-20 pb-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-6">
+              <button
+                onClick={() => setShowParentManagement(false)}
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  isDark 
+                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <FaArrowLeft className="w-4 h-4 mr-2" />
+                Back to Admin Dashboard
+              </button>
+            </div>
+            <ParentManagement />
+          </div>
         </div>
       </div>
     );
@@ -440,6 +472,26 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </Link>
+
+            {/* Parent Management */}
+            <button
+              onClick={() => setShowParentManagement(true)}
+              className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md hover:scale-105 text-left ${
+                isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-100 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center mb-4">
+                <FaUserCog className="text-3xl text-orange-500 mr-4" />
+                <div>
+                  <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Parent Management
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Manage parent registrations and approvals
+                  </p>
+                </div>
+              </div>
+            </button>
           </div>
 
           {/* Admin Information Panels */}
