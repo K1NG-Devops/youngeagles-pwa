@@ -28,7 +28,7 @@ export default defineConfig({
     react({
       jsxRuntime: 'automatic',
       jsxImportSource: 'react',
-      fastRefresh: true,
+      fastRefresh: process.env.NODE_ENV !== 'production',
       babel: {
         plugins: [
           ['@babel/plugin-transform-react-jsx', {
