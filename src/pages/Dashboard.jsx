@@ -255,12 +255,6 @@ const Dashboard = () => {
       <Header />
       <NativeAppEnhancements />
       
-      {/* Swipe Instructions - Mobile Only */}
-      <div className="md:hidden bg-blue-100 dark:bg-blue-900/20 border-l-4 border-blue-500 p-3 mx-4 sm:mx-6 lg:mx-8 mb-4 rounded-r">
-        <p className="text-xs text-blue-700 dark:text-blue-300">
-          💡 Swipe: ← Homework | → Activities | ↑ More Stats | ↓ Profile
-        </p>
-      </div>
       
       <main className="pt-0 pb-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

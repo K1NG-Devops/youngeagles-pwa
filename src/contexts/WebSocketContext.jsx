@@ -31,16 +31,22 @@ export const WebSocketProvider = ({ children }) => {
       return;
     }
 
+    // Skip WebSocket connection if not available
+    if (!API_BASE_URL || API_BASE_URL.includes('localhost')) {
+      console.log('WebSocket disabled in production or localhost environment');
+      return;
+    }
+
     const newSocket = io(API_BASE_URL, {
       auth: {
         token
       },
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 2000,
       reconnectionDelayMax: 5000,
-      timeout: 20000
+      timeout: 10000
     });
 
     // Connection events
