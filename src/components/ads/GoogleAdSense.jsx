@@ -59,7 +59,19 @@ const GoogleAdSense = ({
     <ins
       ref={adRef}
       className={`adsbygoogle ${className}`}
-      style={{ display: 'block', width: '100%', ...style }}
+      style={{ 
+        display: 'block', 
+        width: '100%', 
+        height: 'auto',
+        margin: '16px 0',
+        padding: 0,
+        overflow: 'visible',
+        maxWidth: 'none',
+        maxHeight: 'none',
+        minWidth: 'unset',
+        minHeight: 'unset',
+        ...style 
+      }}
       data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-XXXXXXXXX'}
       data-ad-slot={adSlot}
       data-ad-format={adFormat}

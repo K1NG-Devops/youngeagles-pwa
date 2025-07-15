@@ -79,38 +79,21 @@ const LazyAd = ({
     return showPlaceholderWhenEmpty && placeholder ? placeholder : null;
   }
 
-  // Get responsive dimensions based on format and screen size
-  const getResponsiveDimensions = () => {
-    const isSmall = window.innerWidth < 640;
-    const isMedium = window.innerWidth < 1024;
-    
-    const dimensions = {
+  // Get completely unrestricted dimensions - let Google optimize
+  const getUnrestrictedDimensions = () => {
+    return {
       display: 'block',
       width: '100%',
-      margin: 0,
+      height: 'auto',
+      margin: '16px 0',
       padding: 0,
+      overflow: 'visible',
+      maxWidth: 'none',
+      maxHeight: 'none',
+      minWidth: 'unset',
+      minHeight: 'unset',
       ...style
     };
-    
-    // Set responsive height based on format
-    switch (adFormat) {
-    case 'horizontal':
-    case 'banner':
-      dimensions.minHeight = isSmall ? '50px' : '90px';
-      dimensions.maxHeight = isSmall ? '100px' : '120px';
-      break;
-    case 'rectangle':
-      dimensions.minHeight = isSmall ? '200px' : '250px';
-      dimensions.width = isSmall ? '100%' : 'auto';
-      break;
-    case 'fluid':
-      dimensions.minHeight = isSmall ? '100px' : '150px';
-      break;
-    default:
-      dimensions.minHeight = isSmall ? '50px' : (style.minHeight || '90px');
-    }
-    
-    return dimensions;
   };
 
   if (!isVisible) {
@@ -118,7 +101,7 @@ const LazyAd = ({
     if (placeholder) {
       return React.cloneElement(placeholder, {
         ref: adRef,
-        style: getResponsiveDimensions()
+        style: getUnrestrictedDimensions()
       });
     }
     
@@ -127,7 +110,7 @@ const LazyAd = ({
       <div 
         ref={adRef}
         className={className}
-        style={getResponsiveDimensions()}
+        style={getUnrestrictedDimensions()}
       />
     );
   }
@@ -139,7 +122,7 @@ const LazyAd = ({
         ref={adRef}
         className={className}
         style={{
-          ...getResponsiveDimensions(),
+          ...getUnrestrictedDimensions(),
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -159,7 +142,7 @@ const LazyAd = ({
     adSlot,
     adFormat,
     className,
-    style: getResponsiveDimensions(),
+    style: getUnrestrictedDimensions(),
     ...props
   };
 

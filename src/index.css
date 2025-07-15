@@ -235,147 +235,74 @@ body, html {
   overflow-x: hidden !important;
 }
 
-/* Google AdSense - Full Display (No Cropping) */
+/* Google AdSense - Completely Unrestricted (No Cropping) */
 .adsbygoogle {
   display: block !important;
   text-align: center;
-  margin: 0;
+  margin: 16px 0;
   overflow: visible !important;
   width: 100% !important;
   height: auto !important;
   max-width: none !important;
   max-height: none !important;
+  min-width: unset !important;
+  min-height: unset !important;
   border: none !important;
   padding: 0 !important;
 }
 
-/* Remove forced dimensions to let Google optimize */
-.adsbygoogle[data-ad-format="auto"] {
+/* Remove ALL constraints from responsive ads */
+.adsbygoogle[data-ad-format="auto"],
+.adsbygoogle[data-ad-format="fluid"],
+.adsbygoogle[data-full-width-responsive="true"] {
   width: 100% !important;
   height: auto !important;
   min-height: unset !important;
   max-width: none !important;
   max-height: none !important;
-}
-
-/* Ensure ads are responsive and unrestricted */
-.adsbygoogle[data-full-width-responsive="true"] {
-  width: 100% !important;
+  min-width: unset !important;
   overflow: visible !important;
-  max-width: none !important;
-  max-height: none !important;
 }
 
-/* Mobile specific ad sizing - Full viewport */
-@media (max-width: 640px) {
-  .adsbygoogle {
-    width: 100vw !important;
-    max-width: none !important;
-    margin-left: calc(-50vw + 50%) !important;
-    margin-right: calc(-50vw + 50%) !important;
-    height: auto !important;
-    min-height: unset !important;
-    max-height: none !important;
-  }
-  
-  .ad-container {
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100vw !important;
-    max-width: none !important;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw !important;
-    margin-right: -50vw !important;
-    overflow: visible !important;
-  }
-}
-
-/* Remove all height restrictions */
-@media (max-width: 640px) {
-  .adsbygoogle {
-    min-height: unset !important;
-    max-height: none !important;
-  }
-}
-
-@media (min-width: 641px) {
-  .adsbygoogle {
-    min-height: unset !important;
-    max-height: none !important;
-  }
-}
-
-/* Natural ad spacing - no restrictions */
-.adsbygoogle {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
-/* Remove dark mode restrictions */
-.dark .adsbygoogle {
-  background-color: transparent;
-  border-radius: 0;
-  padding: 0;
-}
-
-/* Minimal loading state for ads */
-.adsbygoogle:empty {
-  min-height: unset;
-  background: transparent;
-  border-radius: 0;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Ad Container - No restrictions */
+/* Ad Container - Completely flexible */
 .ad-container {
   width: 100%;
   position: relative;
   margin: 0 auto;
   overflow: visible !important;
-}
-
-/* Ensure ad content has no bounds */
-.ad-container .adsbygoogle {
-  max-width: none !important;
+  min-height: unset !important;
   max-height: none !important;
-  position: relative !important;
-  width: 100% !important;
-  height: auto !important;
 }
 
-/* Allow ads to expand naturally */
+/* Allow ALL ad content to expand freely */
+.ad-container .adsbygoogle,
 .ad-container iframe,
 .ad-container ins,
 .ad-container div {
   max-width: none !important;
   max-height: none !important;
+  min-width: unset !important;
+  min-height: unset !important;
   width: auto !important;
   height: auto !important;
+  overflow: visible !important;
 }
 
-/* Remove responsive ad restrictions */
+/* Remove ALL mobile constraints */
 @media (max-width: 640px) {
+  .adsbygoogle,
   .ad-container {
-    min-height: unset;
-    max-height: none;
+    min-height: unset !important;
+    max-height: none !important;
     overflow: visible !important;
   }
 }
 
 @media (min-width: 641px) {
+  .adsbygoogle,
   .ad-container {
-    min-height: unset;
-    max-height: none;
+    min-height: unset !important;
+    max-height: none !important;
     overflow: visible !important;
   }
 }
