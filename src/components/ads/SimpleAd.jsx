@@ -21,6 +21,12 @@ const SimpleAd = ({
   useEffect(() => {
     if (!shouldShowAds || !adRef.current) return;
 
+    // Skip ads in development if AdSense script not loaded
+    if (!window.adsbygoogle) {
+      // console.log('AdSense script not loaded, skipping ad initialization');
+      return;
+    }
+
     // Initialize AdSense
     window.adsbygoogle = window.adsbygoogle || [];
     
@@ -29,10 +35,10 @@ const SimpleAd = ({
         window.adsbygoogle.push({});
         setIsLoaded(true);
       } catch (error) {
-        console.error('AdSense error:', error);
+        // Silent error handling in development
         setHasError(true);
       }
-    }, 100);
+    }, 500); // Increased delay for better loading
 
     return () => clearTimeout(timer);
   }, [adSlot, shouldShowAds]);

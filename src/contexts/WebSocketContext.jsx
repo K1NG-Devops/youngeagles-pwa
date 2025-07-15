@@ -31,9 +31,9 @@ export const WebSocketProvider = ({ children }) => {
       return;
     }
 
-    // Skip WebSocket connection if not available
-    if (!API_BASE_URL || API_BASE_URL.includes('localhost')) {
-      console.log('WebSocket disabled in production or localhost environment');
+    // Skip WebSocket connection in development/localhost
+    if (!API_BASE_URL || API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1') || import.meta.env.DEV) {
+      // console.log('WebSocket disabled in development environment');
       return;
     }
 
