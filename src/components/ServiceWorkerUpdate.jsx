@@ -84,6 +84,9 @@ const ServiceWorkerUpdate = () => {
     setIsUpdating(true);
     
     try {
+      // Hide the notification immediately
+      setShowUpdate(false);
+      
       if (waitingWorker) {
         // Tell waiting service worker to skip waiting
         waitingWorker.postMessage({ type: 'SKIP_WAITING' });
@@ -100,11 +103,13 @@ const ServiceWorkerUpdate = () => {
     } catch (error) {
       console.error('Error updating service worker:', error);
       setIsUpdating(false);
+      setShowUpdate(true); // Show again if error
     }
   };
 
   const handleDismiss = () => {
     setShowUpdate(false);
+    setWaitingWorker(null);
   };
 
   if (!showUpdate) {

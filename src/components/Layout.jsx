@@ -92,8 +92,15 @@ const Layout = () => {
     let classes = 'flex-grow relative';
     
     // Add padding based on what's showing
-    if (showGlobalHeader) classes += ' pt-16';
-    if (showSubscriptionBanner) classes += ' pt-10';
+    if (showGlobalHeader) {
+      classes += ' pt-16';
+    } else {
+      classes += ' pt-0';
+    }
+    
+    if (showSubscriptionBanner) {
+      classes += ' pt-10';
+    }
     
     // Add padding based on navigation style
     switch (navigationStyle) {
@@ -101,21 +108,17 @@ const Layout = () => {
       classes += ' pt-16'; // Top navigation needs top padding
       break;
     case NAVIGATION_STYLES.BOTTOM:
-      // Minimal bottom padding when ads are shown to reduce gap
-      if (showAds()) {
-        classes += ' pb-16'; // Reduced from pb-20 to pb-16
-      } else {
-        classes += ' pb-16'; // Standard padding when no ads
-      }
+      // Bottom padding for tab navigation
+      classes += ' pb-20'; // Proper padding for bottom navigation
       break;
     case NAVIGATION_STYLES.SIDE:
       classes += ' pl-0'; // Side navigation doesn't need padding as it's overlay
       break;
     case NAVIGATION_STYLES.FLOATING:
-      classes += ' pb-4'; // Minimal padding for floating navigation
+      classes += ' pb-6'; // Minimal padding for floating navigation
       break;
     default:
-      classes += ' pb-16';
+      classes += ' pb-20';
     }
     
     return classes;

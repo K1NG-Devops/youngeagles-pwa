@@ -34,6 +34,7 @@ const SimpleAd = ({
     }
     
     setShouldRender(true);
+    setHasError(false); // Reset error state
   }, [shouldShowAds, adSlot]);
 
   useEffect(() => {
@@ -55,19 +56,20 @@ const SimpleAd = ({
         window.adsbygoogle.push({});
         setIsLoaded(true);
         
-        // Check if ad actually loaded after a delay
+    // Check if ad actually loaded after a delay
         setTimeout(() => {
           if (adRef.current) {
             const actualHeight = adRef.current.offsetHeight;
             setAdHeight(actualHeight);
             
-            // If ad has no height after loading, consider it failed
+            // If ad has no height after loading, still keep it visible
+            // AdSense may take time to load or may not fill every request
             if (actualHeight === 0) {
-              console.warn('Ad failed to load - no height');
-              setHasError(true);
+              console.warn('Ad may not have loaded content yet');
+              // Don't set error - give AdSense more time
             }
           }
-        }, 2000); // Increased delay for better loading
+        }, 3000); // Increased delay for better loading
       } catch (error) {
         // Log errors in production for debugging
         console.error('AdSense initialization error:', error);

@@ -251,7 +251,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} dashboard-container mobile-scroll overflow-y-auto scrollbar-hide`} style={{
+    <div ref={swipeRef} className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} dashboard-container mobile-scroll overflow-y-auto scrollbar-hide`} style={{
       WebkitOverflowScrolling: 'touch',
       overscrollBehavior: 'contain',
       scrollBehavior: 'smooth',
@@ -261,7 +261,7 @@ const Dashboard = () => {
       <NativeAppEnhancements />
       
       
-      <main className="pt-0 pb-4">
+      <main className="pt-4 pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Strategic Native Ad - Only show if ads are working */}
           {shouldShowAd && canShowMoreAds && <NativeAd />}
