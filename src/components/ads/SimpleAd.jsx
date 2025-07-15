@@ -46,52 +46,16 @@ const SimpleAd = ({
     return () => clearTimeout(timer);
   }, [adSlot, shouldShowAds]);
 
-  // Get responsive styles based on position - Mobile-optimized
+  // Minimal container styles - no large wrappers
   const getContainerStyles = () => {
-    const baseStyles = {
+    return {
       width: '100%',
-      textAlign: 'center',
-      margin: '16px 0',
+      maxWidth: '100%',
+      margin: '8px 0',
       padding: '0',
-      overflow: 'visible',
+      display: 'block',
       ...style
     };
-
-    // Position-specific adjustments - Mobile-friendly
-    switch (position) {
-    case 'header':
-      return { 
-        ...baseStyles, 
-        marginTop: '8px', 
-        marginBottom: '16px',
-        width: '100%',
-        maxWidth: '100%'
-      };
-    case 'footer': 
-      return { 
-        ...baseStyles, 
-        marginTop: '16px', 
-        marginBottom: '8px',
-        width: '100%',
-        maxWidth: '100%'
-      };
-    case 'sidebar':
-      return { 
-        ...baseStyles, 
-        margin: '16px 0',
-        width: '100%',
-        maxWidth: '100%'
-      };
-    case 'content':
-      return { 
-        ...baseStyles,
-        margin: '16px 0',
-        width: '100%',
-        maxWidth: '100%'
-      };
-    default:
-      return baseStyles;
-    }
   };
 
   // Don't render if ads are disabled, no ad slot, or has error
@@ -100,38 +64,29 @@ const SimpleAd = ({
   }
 
   return (
-    <div className={`simple-ad ${className}`} style={getContainerStyles()}>
-      {/* Ad Label - Minimal styling */}
-      {label && (
-        <div className={`text-xs mb-2 font-medium tracking-wide uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          {label}
-        </div>
-      )}
-      
-      {/* AdSense Ad Unit - Mobile-optimized */}
-      <ins
-        ref={adRef}
-        className="adsbygoogle"
-        style={{
-          display: 'block',
-          width: '100%',
-          maxWidth: '100%',
-          minHeight: '50px',
-          height: 'auto',
-          border: 'none',
-          margin: '0',
-          padding: '0',
-          overflow: 'visible',
-          position: 'relative',
-          boxSizing: 'border-box'
-        }}
-        data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID}
-        data-ad-slot={adSlot}
-        data-ad-format={adFormat}
-        data-full-width-responsive="true"
-        data-ad-test={import.meta.env.VITE_ADSENSE_TEST_MODE === 'true' ? 'on' : 'off'}
-      />
-    </div>
+    <ins
+      ref={adRef}
+      className={`adsbygoogle ${className}`}
+      style={{
+        display: 'block',
+        width: '100%',
+        maxWidth: '100%',
+        minHeight: '90px',
+        height: 'auto',
+        border: 'none',
+        margin: '8px 0',
+        padding: '0',
+        overflow: 'visible',
+        position: 'relative',
+        boxSizing: 'border-box',
+        ...style
+      }}
+      data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID}
+      data-ad-slot={adSlot}
+      data-ad-format={adFormat}
+      data-full-width-responsive="true"
+      data-ad-test={import.meta.env.VITE_ADSENSE_TEST_MODE === 'true' ? 'on' : 'off'}
+    />
   );
 };
 

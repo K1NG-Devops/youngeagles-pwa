@@ -259,9 +259,7 @@ const Dashboard = () => {
       <main className="pt-0 pb-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Strategic Native Ad - Seamless integration */}
-          <div className="mb-6">
-            <NativeAd />
-          </div>
+          <NativeAd />
 
           {/* Welcome Section - Enhanced Light Blue Gradient */}
           <div className="bg-gradient-to-br from-blue-400 via-purple-500 to-purple-600 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
@@ -415,9 +413,7 @@ const Dashboard = () => {
 
           {/* Content Ad - Native integration */}
           {userRole === 'parent' && stats.children > 0 && (
-            <div className="mb-6">
-              <ContentAd />
-            </div>
+            <ContentAd />
           )}
 
           {/* Enhanced Stats Toggle */}
