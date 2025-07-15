@@ -16,8 +16,9 @@ import {
 } from 'react-icons/fa';
 
 // Simplified Ad Components  
-import { HeaderAd, ContentAd, NativeAd, FooterAd, SidebarAd } from '../components/ads/AdComponents';
 import PageWrapper from '../components/PageWrapper';
+import BannerAd from '../components/ads/BannerAd';
+import NativeAd from '../components/ads/NativeAd';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -92,14 +93,8 @@ const Home = () => {
         overscrollBehavior: 'contain',
         scrollBehavior: 'smooth'
       }}>
-      {/* Header Ad - Native app style - Only show if configured */}
-      {import.meta.env.VITE_ADSENSE_HEADER_BANNER && (
-        <div className="w-full py-2">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <HeaderAd className="mx-auto" />
-          </div>
-        </div>
-      )}
+      {/* New Top Banner Ad */}
+      <BannerAd position="top" />
       
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -141,14 +136,8 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Native Ad After Hero Section - Only show if configured */}
-      {import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE && (
-        <div className="py-4">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <NativeAd className="mx-auto" />
-          </div>
-        </div>
-      )}
+      {/* New Inline Native Ad */}
+      <NativeAd type="feed" />
 
       {/* Features Section */}
       <div className="py-16 lg:py-24">
@@ -188,33 +177,14 @@ const Home = () => {
               ))}
             </div>
             
-            {/* Sidebar - Premium ad placement - Only show if configured */}
-            {import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER && (
-              <div className="lg:col-span-1 flex flex-col space-y-8">
-                <div className="sticky top-4">
-                  <SidebarAd />
-                </div>
-                
-                {/* Second content ad */}
-                {import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE && (
-                  <div className="hidden lg:block">
-                    <ContentAd />
-                  </div>
-                )}
-              </div>
-            )}
+            {/* New Sidebar Ad */}
+            <NativeAd type="sidebar" />
           </div>
         </div>
       </div>
 
-      {/* Middle Content - Native integration - Only show if configured */}
-      {import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE && (
-        <div className="py-4">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <NativeAd className="mx-auto" />
-          </div>
-        </div>
-      )}
+      {/* New Middle Content Ad */}
+      <NativeAd type="feed" />
 
       {/* CTA Section */}
       <div className="py-16">
@@ -239,14 +209,8 @@ const Home = () => {
         </div>
       </div>
       
-      {/* Footer Ad - Native app style - Only show if configured */}
-      {import.meta.env.VITE_ADSENSE_FOOTER_BANNER && (
-        <div className="py-4">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <FooterAd />
-          </div>
-        </div>
-      )}
+      {/* New Bottom Banner Ad */}
+      <BannerAd position="bottom" />
       </div>
     </PageWrapper>
   );

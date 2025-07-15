@@ -307,16 +307,16 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
     const loadStudents = async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Loading all students for teacher assignment');
+          console.log('🔄 Loading all students for teacher assignment...');
         }
         
         // For teachers, get all children in the system (same as Dashboard.jsx)
         const response = await apiService.children.getAll();
         if (process.env.NODE_ENV === 'development') {
-          console.log('All children response:', response);
+          console.log('📊 All children response:', response);
         }
         
-        if (response.data && response.data.children) {
+        if (response && response.data && response.data.children) {
           const allStudents = response.data.children.map(student => ({
             ...student,
             className: student.class_name || 'Unassigned',
@@ -324,21 +324,31 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
           }));
           
           if (process.env.NODE_ENV === 'development') {
-            console.log('Mapped students for assignment:', allStudents);
+            console.log('✅ Mapped students for assignment:', allStudents.length, 'students loaded');
+            console.log('Students details:', allStudents);
           }
           setStudents(allStudents);
+          
+          if (allStudents.length === 0) {
+            console.warn('⚠️ No students found in the database');
+          }
         } else {
-          console.log('No children found in database');
+          console.warn('⚠️ Invalid response structure for children data:', response);
           setStudents([]);
         }
       } catch (error) {
-        console.error('Error loading students:', error);
+        console.error('❌ Error loading students:', error);
+        nativeNotificationService.error('Failed to load students for assignment');
         setStudents([]);
       }
     };
 
     if (user?.role === 'teacher') {
       loadStudents();
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('ℹ️ User is not a teacher, skipping student loading. User role:', user?.role);
+      }
     }
   }, [user]);
 
@@ -378,17 +388,27 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
     return subjectData ? subjectData.color : 'gray';
   };
 
-  const handleAssignLesson = async (lesson) => {
+  const handleAssignLesson = async (lesson, customSelectedStudents = null) => {
     try {
+      // Use custom students if provided, otherwise use state
+      const studentsToAssign = customSelectedStudents || selectedStudents;
+      
       // Debug: Check state right before assignment
       if (process.env.NODE_ENV === 'development') {
         console.log('🎯 Starting assignment with current state:', {
           assignmentType,
-          selectedStudentsCount: selectedStudents.length,
-          selectedStudents: selectedStudents,
+          selectedStudentsCount: studentsToAssign.length,
+          selectedStudents: studentsToAssign,
+          customSelectedStudents: customSelectedStudents,
           lesson: lesson?.title,
           currentLessonToAssign: currentLessonToAssign?.title
         });
+      }
+
+      // Validation for individual assignments
+      if (assignmentType === 'individual' && studentsToAssign.length === 0) {
+        nativeNotificationService.error('No students selected for individual assignment');
+        return;
       }
 
       const homeworkData = {
@@ -396,14 +416,16 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
         description: lesson.description,
         type: 'lesson',
         lesson_id: lesson.id,
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week from now
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // MySQL format
         points: 10,
         materials: lesson.materials,
         objectives: lesson.objectives,
         duration: lesson.duration,
         difficulty: lesson.difficulty,
         classes: assignmentType === 'class' ? classes.map(c => c.id) : [],
-        students: assignmentType === 'individual' ? selectedStudents.map(s => s.id) : [],
+        selectedChildren: assignmentType === 'individual' ? studentsToAssign.map(s => s.id) : [], // Backend expects 'selectedChildren'
+        child_ids: assignmentType === 'individual' ? studentsToAssign.map(s => s.id) : [], // Alternative field name
+        students: assignmentType === 'individual' ? studentsToAssign.map(s => s.id) : [], // Keep for compatibility
         assignment_type: assignmentType
       };
 
@@ -411,8 +433,9 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
       if (process.env.NODE_ENV === 'development') {
         console.log('📤 Sending homework assignment data:', {
           ...homeworkData,
-          selectedStudentsCount: selectedStudents.length,
-          selectedStudentsIds: selectedStudents.map(s => s.id),
+          selectedStudentsCount: studentsToAssign.length,
+          selectedStudentsIds: studentsToAssign.map(s => s.id),
+          selectedChildrenIds: homeworkData.selectedChildren,
           assignmentType
         });
       }
@@ -423,14 +446,18 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
 
       const assignmentTarget = assignmentType === 'class' 
         ? `all classes (${classes.length} classes)`
-        : `${selectedStudents.length} selected student${selectedStudents.length > 1 ? 's' : ''}`;
+        : `${studentsToAssign.length} selected student${studentsToAssign.length > 1 ? 's' : ''}`;
       
       nativeNotificationService.success(`✅ "${lesson.title}" assigned to ${assignmentTarget}!`);
+      
+      // Reset state after successful assignment
       setShowAssignModal(false);
       setShowStudentSelector(false);
       setSelectedStudents([]);
       setCurrentLessonToAssign(null);
+      setAssignmentType('class'); // Reset to default
     } catch (error) {
+      console.error('Assignment error:', error);
       nativeNotificationService.error('Failed to assign lesson');
     }
   };
@@ -450,44 +477,61 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
   };
 
   const handleAssignToStudents = (lesson) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🎯 Initiating individual assignment for lesson:', lesson.title);
+    }
+    
     setAssignmentType('individual');
     setCurrentLessonToAssign(lesson);
+    setSelectedStudents([]); // Clear any previous selections
     setShowStudentSelector(true);
   };
 
   const handleStudentSelection = (student) => {
     setSelectedStudents(prev => {
       const isSelected = prev.find(s => s.id === student.id);
+      let newList;
+      
       if (isSelected) {
-        const newList = prev.filter(s => s.id !== student.id);
+        newList = prev.filter(s => s.id !== student.id);
         if (process.env.NODE_ENV === 'development') {
-          console.log('🔴 Student deselected:', student.name, 'New list:', newList);
+          console.log('🔴 Student deselected:', student.name, 'Remaining count:', newList.length);
         }
-        return newList;
       } else {
-        const newList = [...prev, student];
+        newList = [...prev, student];
         if (process.env.NODE_ENV === 'development') {
-          console.log('🟢 Student selected:', student.name, 'New list:', newList);
+          console.log('🟢 Student selected:', student.name, 'Total count:', newList.length);
         }
-        return newList;
       }
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📝 Updated selected students list:', newList.map(s => ({ id: s.id, name: s.name })));
+      }
+      
+      return newList;
     });
   };
 
   const handleConfirmStudentAssignment = () => {
+    // Capture current state of selected students to prevent race conditions
+    const studentsToAssign = [...selectedStudents];
+    
     if (process.env.NODE_ENV === 'development') {
       console.log('🎯 Confirming student assignment:', {
-        selectedStudentsCount: selectedStudents.length,
-        selectedStudents: selectedStudents,
-        studentIds: selectedStudents.map(s => s.id)
+        selectedStudentsCount: studentsToAssign.length,
+        selectedStudents: studentsToAssign,
+        studentIds: studentsToAssign.map(s => s.id),
+        currentLessonToAssign: currentLessonToAssign?.title
       });
     }
     
-    if (selectedStudents.length === 0) {
+    if (studentsToAssign.length === 0) {
       nativeNotificationService.error('Please select at least one student');
       return;
     }
-    handleAssignLesson(currentLessonToAssign);
+    
+    // Pass the captured students array to prevent state reset issues
+    handleAssignLesson(currentLessonToAssign, studentsToAssign);
   };
 
   if (isLoading) {
@@ -1004,39 +1048,59 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
             )}
 
             {/* Modal Footer */}
-            <div className="flex justify-between items-center">
-              <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                {selectedStudents.length} student{selectedStudents.length !== 1 ? 's' : ''} selected
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setShowStudentSelector(false);
-                    setSelectedStudents([]);
-                    setCurrentLessonToAssign(null);
-                  }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    isDark 
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmStudentAssignment}
-                  disabled={selectedStudents.length === 0}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    selectedStudents.length === 0
-                      ? isDark
-                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
-                >
-                  <FaUsers className="inline mr-2" />
-                  Assign to {selectedStudents.length} Student{selectedStudents.length !== 1 ? 's' : ''}
-                </button>
+            <div className="space-y-3">
+              {/* Debug info for development */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className={`p-3 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                  <h4 className={`text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    🔧 Debug Info
+                  </h4>
+                  <div className={`text-xs space-y-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <p>Total students loaded: {students.length}</p>
+                    <p>Selected students: {selectedStudents.length}</p>
+                    <p>Assignment type: {assignmentType}</p>
+                    <p>Current lesson: {currentLessonToAssign?.title || 'None'}</p>
+                    {selectedStudents.length > 0 && (
+                      <p>Selected: {selectedStudents.map(s => s.name).join(', ')}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-between items-center">
+                <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {selectedStudents.length} student{selectedStudents.length !== 1 ? 's' : ''} selected
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setShowStudentSelector(false);
+                      setSelectedStudents([]);
+                      setCurrentLessonToAssign(null);
+                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmStudentAssignment}
+                    disabled={selectedStudents.length === 0}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      selectedStudents.length === 0
+                        ? isDark
+                          ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
+                  >
+                    <FaUsers className="inline mr-2" />
+                    Assign to {selectedStudents.length} Student{selectedStudents.length !== 1 ? 's' : ''}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

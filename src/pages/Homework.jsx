@@ -19,8 +19,6 @@ import {
   FaGamepad,
   FaArrowLeft
 } from 'react-icons/fa';
-// Simplified Ad Component
-import { NativeAd } from '../components/ads/AdComponents';
 
 const Homework = () => {
   const { user } = useAuth();
@@ -519,10 +517,6 @@ const Homework = () => {
               </div>
             ))}
             
-            {/* Native Ad - Seamless integration */}
-            <div className="my-4">
-              <NativeAd />
-            </div>
           </div>
         )}
       </div>

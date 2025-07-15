@@ -31,16 +31,13 @@ import AdaptiveLoader from '../components/loading/AdaptiveLoader';
 import NativeAppEnhancements from '../components/NativeAppEnhancements';
 import ChildRegistration from '../components/ChildRegistration';
 import PullToRefresh from '../components/PullToRefresh';
-// Simplified Ad Components
-import { HeaderAd, ContentAd, NativeAd } from '../components/ads/AdComponents';
-import useAdFrequency from '../hooks/useAdFrequency';
-import adConfig from '../utils/adConfig';
+import BannerAd from '../components/ads/BannerAd';
+import NativeAd from '../components/ads/NativeAd';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const { navigationStyle, NAVIGATION_STYLES } = useNavigation();
-  const { showAds } = useSubscription();
   const navigate = useNavigate();
   const swipeRef = useRef(null);
   
@@ -71,9 +68,6 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showChildRegistration, setShowChildRegistration] = useState(false);
-  
-  // Ad frequency management
-  const { shouldShowAd, recordAdShown, canShowMoreAds } = useAdFrequency('dashboard');
   
   // Mobile-first responsive design helpers
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -280,12 +274,8 @@ const Dashboard = () => {
         <NativeAppEnhancements />
         
         <div className={getMainClasses()}>
-          {/* Banner Ad - Top placement */}
-          {adConfig.isEnabled() && shouldShowAd && canShowMoreAds && (
-            <div className="mb-6">
-              <HeaderAd />
-            </div>
-          )}
+          {/* Top Banner Ad - Natural placement */}
+          <BannerAd position="top" />
 
           {/* Welcome Section - Clean compact design */}
           <div className="bg-gradient-to-br from-blue-400 via-purple-500 to-purple-600 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
@@ -427,11 +417,9 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Native Ad - Integrated between content */}
-          {adConfig.isEnabled() && userRole === 'parent' && stats.children > 0 && shouldShowAd && canShowMoreAds && (
-            <div className="mb-6">
-              <NativeAd />
-            </div>
+          {/* Native Feed Ad - Natural placement between content */}
+          {userRole === 'parent' && (
+            <NativeAd type="feed" />
           )}
 
           {/* Enhanced Stats Toggle */}
@@ -480,6 +468,11 @@ const Dashboard = () => {
             </div>
           )}
           
+          {/* Video Ad - Natural placement after detailed stats */}
+          {userRole === 'parent' && showMoreStats && (
+            <NativeAd type="video" />
+          )}
+          
           {/* Quick Actions for Parents - Mobile-first grid */}
           {userRole === 'parent' && (
             <div className="mb-6">
@@ -511,12 +504,8 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Bottom Banner Ad - Clean placement */}
-          {adConfig.isEnabled() && shouldShowAd && canShowMoreAds && (
-            <div className="mt-6">
-              <ContentAd />
-            </div>
-          )}
+          {/* Bottom Banner Ad - Natural placement at end */}
+          <BannerAd position="bottom" />
 
         </div>
         

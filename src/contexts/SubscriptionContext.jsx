@@ -288,15 +288,6 @@ export const SubscriptionProvider = ({ children }) => {
     return true;
   };
 
-  const showAds = () => {
-    if (loading) return false;
-    
-    // Show ads for users without subscription or with free plan
-    if (!subscription) return true;
-    const currentPlan = getCurrentPlan();
-    return currentPlan.features.ads_enabled === true;
-  };
-
   const getSubscriptionStatus = () => {
     if (!subscription) return 'none';
     
@@ -392,34 +383,6 @@ export const SubscriptionProvider = ({ children }) => {
     }
   };
 
-  const shouldShowAd = (context = 'general') => {
-    if (!showAds()) return false;
-    
-    const now = Date.now();
-    const { sessionAdCount, lastAdShown, maxAdsPerSession, minTimeBetweenAds, naturalBreakPoints } = adFrequency;
-    
-    if (sessionAdCount >= maxAdsPerSession) return false;
-    if (lastAdShown && (now - lastAdShown) < minTimeBetweenAds) return false;
-    if (!naturalBreakPoints.includes(context)) return false;
-    
-    return true;
-  };
-
-  const recordAdShown = (context) => {
-    setAdFrequency(prev => ({
-      ...prev,
-      sessionAdCount: prev.sessionAdCount + 1,
-      lastAdShown: Date.now()
-    }));
-  };
-
-  const resetAdSession = () => {
-    setAdFrequency(prev => ({
-      ...prev,
-      sessionAdCount: 0,
-      lastAdShown: null
-    }));
-  };
 
   const canAddChild = () => {
     const currentPlan = getCurrentPlan();
@@ -441,11 +404,6 @@ export const SubscriptionProvider = ({ children }) => {
     loading,
     error,
     lastUpdated,
-    showAds,
-    shouldShowAd,
-    recordAdShown,
-    resetAdSession,
-    adFrequency,
     features,
     usage,
     plans,

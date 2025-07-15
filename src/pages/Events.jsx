@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
 import { FaCalendarAlt, FaBell, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
-import { HeaderAd, ContentAd, FooterAd } from '../components/ads/AdComponents';
 import PageWrapper from '../components/PageWrapper';
+import BannerAd from '../components/ads/BannerAd';
+import NativeAd from '../components/ads/NativeAd';
 
 const Events = () => {
   const { isDark } = useTheme();
@@ -82,10 +83,10 @@ const Events = () => {
         </div>
 
         {/* Header Ad */}
-        <HeaderAd />
+        <BannerAd position="top" />
 
         {/* Content Ad */}
-        <ContentAd />
+        <NativeAd type="feed" />
 
         {events.length === 0 ? (
           <div className={`p-6 text-center rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
@@ -137,7 +138,7 @@ const Events = () => {
 
                 {/* Content Ad after every 4th event */}
                 {(index + 1) % 4 === 0 && index < events.length - 1 && (
-                  <ContentAd />
+                  <NativeAd type="feed" />
                 )}
               </React.Fragment>
             );
@@ -145,7 +146,7 @@ const Events = () => {
         )}
         
         {/* Footer Ad */}
-        <FooterAd />
+        <BannerAd position="bottom" />
 
         {/* Admin Updates Section */}
         <div className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
