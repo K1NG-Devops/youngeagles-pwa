@@ -9,7 +9,6 @@ import LoadingSpinner from './components/LoadingSpinner';
 import PrivateRoute from './components/PrivateRoute';
 import PWAEnhancements from './components/PWAEnhancements';
 import Layout from './components/Layout';
-import AutoAds from './components/ads/AutoAds';
 import './index.css';
 
 // Debug logger
@@ -91,6 +90,7 @@ const PaymentCancel = createLazyComponent(() => import('./pages/PaymentCancel'),
 const PaymentProofs = createLazyComponent(() => import('./pages/PaymentProofs'), 'PaymentProofs');
 const AdminPaymentReview = createLazyComponent(() => import('./pages/AdminPaymentReview'), 'AdminPaymentReview');
 const SwipeDemo = createLazyComponent(() => import('./components/SwipeDemo'), 'SwipeDemo');
+const AdTest = createLazyComponent(() => import('./pages/AdTest'), 'AdTest');
 
 // Debug navigation tracker
 function NavigationTracker() {
@@ -201,6 +201,7 @@ function App() {
                             <Route path="/contact" element={<Contact />} />
                             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                             <Route path="/terms-of-service" element={<TermsOfService />} />
+                            <Route path="/adtest" element={<AdTest />} />
                             <Route path="/swipe-demo" element={<SwipeDemo />} />
                               
                             {/* Protected routes with Layout */}
@@ -313,7 +314,6 @@ function App() {
                           </Routes>
                         </Suspense>
                         <PWAEnhancements />
-                        <AutoAds />
                       </div>
                     </DebugErrorBoundary>
                   </SubscriptionProvider>

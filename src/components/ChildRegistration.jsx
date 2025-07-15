@@ -32,9 +32,9 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
     firstName: '',
     lastName: '',
     dateOfBirth: '',
-    grade: '',
-    className: '',
-    schoolId: '',
+    class: '', // Auto-assigned class (non-editable)
+    currentSchool: '', // Current/previous school (editable)
+    isYoungEaglesChild: false, // Toggle for Young Eagles vs General
     gender: '',
     allergies: '',
     emergencyContact: '',
@@ -55,7 +55,7 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
     try {
       setIsSearching(true);
       // API call to search for existing children in Young Eagles database
-      const response = await apiService.children.searchYoungEagles(query);
+      const response = await apiService.children.search(query);
       setSearchResults(response.data.children || []);
     } catch (error) {
       console.error('Error searching children:', error);
@@ -74,13 +74,67 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  // Auto-assign class based on age and registration type
+  const assignClass = (dateOfBirth, isYoungEagles) => {
+    if (!dateOfBirth) return '';
+    
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    const ageInMonths = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
+    const ageInYears = Math.floor(ageInMonths / 12);
+    
+    if (isYoungEagles) {
+      // Young Eagles classes
+      if (ageInYears >= 1 && ageInYears <= 3) {
+        return 'Panda';
+      } else if (ageInYears >= 4 && ageInYears <= 6) {
+        return 'Curious Cubs';
+      }
+    } else {
+      // General classes for non-Young Eagles children
+      if (ageInYears >= 1 && ageInYears <= 3) {
+        return 'Little Explorers';
+      } else if (ageInYears >= 4 && ageInYears <= 6) {
+        return 'Tiny Adventurers';
+      }
+    }
+    
+    return 'Unassigned'; // For children outside age range
+  };
+
   // Handle form input changes
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setChildData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type, checked } = e.target;
+    
+    let newValue = type === 'checkbox' ? checked : value;
+    
+    // Handle phone number formatting
+    if (name === 'emergencyPhone') {
+      // Remove all non-digits
+      const digits = value.replace(/\D/g, '');
+      // Format as South African phone number
+      newValue = digits;
+      if (digits.length >= 10) {
+        newValue = digits.slice(0, 10);
+        newValue = newValue.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+      }
+    }
+    
+    setChildData(prev => {
+      const updated = {
+        ...prev,
+        [name]: newValue
+      };
+      
+      // Auto-assign class when date of birth or registration type changes
+      if (name === 'dateOfBirth' || name === 'isYoungEaglesChild') {
+        const dateOfBirth = name === 'dateOfBirth' ? newValue : prev.dateOfBirth;
+        const isYoungEagles = name === 'isYoungEaglesChild' ? newValue : prev.isYoungEaglesChild;
+        updated.class = assignClass(dateOfBirth, isYoungEagles);
+      }
+      
+      return updated;
+    });
     
     // Clear specific field error when user starts typing
     if (errors[name]) {
@@ -105,10 +159,20 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
     
     if (!childData.dateOfBirth) {
       newErrors.dateOfBirth = 'Date of birth is required';
-    }
-    
-    if (!childData.grade) {
-      newErrors.grade = 'Grade is required';
+    } else {
+      // Validate date is not in the future and child is within preschool age range
+      const birthDate = new Date(childData.dateOfBirth);
+      const today = new Date();
+      const ageInMonths = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
+      const ageInYears = Math.floor(ageInMonths / 12);
+      
+      if (birthDate > today) {
+        newErrors.dateOfBirth = 'Date of birth cannot be in the future';
+      } else if (ageInYears > 6) {
+        newErrors.dateOfBirth = 'Child must be 6 years or younger for preschool';
+      } else if (ageInYears < 1) {
+        newErrors.dateOfBirth = 'Child must be at least 1 year old';
+      }
     }
     
     if (!childData.gender) {
@@ -131,27 +195,49 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
       const registrationData = {
         ...childData,
         parentId: user.id,
-        parentType: 'external', // Not a Young Eagles parent initially
         registrationSource: 'parent_app',
-        requiresAdminApproval: true
+        requiresAdminApproval: true,
+        registrationType: childData.isYoungEaglesChild ? 'young_eagles' : 'general'
       };
 
-      const response = await apiService.children.registerNew(registrationData);
+      // Use different endpoints based on registration type
+      let response;
+      if (childData.isYoungEaglesChild) {
+        response = await apiService.children.register(registrationData);
+      } else {
+        // For general registration, try the specific endpoint first, fallback to regular register
+        try {
+          response = await apiService.children.registerGeneral(registrationData);
+        } catch (error) {
+          if (error.response?.status === 404) {
+            // Fallback to regular register endpoint if registerGeneral doesn't exist
+            response = await apiService.children.register(registrationData);
+          } else {
+            throw error;
+          }
+        }
+      }
       
       if (response.data.success) {
-        nativeNotificationService.success('Child registration submitted for admin approval!');
+        const registrationType = childData.isYoungEaglesChild ? 'Young Eagles' : 'General';
+        const className = childData.class || 'unassigned';
+        nativeNotificationService.success(
+          `${registrationType} child registration submitted for admin approval! ${childData.firstName} has been assigned to ${className} class.`
+        );
         setStep(3);
         
         // Notify admin of new registration
         await apiService.notifications.send({
           recipientRole: 'admin',
-          title: 'New Child Registration',
-          message: `${user.name} has registered a new child: ${childData.firstName} ${childData.lastName}`,
+          title: `New ${registrationType} Child Registration`,
+          message: `${user.name} has registered a new ${registrationType.toLowerCase()} child: ${childData.firstName} ${childData.lastName} (${className} class)`,
           type: 'admin_action_required',
           priority: 'high',
           metadata: {
             childId: response.data.child.id,
             parentId: user.id,
+            registrationType: registrationType.toLowerCase(),
+            assignedClass: className,
             action: 'approve_child_registration'
           }
         });
@@ -210,9 +296,9 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
       firstName: '',
       lastName: '',
       dateOfBirth: '',
-      grade: '',
-      className: '',
-      schoolId: '',
+      class: '',
+      currentSchool: '',
+      isYoungEaglesChild: false,
       gender: '',
       allergies: '',
       emergencyContact: '',
@@ -241,11 +327,13 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
               <FaChild className="text-2xl text-blue-500 mr-3" />
               <div>
                 <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {step === 1 ? 'Register Child' : step === 2 ? 'Child Information' : 'Registration Complete'}
+                  {step === 1 ? 'Register Child' : 
+                    step === 2 ? 'Child Information' : 
+                      'Registration Complete'}
                 </h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   {step === 1 ? 'Search for existing child or register new child' : 
-                    step === 2 ? 'Fill in your child\'s information' : 
+                    step === 2 ? 'Fill in your child\'s information (all fields with * are required)' : 
                       'Your request has been submitted'}
                 </p>
               </div>
@@ -483,42 +571,102 @@ const ChildRegistration = ({ isOpen, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Current Grade *
+                {/* Registration Type Selection */}
+                <div className="md:col-span-2">
+                  <label className={`block text-sm font-medium mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Registration Type *
                   </label>
-                  <select
-                    name="grade"
-                    value={childData.grade}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      errors.grade 
-                        ? 'border-red-500 focus:ring-red-500' 
-                        : isDark 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                    } focus:ring-2 focus:border-transparent`}
-                  >
-                    <option value="">Select Grade</option>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(grade => (
-                      <option key={grade} value={grade}>Grade {grade}</option>
-                    ))}
-                  </select>
-                  {errors.grade && (
-                    <p className="text-red-500 text-xs mt-1">{errors.grade}</p>
-                  )}
+                  <div className="space-y-3">
+                    <label className={`flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      childData.isYoungEaglesChild 
+                        ? (isDark ? 'border-blue-500 bg-blue-900/20' : 'border-blue-500 bg-blue-50')
+                        : (isDark ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-gray-400')
+                    }`}>
+                      <input
+                        type="radio"
+                        name="registrationType"
+                        value="youngEagles"
+                        checked={childData.isYoungEaglesChild}
+                        onChange={() => setChildData(prev => ({...prev, isYoungEaglesChild: true}))}
+                        className="w-4 h-4 text-blue-600 mt-0.5"
+                      />
+                      <div>
+                        <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                          Young Eagles Student
+                        </span>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Child is currently enrolled at Young Eagles (transferring within school)
+                        </p>
+                      </div>
+                    </label>
+                    
+                    <label className={`flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      !childData.isYoungEaglesChild 
+                        ? (isDark ? 'border-green-500 bg-green-900/20' : 'border-green-500 bg-green-50')
+                        : (isDark ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-gray-400')
+                    }`}>
+                      <input
+                        type="radio"
+                        name="registrationType"
+                        value="external"
+                        checked={!childData.isYoungEaglesChild}
+                        onChange={() => setChildData(prev => ({...prev, isYoungEaglesChild: false}))}
+                        className="w-4 h-4 text-green-600 mt-0.5"
+                      />
+                      <div>
+                        <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                          New Student (from another school)
+                        </span>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Child is coming from another school or preschool
+                        </p>
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
-                <div>
+                {/* Auto-assigned Class Display */}
+                {childData.dateOfBirth && (
+                  <div className="md:col-span-2">
+                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Assigned Class (Auto-assigned)
+                    </label>
+                    <div className={`px-3 py-2 rounded-lg border ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{childData.class || 'Calculating...'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          childData.isYoungEaglesChild 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {childData.isYoungEaglesChild ? 'Young Eagles' : 'General'}
+                        </span>
+                      </div>
+                      <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {childData.isYoungEaglesChild 
+                          ? 'Young Eagles class assignment based on age'
+                          : 'General preschool class assignment based on age'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Current/Previous School */}
+                <div className="md:col-span-2">
                   <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Current School
+                    {childData.isYoungEaglesChild ? 'Current Young Eagles Class/Teacher' : 'Previous School/Preschool'} (Optional)
                   </label>
                   <input
                     type="text"
-                    name="className"
-                    value={childData.className}
+                    name="currentSchool"
+                    value={childData.currentSchool || ''}
                     onChange={handleInputChange}
-                    placeholder="Current school name"
+                    placeholder={childData.isYoungEaglesChild ? 'Current class or teacher name' : 'Previous school or preschool name'}
                     className={`w-full px-3 py-2 rounded-lg border ${
                       isDark 
                         ? 'bg-gray-700 border-gray-600 text-white' 

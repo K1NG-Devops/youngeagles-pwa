@@ -333,21 +333,14 @@ body, html {
   padding: 0 !important;
 }
 
-/* Allow ALL ad content to expand freely */
-.ad-container .adsbygoogle,
-.ad-container iframe,
-.ad-container ins,
-.ad-container div {
-  max-width: none !important;
-  max-height: none !important;
-  min-width: unset !important;
-  min-height: unset !important;
-  width: auto !important;
-  height: auto !important;
+/* Simplified ad content rules */
+.ad-container .adsbygoogle {
   overflow: visible !important;
+  width: 100% !important;
+  height: auto !important;
 }
 
-/* Remove ALL mobile constraints */
+/* Remove constraints on mobile */
 @media (max-width: 640px) {
   .adsbygoogle,
   .ad-container {

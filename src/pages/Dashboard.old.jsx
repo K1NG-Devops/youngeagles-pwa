@@ -66,17 +66,17 @@ const Dashboard = () => {
     
     // Add proper spacing based on navigation style
     switch (navigationStyle) {
-      case NAVIGATION_STYLES.FLOATING:
-        classes += ' pb-6';
-        break;
-      case NAVIGATION_STYLES.BOTTOM:
-        classes += ' pb-20';
-        break;
-      case NAVIGATION_STYLES.TOP:
-        classes += ' pt-16';
-        break;
-      default:
-        classes += ' pb-20';
+    case NAVIGATION_STYLES.FLOATING:
+      classes += ' pb-6';
+      break;
+    case NAVIGATION_STYLES.BOTTOM:
+      classes += ' pb-20';
+      break;
+    case NAVIGATION_STYLES.TOP:
+      classes += ' pt-16';
+      break;
+    default:
+      classes += ' pb-20';
     }
     
     return classes;

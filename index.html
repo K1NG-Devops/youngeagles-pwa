@@ -114,11 +114,46 @@
   
   <!-- Google AdSense Script (Global - supports all ad units) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5506438806314781"
-    crossorigin="anonymous"></script>
+    crossorigin="anonymous"
+    data-adbreak-test="on"></script>
   
   <!-- Initialize AdSense global array -->
   <script>
-    window.adsbygoogle = window.adsbygoogle || [];
+    (function() {
+      // Function to ensure adsbygoogle is always an array
+      function ensureAdsbygoogleArray() {
+        if (!window.adsbygoogle || !Array.isArray(window.adsbygoogle)) {
+          window.adsbygoogle = [];
+        }
+      }
+      
+      // Initial setup
+      ensureAdsbygoogleArray();
+      
+      // Monitor for changes using Object.defineProperty
+      var _adsbygoogle = [];
+      Object.defineProperty(window, 'adsbygoogle', {
+        get: function() {
+          return _adsbygoogle;
+        },
+        set: function(value) {
+          // If someone tries to set it to non-array, keep it as array
+          if (Array.isArray(value)) {
+            _adsbygoogle = value;
+          } else {
+            console.warn('Attempted to set adsbygoogle to non-array:', value);
+            // If it has a push method, convert to array
+            if (value && typeof value.push === 'function') {
+              _adsbygoogle = Array.from(value);
+            }
+          }
+        },
+        configurable: true
+      });
+      
+      // Also set up after load
+      window.addEventListener('load', ensureAdsbygoogleArray);
+    })();
   </script>
 </body>
 

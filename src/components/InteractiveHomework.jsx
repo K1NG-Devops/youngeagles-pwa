@@ -6,7 +6,26 @@ import {
   FaCube,
   FaGamepad,
   FaTrophy,
-  FaSmile
+  FaSmile,
+  FaCircle,
+  FaSquare,
+  FaPuzzlePiece,
+  FaLeaf,
+  FaCar,
+  FaCat,
+  FaDog,
+  FaFish,
+  FaTree,
+  FaHome,
+  FaBug,
+  FaCarrot,
+  FaBan,
+  FaCheck,
+  FaQuestion,
+  FaRainbow,
+  FaSun,
+  FaMoon,
+  FaCloud
 } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import nativeNotificationService from '../services/nativeNotificationService.js';
@@ -25,71 +44,219 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
   const [previousSubmission, setPreviousSubmission] = useState(null);
   const [isCheckingSubmission, setIsCheckingSubmission] = useState(true);
 
-  // Define interactive activities based on homework type
+  // Enhanced activity generation system
   const getActivities = () => {
-    if (homework.title.includes('Basic Addition 1-5')) {
-      return [
-        {
-          id: 1,
-          type: 'counting',
-          question: 'Count the apples!',
-          instruction: 'How many apples do you see?',
-          items: 3,
-          icon: FaAppleAlt,
-          color: 'text-red-500',
-          correctAnswer: 3
-        },
-        {
-          id: 2,
-          type: 'addition',
-          question: '2 + 1 = ?',
-          instruction: 'Add the blocks together',
-          items: [2, 1],
-          icon: FaCube,
-          color: 'text-blue-500',
-          correctAnswer: 3
-        },
-        {
-          id: 3,
-          type: 'addition',
-          question: '3 + 2 = ?',
-          instruction: 'Count all the hearts',
-          items: [3, 2],
-          icon: FaHeart,
-          color: 'text-pink-500',
-          correctAnswer: 5
-        },
-        {
-          id: 4,
-          type: 'addition',
-          question: '1 + 4 = ?',
-          instruction: 'Add the stars together',
-          items: [1, 4],
-          icon: FaStar,
-          color: 'text-yellow-500',
-          correctAnswer: 5
-        },
-        {
-          id: 5,
-          type: 'number_recognition',
-          question: 'Which number is 4?',
-          instruction: 'Click on the number 4',
-          options: [2, 4, 3, 1, 5],
-          correctAnswer: 4
-        }
-      ];
+    const homeworkTitle = homework.title.toLowerCase();
+    
+    // Math Activities
+    if (homeworkTitle.includes('basic addition') || homeworkTitle.includes('addition')) {
+      return generateMathActivities('addition', 1, 5);
     }
     
-    // Default activities for other homework types
+    if (homeworkTitle.includes('subtraction')) {
+      return generateMathActivities('subtraction', 1, 5);
+    }
+    
+    if (homeworkTitle.includes('counting') || homeworkTitle.includes('numbers')) {
+      return generateCountingActivities(1, 10);
+    }
+    
+    // Shape Activities
+    if (homeworkTitle.includes('shapes') || homeworkTitle.includes('geometry')) {
+      return generateShapeActivities();
+    }
+    
+    // Color Activities
+    if (homeworkTitle.includes('colors') || homeworkTitle.includes('colour')) {
+      return generateColorActivities();
+    }
+    
+    // Letter Activities
+    if (homeworkTitle.includes('letters') || homeworkTitle.includes('alphabet')) {
+      return generateLetterActivities();
+    }
+    
+    // Animal Activities
+    if (homeworkTitle.includes('animals') || homeworkTitle.includes('pets')) {
+      return generateAnimalActivities();
+    }
+    
+    // Default fallback - mixed activities for general homework
+    return generateMixedActivities();
+  };
+  
+  // Math activity generators
+  const generateMathActivities = (type, min, max) => {
+    const activities = [];
+    const mathIcons = [FaAppleAlt, FaCube, FaHeart, FaStar, FaCircle];
+    const colors = ['text-red-500', 'text-blue-500', 'text-pink-500', 'text-yellow-500', 'text-green-500'];
+    
+    for (let i = 0; i < 5; i++) {
+      if (type === 'addition') {
+        const first = Math.floor(Math.random() * max) + 1;
+        const second = Math.floor(Math.random() * (max - first + 1)) + 1;
+        const answer = first + second;
+        
+        activities.push({
+          id: i + 1,
+          type: 'addition',
+          question: `${first} + ${second} = ?`,
+          instruction: 'Add the items together',
+          items: [first, second],
+          icon: mathIcons[i % mathIcons.length],
+          color: colors[i % colors.length],
+          correctAnswer: answer
+        });
+      } else if (type === 'subtraction') {
+        const total = Math.floor(Math.random() * max) + 2;
+        const subtract = Math.floor(Math.random() * (total - 1)) + 1;
+        const answer = total - subtract;
+        
+        activities.push({
+          id: i + 1,
+          type: 'subtraction',
+          question: `${total} - ${subtract} = ?`,
+          instruction: 'Take away the items',
+          items: [total, subtract],
+          icon: mathIcons[i % mathIcons.length],
+          color: colors[i % colors.length],
+          correctAnswer: answer
+        });
+      }
+    }
+    
+    return activities;
+  };
+  
+  const generateCountingActivities = (min, max) => {
+    const activities = [];
+    const countingIcons = [FaAppleAlt, FaStar, FaHeart, FaLeaf, FaCar];
+    const colors = ['text-red-500', 'text-yellow-500', 'text-pink-500', 'text-green-500', 'text-blue-500'];
+    
+    for (let i = 0; i < 5; i++) {
+      const count = Math.floor(Math.random() * (max - min + 1)) + min;
+      
+      activities.push({
+        id: i + 1,
+        type: 'counting',
+        question: 'Count the items!',
+        instruction: 'How many do you see?',
+        items: count,
+        icon: countingIcons[i % countingIcons.length],
+        color: colors[i % colors.length],
+        correctAnswer: count
+      });
+    }
+    
+    return activities;
+  };
+  
+  const generateShapeActivities = () => {
+    const shapes = [
+      { name: 'Circle', icon: FaCircle, color: 'text-blue-500' },
+      { name: 'Square', icon: FaSquare, color: 'text-red-500' },
+      { name: 'Star', icon: FaStar, color: 'text-yellow-500' }
+    ];
+    
+    return shapes.map((shape, index) => ({
+      id: index + 1,
+      type: 'shape_recognition',
+      question: `Which one is a ${shape.name}?`,
+      instruction: `Find the ${shape.name}`,
+      targetShape: shape.name,
+      icon: shape.icon,
+      color: shape.color,
+      correctAnswer: shape.name
+    }));
+  };
+  
+  const generateColorActivities = () => {
+    const colors = [
+      { name: 'Red', icon: FaHeart, color: 'text-red-500', bgColor: 'bg-red-500' },
+      { name: 'Blue', icon: FaCircle, color: 'text-blue-500', bgColor: 'bg-blue-500' },
+      { name: 'Yellow', icon: FaSun, color: 'text-yellow-500', bgColor: 'bg-yellow-500' },
+      { name: 'Green', icon: FaLeaf, color: 'text-green-500', bgColor: 'bg-green-500' }
+    ];
+    
+    return colors.map((color, index) => ({
+      id: index + 1,
+      type: 'color_recognition',
+      question: `Which color is ${color.name}?`,
+      instruction: `Find the ${color.name} color`,
+      targetColor: color.name,
+      icon: color.icon,
+      color: color.color,
+      bgColor: color.bgColor,
+      correctAnswer: color.name
+    }));
+  };
+  
+  const generateLetterActivities = () => {
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    
+    return letters.map((letter, index) => ({
+      id: index + 1,
+      type: 'letter_recognition',
+      question: `Which letter is ${letter}?`,
+      instruction: `Find the letter ${letter}`,
+      targetLetter: letter,
+      icon: FaPuzzlePiece,
+      color: 'text-purple-500',
+      correctAnswer: letter
+    }));
+  };
+  
+  const generateAnimalActivities = () => {
+    const animals = [
+      { name: 'Cat', icon: FaCat, sound: 'Meow' },
+      { name: 'Dog', icon: FaDog, sound: 'Woof' },
+      { name: 'Fish', icon: FaFish, sound: 'Blub' }
+    ];
+    
+    return animals.map((animal, index) => ({
+      id: index + 1,
+      type: 'animal_recognition',
+      question: `Which animal says "${animal.sound}"?`,
+      instruction: 'Find the animal that makes this sound',
+      targetAnimal: animal.name,
+      icon: animal.icon,
+      color: 'text-orange-500',
+      correctAnswer: animal.name
+    }));
+  };
+  
+  const generateMixedActivities = () => {
+    // Fallback mixed activities for general homework
     return [
       {
         id: 1,
-        type: 'general',
-        question: 'Let\'s get started!',
-        instruction: 'This homework has interactive activities coming soon!',
-        icon: FaGamepad,
-        color: 'text-green-500',
-        correctAnswer: 1
+        type: 'counting',
+        question: 'Count the stars!',
+        instruction: 'How many stars do you see?',
+        items: 3,
+        icon: FaStar,
+        color: 'text-yellow-500',
+        correctAnswer: 3
+      },
+      {
+        id: 2,
+        type: 'addition',
+        question: '2 + 1 = ?',
+        instruction: 'Add the hearts together',
+        items: [2, 1],
+        icon: FaHeart,
+        color: 'text-pink-500',
+        correctAnswer: 3
+      },
+      {
+        id: 3,
+        type: 'shape_recognition',
+        question: 'Which one is a Circle?',
+        instruction: 'Find the Circle',
+        targetShape: 'Circle',
+        icon: FaCircle,
+        color: 'text-blue-500',
+        correctAnswer: 'Circle'
       }
     ];
   };
@@ -156,13 +323,17 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
         </p>
         
         {/* Visual items to count */}
-        <div className="flex justify-center gap-4 my-8">
+        <div className="flex justify-center gap-4 my-8 flex-wrap">
           {items.map((_, index) => (
-            <IconComponent 
-              key={index}
-              className={`text-6xl ${activity.color} animate-bounce`}
-              style={{ animationDelay: `${index * 0.2}s` }}
-            />
+            <div key={index} className="transform transition-all duration-300 hover:scale-110">
+              <IconComponent 
+                className={`text-6xl ${activity.color} animate-bounce`}
+                style={{ 
+                  animationDelay: `${index * 0.2}s`,
+                  filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+                }}
+              />
+            </div>
           ))}
         </div>
         
@@ -267,6 +438,258 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
     );
   };
 
+  const renderSubtractionActivity = (activity) => {
+    const IconComponent = activity.icon;
+    const [total, subtract] = activity.items;
+
+    return (
+      <div className="text-center space-y-6">
+        <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {activity.question}
+        </h3>
+        <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          {activity.instruction}
+        </p>
+        
+        {/* Visual representation */}
+        <div className="flex justify-center items-center gap-8 my-8">
+          {/* Total items */}
+          <div className="flex gap-2 flex-wrap max-w-xs">
+            {Array.from({ length: total }, (_, i) => (
+              <IconComponent 
+                key={`total-${i}`}
+                className={`text-4xl ${i < subtract ? 'text-gray-400 line-through' : activity.color}`}
+              />
+            ))}
+          </div>
+          
+          {/* Minus sign */}
+          <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            -
+          </div>
+          
+          {/* Subtract amount */}
+          <div className="flex gap-2">
+            {Array.from({ length: subtract }, (_, i) => (
+              <IconComponent 
+                key={`subtract-${i}`}
+                className="text-4xl text-red-500"
+              />
+            ))}
+          </div>
+          
+          {/* Equals sign */}
+          <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            =
+          </div>
+          
+          {/* Question mark */}
+          <div className="text-4xl font-bold text-purple-500">
+            ?
+          </div>
+        </div>
+        
+        {/* Answer buttons */}
+        <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+          {[0, 1, 2, 3, 4, 5].map(num => (
+            <button
+              key={num}
+              onClick={() => handleAnswer(activity.id, num)}
+              className={`p-4 text-2xl font-bold rounded-xl border-2 transition-all transform hover:scale-105 ${
+                answers[activity.id] === num
+                  ? num === activity.correctAnswer
+                    ? 'bg-green-500 text-white border-green-600'
+                    : 'bg-red-500 text-white border-red-600'
+                  : isDark
+                    ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700'
+                    : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
+              }`}
+              disabled={answers[activity.id] !== undefined}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderShapeRecognitionActivity = (activity) => {
+    const shapes = [
+      { name: 'Circle', icon: FaCircle },
+      { name: 'Square', icon: FaSquare },
+      { name: 'Star', icon: FaStar }
+    ];
+
+    return (
+      <div className="text-center space-y-6">
+        <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {activity.question}
+        </h3>
+        <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          {activity.instruction}
+        </p>
+        
+        {/* Shape options */}
+        <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto my-8">
+          {shapes.map(shape => {
+            const ShapeIcon = shape.icon;
+            return (
+              <button
+                key={shape.name}
+                onClick={() => handleAnswer(activity.id, shape.name)}
+                className={`p-8 rounded-2xl border-2 transition-all transform hover:scale-105 ${
+                  answers[activity.id] === shape.name
+                    ? shape.name === activity.correctAnswer
+                      ? 'bg-green-500 text-white border-green-600'
+                      : 'bg-red-500 text-white border-red-600'
+                    : isDark
+                      ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700'
+                      : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
+                }`}
+                disabled={answers[activity.id] !== undefined}
+              >
+                <ShapeIcon className="text-6xl mx-auto mb-2" />
+                <div className="text-lg font-bold">{shape.name}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderColorRecognitionActivity = (activity) => {
+    const colors = [
+      { name: 'Red', bgColor: 'bg-red-500' },
+      { name: 'Blue', bgColor: 'bg-blue-500' },
+      { name: 'Yellow', bgColor: 'bg-yellow-500' },
+      { name: 'Green', bgColor: 'bg-green-500' }
+    ];
+
+    return (
+      <div className="text-center space-y-6">
+        <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {activity.question}
+        </h3>
+        <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          {activity.instruction}
+        </p>
+        
+        {/* Color options */}
+        <div className="grid grid-cols-2 gap-6 max-w-md mx-auto my-8">
+          {colors.map(color => (
+            <button
+              key={color.name}
+              onClick={() => handleAnswer(activity.id, color.name)}
+              className={`p-8 rounded-2xl border-4 transition-all transform hover:scale-105 ${
+                answers[activity.id] === color.name
+                  ? color.name === activity.correctAnswer
+                    ? 'border-green-600 ring-4 ring-green-300'
+                    : 'border-red-600 ring-4 ring-red-300'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              disabled={answers[activity.id] !== undefined}
+            >
+              <div className={`w-20 h-20 ${color.bgColor} rounded-full mx-auto mb-3`}></div>
+              <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {color.name}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderLetterRecognitionActivity = (activity) => {
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    const shuffledLetters = [...letters].sort(() => Math.random() - 0.5).slice(0, 4);
+    
+    // Ensure target letter is included
+    if (!shuffledLetters.includes(activity.targetLetter)) {
+      shuffledLetters[Math.floor(Math.random() * shuffledLetters.length)] = activity.targetLetter;
+    }
+
+    return (
+      <div className="text-center space-y-6">
+        <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {activity.question}
+        </h3>
+        <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          {activity.instruction}
+        </p>
+        
+        {/* Letter options */}
+        <div className="grid grid-cols-2 gap-6 max-w-md mx-auto my-8">
+          {shuffledLetters.map(letter => (
+            <button
+              key={letter}
+              onClick={() => handleAnswer(activity.id, letter)}
+              className={`p-8 text-6xl font-bold rounded-2xl border-2 transition-all transform hover:scale-105 ${
+                answers[activity.id] === letter
+                  ? letter === activity.correctAnswer
+                    ? 'bg-green-500 text-white border-green-600'
+                    : 'bg-red-500 text-white border-red-600'
+                  : isDark
+                    ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700'
+                    : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
+              }`}
+              disabled={answers[activity.id] !== undefined}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAnimalRecognitionActivity = (activity) => {
+    const animals = [
+      { name: 'Cat', icon: FaCat },
+      { name: 'Dog', icon: FaDog },
+      { name: 'Fish', icon: FaFish }
+    ];
+
+    return (
+      <div className="text-center space-y-6">
+        <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {activity.question}
+        </h3>
+        <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          {activity.instruction}
+        </p>
+        
+        {/* Animal options */}
+        <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto my-8">
+          {animals.map(animal => {
+            const AnimalIcon = animal.icon;
+            return (
+              <button
+                key={animal.name}
+                onClick={() => handleAnswer(activity.id, animal.name)}
+                className={`p-8 rounded-2xl border-2 transition-all transform hover:scale-105 ${
+                  answers[activity.id] === animal.name
+                    ? animal.name === activity.correctAnswer
+                      ? 'bg-green-500 text-white border-green-600'
+                      : 'bg-red-500 text-white border-red-600'
+                    : isDark
+                      ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700'
+                      : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
+                }`}
+                disabled={answers[activity.id] !== undefined}
+              >
+                <AnimalIcon className="text-6xl mx-auto mb-2 text-orange-500" />
+                <div className="text-lg font-bold">{animal.name}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const renderNumberRecognitionActivity = (activity) => {
     return (
       <div className="text-center space-y-6">
@@ -279,7 +702,7 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
         
         {/* Number options */}
         <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto my-8">
-          {activity.options.map(num => (
+          {(activity.options || [1, 2, 3, 4, 5]).map(num => (
             <button
               key={num}
               onClick={() => handleAnswer(activity.id, num)}
@@ -310,19 +733,44 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
     
     if (isCorrect) {
       setScore(prev => prev + 1);
-      nativeNotificationService.success('Correct! Well done! 🎉');
+      
+      // Provide specific positive feedback based on activity type
+      const encouragements = [
+        'Excellent! 🌟',
+        'Perfect! 🎉',
+        'Well done! 👏',
+        'Amazing! ✨',
+        'Fantastic! 🚀',
+        'Great job! 💫'
+      ];
+      
+      const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+      nativeNotificationService.success(randomEncouragement);
     } else {
-      nativeNotificationService.error(`Not quite right. The answer is ${activity.correctAnswer} 😊`);
+      // Provide gentle, encouraging feedback for incorrect answers
+      const hints = {
+        'counting': `Count again! The correct answer is ${activity.correctAnswer} 😊`,
+        'addition': `Try adding again! ${activity.items?.[0]} + ${activity.items?.[1]} = ${activity.correctAnswer} 🔢`,
+        'subtraction': `Think about taking away! ${activity.items?.[0]} - ${activity.items?.[1]} = ${activity.correctAnswer} ➖`,
+        'shape_recognition': `Look for the ${activity.correctAnswer}! 🔺`,
+        'color_recognition': `Find the ${activity.correctAnswer} color! 🎨`,
+        'letter_recognition': `Look for the letter ${activity.correctAnswer}! 📝`,
+        'animal_recognition': `The ${activity.correctAnswer} makes that sound! 🐾`,
+        'number_recognition': `Look for the number ${activity.correctAnswer}! 🔢`
+      };
+      
+      const feedback = hints[activity.type] || `Not quite right. The answer is ${activity.correctAnswer} 😊`;
+      nativeNotificationService.error(feedback);
     }
     
-    // Auto advance after 2 seconds
+    // Auto advance after 2.5 seconds (slightly longer for reading feedback)
     setTimeout(() => {
       if (currentActivity < activities.length - 1) {
         setCurrentActivity(prev => prev + 1);
       } else {
         completeHomework();
       }
-    }, 2000);
+    }, 2500);
   };
 
   const completeHomework = async () => {
@@ -584,21 +1032,38 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
     <div className={`rounded-xl p-6 border ${
       isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
     }`}>
-      {/* Progress bar */}
+      {/* Enhanced Progress bar */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             Question {currentActivity + 1} of {activities.length}
           </span>
-          <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            Score: {score}/{activities.length}
-          </span>
+          <div className="flex items-center space-x-2">
+            <FaTrophy className="text-yellow-500 text-sm" />
+            <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              Score: {score}/{activities.length}
+            </span>
+          </div>
         </div>
-        <div className={`w-full bg-gray-200 rounded-full h-2 ${isDark ? 'bg-gray-700' : ''}`}>
+        <div className={`w-full bg-gray-200 rounded-full h-3 ${isDark ? 'bg-gray-700' : ''} overflow-hidden`}>
           <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out relative"
             style={{ width: `${((currentActivity + 1) / activities.length) * 100}%` }}
-          ></div>
+          >
+            <div className="absolute inset-0 bg-white opacity-30 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="flex justify-between mt-1">
+          {activities.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index <= currentActivity
+                  ? 'bg-green-500 scale-110'
+                  : 'bg-gray-300 scale-75'
+              }`}
+            />
+          ))}
         </div>
       </div>
 
@@ -606,10 +1071,15 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
       <div className="min-h-[400px] flex flex-col justify-center">
         {currentActivityData.type === 'counting' && renderCountingActivity(currentActivityData)}
         {currentActivityData.type === 'addition' && renderAdditionActivity(currentActivityData)}
+        {currentActivityData.type === 'subtraction' && renderSubtractionActivity(currentActivityData)}
         {currentActivityData.type === 'number_recognition' && renderNumberRecognitionActivity(currentActivityData)}
+        {currentActivityData.type === 'shape_recognition' && renderShapeRecognitionActivity(currentActivityData)}
+        {currentActivityData.type === 'color_recognition' && renderColorRecognitionActivity(currentActivityData)}
+        {currentActivityData.type === 'letter_recognition' && renderLetterRecognitionActivity(currentActivityData)}
+        {currentActivityData.type === 'animal_recognition' && renderAnimalRecognitionActivity(currentActivityData)}
         {currentActivityData.type === 'general' && (
           <div className="text-center space-y-6">
-            <FaGamepad className="text-6xl text-green-500 mx-auto" />
+            <FaGamepad className="text-6xl text-green-500 mx-auto animate-pulse" />
             <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {currentActivityData.question}
             </h3>
@@ -618,7 +1088,7 @@ const InteractiveHomework = ({ homework, selectedChildId, onComplete }) => {
             </p>
             <button
               onClick={() => handleAnswer(currentActivityData.id, 1)}
-              className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors transform hover:scale-105"
             >
               <FaSmile className="w-4 h-4 mr-2" />
               Continue

@@ -25,6 +25,9 @@ import StudentProgressModal from '../components/StudentProgressModal';
 import ParentCommunicationPanel from '../components/ParentCommunicationPanel';
 import AdvancedHomeworkAssignment from '../components/AdvancedHomeworkAssignment';
 import NewHomeworkAssignment from '../components/NewHomeworkAssignment';
+import VirtualSchoolPlatform from '../components/VirtualSchoolPlatform';
+import ComprehensiveLessonLibrary from '../components/ComprehensiveLessonLibrary';
+import EnhancedAIGradingSystem from '../components/EnhancedAIGradingSystem';
 import Header from '../components/Header';
 
 // Hooks and Services
@@ -46,6 +49,9 @@ const TeacherDashboard = () => {
   const [showAIGrading, setShowAIGrading] = useState(false);
   const [showParentComm, setShowParentComm] = useState(false);
   const [showHomeworkAssignment, setShowHomeworkAssignment] = useState(false);
+  const [showVirtualSchoolPlatform, setShowVirtualSchoolPlatform] = useState(false);
+  const [showComprehensiveLessons, setShowComprehensiveLessons] = useState(false);
+  const [showEnhancedGrading, setShowEnhancedGrading] = useState(false);
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
   const navigate = useNavigate();
   const { isDark } = useTheme();
@@ -53,6 +59,12 @@ const TeacherDashboard = () => {
   const [gradingQueue, setGradingQueue] = useState([]);
   const [aiGradingStatus, setAiGradingStatus] = useState('idle');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [lessonLibraryStats, setLessonLibraryStats] = useState({
+    totalLessons: 454,
+    worksheets: 24,
+    subjects: 7,
+    readyMade: true
+  });
 
   useEffect(() => {
     const fetchTeacherData = async () => {
@@ -75,7 +87,6 @@ const TeacherDashboard = () => {
             const attendanceResponse = await apiService.attendance.getByClass(today);
             if (attendanceResponse.data.success && attendanceResponse.data.students) {
               studentCount = attendanceResponse.data.students.length;
-              console.log(`📊 Found ${studentCount} students in attendance API for teacher ${user.id}`);
               
               // Create virtual class from attendance data
               const virtualClass = {
@@ -86,7 +97,7 @@ const TeacherDashboard = () => {
               setClasses([virtualClass]);
             }
           } catch (attendanceError) {
-            console.error('Error getting students from attendance API:', attendanceError);
+            // If attendance API fails, use fallback
           }
         }
         
@@ -120,7 +131,6 @@ const TeacherDashboard = () => {
             completedAssignments: completedAssignments
           });
         } catch (error) {
-          console.error('Error fetching homework data:', error);
           // Use empty data when homework API is not available
           setStats({
             classes: Math.max(teacherClasses.length, studentCount > 0 ? 1 : 0),
@@ -132,7 +142,6 @@ const TeacherDashboard = () => {
           });
         }
       } catch (error) {
-        console.error('Error fetching teacher data:', error);
         // Use empty stats when API is not available
         setStats({
           classes: 0,
@@ -151,18 +160,44 @@ const TeacherDashboard = () => {
     }
   }, [user, refreshTrigger]);
 
+  // Auto-refresh stats every 30 seconds when user is active
+  useEffect(() => {
+    const updateStats = async () => {
+      try {
+        // Only update if not already loading
+        if (!isLoading) {
+          const homeworkResponse = await apiService.homework.getByTeacher(user.id);
+          const homework = homeworkResponse.data.homework || [];
+          
+          setStats(prev => ({
+            ...prev,
+            assignments: homework.length,
+            pending: homework.filter(hw => hw.status === 'assigned' || hw.status === 'active').length,
+            completedAssignments: homework.filter(hw => hw.status === 'submitted' || hw.status === 'graded').length
+          }));
+        }
+      } catch (error) {
+        // Silently fail for auto-refresh
+      }
+    };
+
+    // Initial update
+    updateStats();
+
+    // Set up auto-refresh interval
+    const interval = setInterval(updateStats, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [user.id, isLoading, refreshTrigger]);
+
   const handleAssignHomework = async (homeworkData) => {
     try {
       const response = await apiService.homework.create(homeworkData);
       const homeworkId = response?.data?.homeworkId || response?.data?.homework?.id;
       nativeNotificationService.success(`Lesson "${homeworkData.title}" assigned successfully!`);
 
-      // Refresh stats
-      setStats(prev => ({
-        ...prev,
-        assignments: prev.assignments + 1,
-        pending: prev.pending + homeworkData.classes.length
-      }));
+      // Trigger immediate refresh of all data
+      setRefreshTrigger(prev => prev + 1);
 
       // Navigate to newly created homework details page if we have the ID
       if (homeworkId) {
@@ -171,14 +206,14 @@ const TeacherDashboard = () => {
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || 'Failed to assign homework';
       nativeNotificationService.error(errorMessage);
-      console.error('Error assigning homework:', error);
       throw error; // Re-throw so calling component can still handle if needed
     }
   };
 
   // Handle homework creation from advanced component
   const handleHomeworkCreated = (newHomework) => {
-    console.log('New homework created:', newHomework);
+    // Trigger immediate refresh
+    setRefreshTrigger(prev => prev + 1);
     
     // Force a complete refresh of teacher data
     const refreshAllData = async () => {
@@ -196,21 +231,19 @@ const TeacherDashboard = () => {
           pending: homework.filter(hw => hw.status === 'assigned' || hw.status === 'active').length
         }));
         
-        console.log(`✅ Refreshed homework data: ${homework.length} total assignments`);
         
         // Trigger refresh trigger to update other components
         setRefreshTrigger(prev => prev + 1);
         
       } catch (error) {
-        console.error('Error refreshing homework data:', error);
         nativeNotificationService.error('Failed to refresh homework data');
       } finally {
         setIsLoading(false);
       }
     };
     
-    // Wait a moment for the API to process, then refresh
-    setTimeout(refreshAllData, 500);
+    // Refresh data after homework creation
+    refreshAllData();
   };
 
   // AI Grading handlers
@@ -226,11 +259,8 @@ const TeacherDashboard = () => {
       
       // Mock response for now
       nativeNotificationService.success('AI grading feature coming soon!');
-      setTimeout(() => {
-        setAiGradingStatus('completed');
-      }, 3000);
+      setAiGradingStatus('completed');
     } catch (error) {
-      console.error('Error starting AI grading:', error);
       nativeNotificationService.error('Failed to start AI grading');
       setAiGradingStatus('idle');
     }
@@ -254,7 +284,6 @@ const TeacherDashboard = () => {
       // Mock response for now
       nativeNotificationService.info('Grading results feature coming soon!');
     } catch (error) {
-      console.error('Error viewing grading results:', error);
       nativeNotificationService.error('Failed to load grading results');
     }
   };
@@ -271,7 +300,6 @@ const TeacherDashboard = () => {
       // Mock response for now
       nativeNotificationService.success('Parent communication feature coming soon!');
     } catch (error) {
-      console.error('Error sharing with parent:', error);
       nativeNotificationService.error('Failed to share with parent');
     }
   };
@@ -289,7 +317,6 @@ const TeacherDashboard = () => {
       nativeNotificationService.success('Progress report feature coming soon!');
       return null;
     } catch (error) {
-      console.error('Error generating progress report:', error);
       nativeNotificationService.error('Failed to generate progress report');
       return null;
     }
@@ -302,6 +329,77 @@ const TeacherDashboard = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Loading dashboard...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (showVirtualSchoolPlatform) {
+    return (
+      <div>
+        <div className="mb-4 p-4">
+          <button
+            onClick={() => setShowVirtualSchoolPlatform(false)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-gray-300 hover:bg-gray-800 hover:text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowRight className="w-4 h-4 mr-2 rotate-180" />
+            Back to Dashboard
+          </button>
+        </div>
+        <VirtualSchoolPlatform />
+      </div>
+    );
+  }
+
+  if (showComprehensiveLessons) {
+    return (
+      <div>
+        <div className="mb-4 p-4">
+          <button
+            onClick={() => setShowComprehensiveLessons(false)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-gray-300 hover:bg-gray-800 hover:text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowRight className="w-4 h-4 mr-2 rotate-180" />
+            Back to Dashboard
+          </button>
+        </div>
+        <ComprehensiveLessonLibrary 
+          onAssignHomework={handleAssignHomework}
+          classes={classes}
+        />
+      </div>
+    );
+  }
+
+  if (showEnhancedGrading) {
+    return (
+      <div>
+        <div className="mb-4 p-4">
+          <button
+            onClick={() => setShowEnhancedGrading(false)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'text-gray-300 hover:bg-gray-800 hover:text-white' 
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowRight className="w-4 h-4 mr-2 rotate-180" />
+            Back to Dashboard
+          </button>
+        </div>
+        <EnhancedAIGradingSystem 
+          submissions={pendingSubmissions}
+          onGradingComplete={(results) => {
+            setAiGradingStatus('completed');
+          }}
+        />
       </div>
     );
   }
@@ -494,15 +592,15 @@ const TeacherDashboard = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full box-border">
             <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
-              <div className={`text-2xl font-bold ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>16</div>
+              <div className={`text-2xl font-bold ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>{lessonLibraryStats.totalLessons}</div>
               <div className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Total Lessons</div>
             </div>
             <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
-              <div className={`text-2xl font-bold ${isDark ? 'text-green-300' : 'text-green-800'}`}>24+</div>
+              <div className={`text-2xl font-bold ${isDark ? 'text-green-300' : 'text-green-800'}`}>{lessonLibraryStats.worksheets}+</div>
               <div className={`text-xs ${isDark ? 'text-green-400' : 'text-green-600'}`}>Worksheets</div>
             </div>
             <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
-              <div className={`text-2xl font-bold ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>5</div>
+              <div className={`text-2xl font-bold ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>{lessonLibraryStats.subjects}</div>
               <div className={`text-xs ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Subjects</div>
             </div>
             <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-orange-900/20' : 'bg-orange-50'}`}>
@@ -518,7 +616,73 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 w-full box-border mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full box-border mb-4">
+          {/* Virtual School Platform */}
+          <button
+            onClick={() => setShowVirtualSchoolPlatform(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-emerald-900/20 to-teal-900/20 border-emerald-700 hover:border-emerald-600' : 'bg-gradient-to-r from-emerald-100 to-teal-100 border-emerald-200 hover:border-emerald-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl">🏫</div>
+              <FaGraduationCap className={`text-2xl ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Virtual School Platform
+            </h3>
+            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              Complete virtual school ecosystem with 500+ lessons and AI-powered tools
+            </p>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+              Explore Platform <FaArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </button>
+
+          {/* Comprehensive Lesson Library */}
+          <button
+            onClick={() => setShowComprehensiveLessons(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-700 hover:border-purple-600' : 'bg-gradient-to-r from-purple-100 to-blue-100 border-purple-200 hover:border-purple-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl">📚</div>
+              <FaBook className={`text-2xl ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              500+ Lesson Library
+            </h3>
+            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              Comprehensive CAPS-aligned lessons across all subjects and grades
+            </p>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+              Browse Lessons <FaArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </button>
+
+          {/* Enhanced AI Grading */}
+          <button
+            onClick={() => setShowEnhancedGrading(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-blue-900/20 to-cyan-900/20 border-blue-700 hover:border-blue-600' : 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-200 hover:border-blue-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl">🤖</div>
+              <FaRobot className={`text-2xl ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              AI Grading Assistant
+            </h3>
+            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              Advanced AI grading with detailed analytics and personalized feedback
+            </p>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+              Start Grading <FaArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </button>
+
           {/* Create Homework Assignment */}
           <button
             onClick={() => setShowHomeworkAssignment(true)}
@@ -540,45 +704,47 @@ const TeacherDashboard = () => {
               Create Homework <FaArrowRight className="ml-2 w-4 h-4" />
             </div>
           </button>
-          {/* Lesson Library */}
+
+          {/* Original Lesson Library */}
           <button
             onClick={() => setShowLessonLibrary(true)}
             className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
-              isDark ? 'bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-700 hover:border-purple-600' : 'bg-gradient-to-r from-purple-100 to-blue-100 border-purple-200 hover:border-purple-300'
+              isDark ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border-orange-700 hover:border-orange-600' : 'bg-gradient-to-r from-orange-100 to-red-100 border-orange-200 hover:border-orange-300'
             }`}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="text-4xl">🌟</div>
-              <FaLightbulb className={`text-2xl ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+              <FaLightbulb className={`text-2xl ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
             </div>
             <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Interactive Lesson Library
+              Interactive Lessons
             </h3>
             <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Browse and assign engaging interactive lessons to your classes
+              Browse and assign engaging interactive lessons with worksheets
             </p>
-            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
               Explore Lessons <FaArrowRight className="ml-2 w-4 h-4" />
             </div>
           </button>
-          {/* AI Grading Panel */}
+
+          {/* AI Grading Panel (Original) */}
           <button
             onClick={() => setShowAIGrading(true)}
             className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
-              isDark ? 'bg-gradient-to-r from-blue-900/20 to-cyan-900/20 border-blue-700 hover:border-blue-600' : 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-200 hover:border-blue-300'
+              isDark ? 'bg-gradient-to-r from-gray-900/20 to-slate-900/20 border-gray-700 hover:border-gray-600' : 'bg-gradient-to-r from-gray-100 to-slate-100 border-gray-200 hover:border-gray-300'
             }`}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="text-4xl">🤖</div>
-              <FaRobot className={`text-2xl ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+              <div className="text-4xl">⚡</div>
+              <FaClipboardCheck className={`text-2xl ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
             </div>
             <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              AI Grading Assistant
+              Quick Grading
             </h3>
             <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Automatically grade assignments with detailed feedback and analysis
+              Simple grading tools and submission management
             </p>
-            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               Grade Work <FaArrowRight className="ml-2 w-4 h-4" />
             </div>
             {stats.pendingGrading > 0 && (
@@ -586,28 +752,6 @@ const TeacherDashboard = () => {
                 {stats.pendingGrading} pending
               </div>
             )}
-          </button>
-
-          {/* Parent Communication */}
-          <button
-            onClick={() => setShowParentComm(true)}
-            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
-              isDark ? 'bg-gradient-to-r from-green-900/20 to-emerald-900/20 border-green-700 hover:border-green-600' : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-200 hover:border-green-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-4xl">👨‍👩‍👧‍👦</div>
-              <FaComments className={`text-2xl ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-            </div>
-            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Parent Communication
-            </h3>
-            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Share graded work and generate progress reports for parents
-            </p>
-            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-              Communicate <FaArrowRight className="ml-2 w-4 h-4" />
-            </div>
           </button>
         </div>
 

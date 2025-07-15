@@ -81,7 +81,7 @@ const Dashboard = () => {
   
   // Get proper spacing based on navigation style
   const getContainerClasses = () => {
-    let classes = `${isDark ? 'bg-gray-900' : 'bg-gray-50'}`;
+    const classes = `${isDark ? 'bg-gray-900' : 'bg-gray-50'}`;
     return classes;
   };
   
@@ -109,22 +109,22 @@ const Dashboard = () => {
     }
 
     switch (direction) {
-      case 'left':
-        navigate('/homework');
-        break;
-      case 'right':
-        navigate('/activities');
-        break;
-      case 'up':
-        setShowMoreStats(true);
-        break;
-      case 'down':
-        if (showMoreStats) {
-          setShowMoreStats(false);
-        } else {
-          navigate('/profile');
-        }
-        break;
+    case 'left':
+      navigate('/homework');
+      break;
+    case 'right':
+      navigate('/activities');
+      break;
+    case 'up':
+      setShowMoreStats(true);
+      break;
+    case 'down':
+      if (showMoreStats) {
+        setShowMoreStats(false);
+      } else {
+        navigate('/profile');
+      }
+      break;
     }
   };
 

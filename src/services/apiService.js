@@ -4,7 +4,9 @@ import axios from 'axios';
 export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 // Log API configuration
-console.log('🌐 API Base URL:', API_BASE_URL);
+if (process.env.NODE_ENV === 'development') {
+  console.log('🌐 API Base URL:', API_BASE_URL);
+}
 
 // Request cache and debouncing
 const requestCache = new Map();
@@ -129,24 +131,31 @@ apiClient.interceptors.request.use(
     const user = localStorage.getItem('user');
     
     // Enhanced debugging
-    console.log('🔍 Request Interceptor Debug:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      fullUrl: `${config.baseURL}${config.url}`,
-      hasToken: !!token,
-      tokenPrefix: token ? token.substring(0, 10) + '...' : 'None',
-      userInStorage: !!user,
-      headers: config.headers
-    });
-    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Request Interceptor Debug:', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        fullUrl: `${config.baseURL}${config.url}`,
+        hasToken: !!token,
+        tokenPrefix: token ? token.substring(0, 10) + '...' : 'None',
+        userInStorage: !!user,
+        headers: config.headers
+      });
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('✅ Auth token added to request');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Auth token added to request');
+      }
     } else {
-      console.log('⚠️ No auth token found in localStorage');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('⚠️ No auth token found in localStorage');
+      }
     }
-    
-    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    }
     return config;
   },
   (error) => {
@@ -308,6 +317,7 @@ const apiService = {
     // Child registration endpoints
     search: (searchTerm) => apiClient.get(`/api/children/search?q=${encodeURIComponent(searchTerm)}`),
     register: (childData) => apiClient.post('/api/children/register', childData),
+    registerGeneral: (childData) => apiClient.post('/api/children/register-general', childData),
     linkToParent: (childId, parentId) => apiClient.post('/api/children/link-parent', { childId, parentId }),
     
     // Create new child (complete registration)

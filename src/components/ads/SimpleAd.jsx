@@ -40,23 +40,29 @@ const SimpleAd = ({
   useEffect(() => {
     if (!shouldRender || !adRef.current) return;
 
-    // Skip ads if AdSense script not loaded
-    if (!adConfig.isScriptLoaded()) {
-      // AdSense script not loaded yet, will retry on next render
-      console.warn('AdSense script not loaded');
+    // Initialize AdSense first (before any checks)
+    if (!window.adsbygoogle) {
+      window.adsbygoogle = [];
+    }
+    
+    // Skip ads if AdSense script tag not present
+    const hasScriptTag = !!document.querySelector('script[src*="adsbygoogle.js"]');
+    if (!hasScriptTag) {
+      console.warn('AdSense script tag not found');
       setHasError(true);
       return;
     }
-
-    // Initialize AdSense
-    adConfig.initializeAdSense();
     
     const timer = setTimeout(() => {
       try {
+        // Ensure adsbygoogle exists and push
+        if (!window.adsbygoogle) {
+          window.adsbygoogle = [];
+        }
         window.adsbygoogle.push({});
         setIsLoaded(true);
         
-    // Check if ad actually loaded after a delay
+        // Check if ad actually loaded after a delay
         setTimeout(() => {
           if (adRef.current) {
             const actualHeight = adRef.current.offsetHeight;
@@ -97,32 +103,23 @@ const SimpleAd = ({
     return null;
   }
 
+  // Return the ins element directly without wrapper div
   return (
-    <div style={getContainerStyles()}>
-      <ins
-        ref={adRef}
-        className={`adsbygoogle ${className}`}
-        style={{
-          display: 'block',
-          width: '100%',
-          maxWidth: '100%',
-          minHeight: adHeight > 0 ? `${adHeight}px` : '50px',
-          height: 'auto',
-          border: 'none',
-          margin: '0',
-          padding: '0',
-          overflow: 'visible',
-          position: 'relative',
-          boxSizing: 'border-box',
-          ...style
-        }}
-        data-ad-client={adConfig.getPublisherId()}
-        data-ad-slot={adSlot}
-        data-ad-format={adFormat}
-        data-full-width-responsive="true"
-        data-ad-test={adConfig.isTestMode() ? 'on' : 'off'}
-      />
-    </div>
+    <ins
+      ref={adRef}
+      className={`adsbygoogle ${className}`}
+      style={{
+        display: 'block',
+        width: '100%',
+        height: 'auto',
+        ...style
+      }}
+      data-ad-client={adConfig.getPublisherId()}
+      data-ad-slot={adSlot}
+      data-ad-format={adFormat}
+      data-full-width-responsive="true"
+      data-ad-test={adConfig.isTestMode() ? 'on' : 'off'}
+    />
   );
 };
 
