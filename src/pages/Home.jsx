@@ -17,6 +17,7 @@ import {
 
 // Simplified Ad Components  
 import { HeaderAd, ContentAd, NativeAd, FooterAd, SidebarAd } from '../components/ads/AdComponents';
+import PageWrapper from '../components/PageWrapper';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -85,11 +86,12 @@ const Home = () => {
   ];
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} overflow-x-hidden`} style={{
-      WebkitOverflowScrolling: 'touch',
-      overscrollBehavior: 'contain',
-      scrollBehavior: 'smooth'
-    }}>
+    <PageWrapper>
+      <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} overflow-x-hidden`} style={{
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+        scrollBehavior: 'smooth'
+      }}>
       {/* Header Ad - Native app style - Only show if configured */}
       {import.meta.env.VITE_ADSENSE_HEADER_BANNER && (
         <div className="w-full py-2">
@@ -245,8 +247,9 @@ const Home = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PageWrapper>
   );
 };
 
-export default Home; 
+export default Home;

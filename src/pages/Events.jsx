@@ -3,28 +3,33 @@ import apiService from '../services/apiService';
 import { useTheme } from '../contexts/ThemeContext';
 import { FaCalendarAlt, FaBell, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
 import { HeaderAd, ContentAd, FooterAd } from '../components/ads/AdComponents';
+import PageWrapper from '../components/PageWrapper';
 
 const Events = () => {
   const { isDark } = useTheme();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await apiService.events.getAll();
-        setEvents(response.data.events || []);
-      } catch (error) {
-        console.error('Events API not available:', error);
-        setEvents([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchEvents = async () => {
+    try {
+      const response = await apiService.events.getAll();
+      setEvents(response.data.events || []);
+    } catch (error) {
+      console.error('Events API not available:', error);
+      setEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await fetchEvents();
+  };
+
+  useEffect(() => {
     fetchEvents();
   }, []);
-
   const getEventIcon = (type) => {
     switch (type) {
     case 'meeting': return FaCalendarAlt;
@@ -66,10 +71,11 @@ const Events = () => {
   }
 
   return (
-    <div className={`min-h-screen mt-18 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header */}  
+    <PageWrapper onRefresh={handleRefresh}>
+      <div className={`min-h-screen mt-18 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        {/* Header */}  
 
-      <div className="p-4 space-y-4 -mt-1">
+        <div className="p-4 space-y-4 -mt-1">
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-2xl">
           <h1 className="text-2xl font-bold mb-1">📅 Events & Calendar</h1>
           <p className="text-purple-100 text-sm">Stay updated with school events and important dates</p>
@@ -155,8 +161,9 @@ const Events = () => {
         </div>
 
         {/* Bottom Rectangle Ad - Removed to improve user experience */}
+        </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 

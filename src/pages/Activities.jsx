@@ -9,6 +9,7 @@ import nativeNotificationService from '../services/nativeNotificationService';
 import LazyLoader from '../components/LazyLoader';
 import MazeActivity from '../components/PWA/MazeActivity';
 import { HeaderAd, ContentAd, FooterAd } from '../components/ads/AdComponents';
+import PageWrapper from '../components/PageWrapper';
 
 const Activities = () => {
   const { isDark } = useTheme();
@@ -41,6 +42,12 @@ const Activities = () => {
     } catch (error) {
       console.error('Error fetching students:', error);
       setStudents([]);
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (user?.role === 'teacher') {
+      await fetchStudents();
     }
   };
 
@@ -426,8 +433,9 @@ const Activities = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} transition-colors`}>
+    <PageWrapper onRefresh={handleRefresh}>
+      <ErrorBoundary>
+        <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} transition-colors`}>
         {/* Header Ad - Removed due to mobile interference */}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -780,8 +788,9 @@ const Activities = () => {
 
         {/* Footer Ad */}
         <FooterAd />
-      </div>
-    </ErrorBoundary>
+        </div>
+      </ErrorBoundary>
+    </PageWrapper>
   );
 };
 

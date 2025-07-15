@@ -229,7 +229,7 @@ const UserDropdown = ({ onLogout }) => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className={`absolute right-0 top-full mt-2 w-64 rounded-xl shadow-xl border z-[60] overflow-hidden ${
+        <div className={`absolute right-0 top-full mt-2 w-64 max-h-96 rounded-xl shadow-xl border z-[60] overflow-hidden ${
           isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         } ${isAnimating ? 'animate-slideDown' : ''}`}>
           
@@ -271,7 +271,7 @@ const UserDropdown = ({ onLogout }) => {
           </div>
 
           {/* Menu Items */}
-          <div className="py-2">
+          <div className="py-2 max-h-60 overflow-y-auto">
             {menuItems.map((item, index) => (
               <div key={index}>
                 <button
