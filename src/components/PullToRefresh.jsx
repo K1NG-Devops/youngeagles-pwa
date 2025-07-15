@@ -13,7 +13,8 @@ const PullToRefresh = ({ onRefresh, children, className = '' }) => {
 
   const handleTouchStart = useCallback((e) => {
     // Only allow pull-to-refresh when at the top of the page
-    if (window.scrollY === 0) {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop === 0) {
       setStartY(e.touches[0].clientY);
       setCanPull(true);
     }
@@ -24,8 +25,9 @@ const PullToRefresh = ({ onRefresh, children, className = '' }) => {
 
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - startY;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
 
-    if (deltaY > 0 && window.scrollY === 0) {
+    if (deltaY > 0 && scrollTop === 0) {
       e.preventDefault();
       setIsPulling(true);
       const distance = Math.min(deltaY * 0.5, MAX_PULL_DISTANCE);
@@ -58,7 +60,7 @@ const PullToRefresh = ({ onRefresh, children, className = '' }) => {
   }, [isPulling, pullDistance, isRefreshing, onRefresh]);
 
   useEffect(() => {
-    const container = document.documentElement;
+    const container = document.body;
     
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
     container.addEventListener('touchmove', handleTouchMove, { passive: false });

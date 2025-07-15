@@ -275,11 +275,11 @@ body, html {
   overflow-x: hidden !important;
 }
 
-/* Google AdSense - Responsive with Error Handling */
+/* Google AdSense - Clean spacing without distortion */
 .adsbygoogle {
   display: block !important;
   text-align: center;
-  margin: 8px 0;
+  margin: 0 !important;
   overflow: visible !important;
   width: 100% !important;
   height: auto !important;
@@ -313,7 +313,7 @@ body, html {
   overflow: visible !important;
 }
 
-/* Ad Container - Flexible with error handling */
+/* Ad Container - Clean with consistent spacing */
 .ad-container {
   width: 100%;
   position: relative;
@@ -321,6 +321,7 @@ body, html {
   overflow: visible !important;
   min-height: unset !important;
   max-height: none !important;
+  padding: 0 !important;
 }
 
 /* Ad containers that failed to load */
@@ -329,6 +330,7 @@ body, html {
   margin: 0 !important;
   height: 0 !important;
   min-height: 0 !important;
+  padding: 0 !important;
 }
 
 /* Allow ALL ad content to expand freely */

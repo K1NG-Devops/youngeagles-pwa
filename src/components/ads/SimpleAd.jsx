@@ -80,12 +80,12 @@ const SimpleAd = ({
     return () => clearTimeout(timer);
   }, [shouldRender]);
 
-  // Minimal container styles - no large wrappers
+  // Clean container styles with consistent spacing
   const getContainerStyles = () => {
     return {
       width: '100%',
       maxWidth: '100%',
-      margin: hasError ? '0' : '8px 0',
+      margin: hasError ? '0' : '0',
       padding: '0',
       display: hasError ? 'none' : 'block',
       ...style
@@ -106,7 +106,7 @@ const SimpleAd = ({
           display: 'block',
           width: '100%',
           maxWidth: '100%',
-          minHeight: adHeight > 0 ? `${adHeight}px` : '90px',
+          minHeight: adHeight > 0 ? `${adHeight}px` : '50px',
           height: 'auto',
           border: 'none',
           margin: '0',
