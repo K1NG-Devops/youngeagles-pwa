@@ -21,9 +21,9 @@ const SimpleAd = ({
   useEffect(() => {
     if (!shouldShowAds || !adRef.current) return;
 
-    // Skip ads in development if AdSense script not loaded
+    // Skip ads if AdSense script not loaded
     if (!window.adsbygoogle) {
-      // console.log('AdSense script not loaded, skipping ad initialization');
+      // AdSense script not loaded yet, will retry on next render
       return;
     }
 
@@ -35,7 +35,10 @@ const SimpleAd = ({
         window.adsbygoogle.push({});
         setIsLoaded(true);
       } catch (error) {
-        // Silent error handling in development
+        // Log errors in production for debugging
+        if (import.meta.env.PROD) {
+          console.error('AdSense initialization error:', error);
+        }
         setHasError(true);
       }
     }, 500); // Increased delay for better loading

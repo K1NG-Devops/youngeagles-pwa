@@ -31,9 +31,15 @@ export const WebSocketProvider = ({ children }) => {
       return;
     }
 
-    // Skip WebSocket connection in development/localhost
-    if (!API_BASE_URL || API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1') || import.meta.env.DEV) {
-      // console.log('WebSocket disabled in development environment');
+    // Skip WebSocket connection only for localhost development
+    if (!API_BASE_URL || API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
+      // console.log('WebSocket disabled for localhost development');
+      return;
+    }
+    
+    // Check if WebSocket endpoint is available
+    if (!API_BASE_URL.includes('railway.app') && !API_BASE_URL.includes('youngeagles')) {
+      // console.log('WebSocket disabled - unknown API endpoint');
       return;
     }
 
