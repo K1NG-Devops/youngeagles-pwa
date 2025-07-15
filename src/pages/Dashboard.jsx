@@ -251,15 +251,20 @@ const Dashboard = () => {
   }
 
   return (
-    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} touch-none`}>
+    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} dashboard-container mobile-scroll overflow-y-auto scrollbar-hide`} style={{
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain',
+      scrollBehavior: 'smooth',
+      touchAction: 'pan-y'
+    }}>
       <Header />
       <NativeAppEnhancements />
       
       
       <main className="pt-0 pb-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Strategic Native Ad - Seamless integration */}
-          <NativeAd />
+          {/* Strategic Native Ad - Only show if ads are working */}
+          {shouldShowAd && canShowMoreAds && <NativeAd />}
 
           {/* Welcome Section - Enhanced Light Blue Gradient */}
           <div className="bg-gradient-to-br from-blue-400 via-purple-500 to-purple-600 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
@@ -411,8 +416,8 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Content Ad - Native integration */}
-          {userRole === 'parent' && stats.children > 0 && (
+          {/* Content Ad - Native integration - Only show if ads are working */}
+          {userRole === 'parent' && stats.children > 0 && shouldShowAd && canShowMoreAds && (
             <ContentAd />
           )}
 

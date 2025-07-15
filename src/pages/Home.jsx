@@ -85,13 +85,19 @@ const Home = () => {
   ];
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header Ad - Native app style */}
-      <div className="w-full py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <HeaderAd className="mx-auto" />
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} overflow-x-hidden`} style={{
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain',
+      scrollBehavior: 'smooth'
+    }}>
+      {/* Header Ad - Native app style - Only show if configured */}
+      {import.meta.env.VITE_ADSENSE_HEADER_BANNER && (
+        <div className="w-full py-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <HeaderAd className="mx-auto" />
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -133,12 +139,14 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Native Ad After Hero Section */}
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <NativeAd className="mx-auto" />
+      {/* Native Ad After Hero Section - Only show if configured */}
+      {import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE && (
+        <div className="py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <NativeAd className="mx-auto" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Features Section */}
       <div className="py-16 lg:py-24">
@@ -178,27 +186,33 @@ const Home = () => {
               ))}
             </div>
             
-            {/* Sidebar - Premium ad placement */}
-            <div className="lg:col-span-1 flex flex-col space-y-8">
-              <div className="sticky top-4">
-                <SidebarAd />
+            {/* Sidebar - Premium ad placement - Only show if configured */}
+            {import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER && (
+              <div className="lg:col-span-1 flex flex-col space-y-8">
+                <div className="sticky top-4">
+                  <SidebarAd />
+                </div>
+                
+                {/* Second content ad */}
+                {import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE && (
+                  <div className="hidden lg:block">
+                    <ContentAd />
+                  </div>
+                )}
               </div>
-              
-              {/* Second content ad */}
-              <div className="hidden lg:block">
-                <ContentAd />
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Middle Content - Native integration */}
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <NativeAd className="mx-auto" />
+      {/* Middle Content - Native integration - Only show if configured */}
+      {import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE && (
+        <div className="py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <NativeAd className="mx-auto" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* CTA Section */}
       <div className="py-16">
@@ -223,12 +237,14 @@ const Home = () => {
         </div>
       </div>
       
-      {/* Footer Ad - Native app style */}
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FooterAd />
+      {/* Footer Ad - Native app style - Only show if configured */}
+      {import.meta.env.VITE_ADSENSE_FOOTER_BANNER && (
+        <div className="py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <FooterAd />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -87,6 +87,8 @@ html, body {
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px; /* Account for fixed header */
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -95,6 +97,8 @@ body {
   /* Enhanced touch scrolling for iOS */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  height: 100%;
+  position: relative;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -117,6 +121,42 @@ body {
 /* Prevent bounce scrolling */
 .no-bounce {
   overscroll-behavior: none;
+}
+
+/* Mobile-first touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  touch-action: pan-y;
+}
+
+/* Ensure proper mobile viewport */
+@media (max-width: 768px) {
+  html, body {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    height: 100%;
+    position: relative;
+  }
+  
+  .mobile-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    height: 100%;
+  }
+  
+  /* Fix for dashboard scrolling */
+  .dashboard-container {
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    position: relative;
+  }
 }
 
 /* Custom animations for confetti */
@@ -235,20 +275,29 @@ body, html {
   overflow-x: hidden !important;
 }
 
-/* Google AdSense - Completely Unrestricted (No Cropping) */
+/* Google AdSense - Responsive with Error Handling */
 .adsbygoogle {
   display: block !important;
   text-align: center;
-  margin: 16px 0;
+  margin: 8px 0;
   overflow: visible !important;
   width: 100% !important;
   height: auto !important;
   max-width: none !important;
   max-height: none !important;
   min-width: unset !important;
-  min-height: unset !important;
+  min-height: 50px !important;
   border: none !important;
   padding: 0 !important;
+}
+
+/* Hide failed ads completely */
+.adsbygoogle[data-ad-status="unfilled"],
+.adsbygoogle[data-ad-status="blocked"] {
+  display: none !important;
+  margin: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
 }
 
 /* Remove ALL constraints from responsive ads */
@@ -264,7 +313,7 @@ body, html {
   overflow: visible !important;
 }
 
-/* Ad Container - Completely flexible */
+/* Ad Container - Flexible with error handling */
 .ad-container {
   width: 100%;
   position: relative;
@@ -272,6 +321,14 @@ body, html {
   overflow: visible !important;
   min-height: unset !important;
   max-height: none !important;
+}
+
+/* Ad containers that failed to load */
+.ad-container:empty {
+  display: none !important;
+  margin: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
 }
 
 /* Allow ALL ad content to expand freely */
@@ -292,16 +349,23 @@ body, html {
 @media (max-width: 640px) {
   .adsbygoogle,
   .ad-container {
-    min-height: unset !important;
+    min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
+  }
+  
+  /* Hide failed ads on mobile */
+  .adsbygoogle:empty {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
   }
 }
 
 @media (min-width: 641px) {
   .adsbygoogle,
   .ad-container {
-    min-height: unset !important;
+    min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
   }
