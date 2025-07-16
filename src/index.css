@@ -4,6 +4,118 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===============================================
+   ADSENSE FIXES - PREVENT CROPPING AND ZERO WIDTH
+   =============================================== */
+
+/* AdSense Container Base Styles */
+ins[data-ad-client] {
+  display: block !important;
+  margin: 15px auto !important;
+  padding: 0 !important;
+  box-sizing: content-box !important;
+  background: transparent !important;
+  border: none !important;
+  text-align: center !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* Rectangle Ad Format (300x250) */
+ins[data-ad-client][data-ad-format="rectangle"],
+ins[data-ad-client][data-ad-slot="1707587859"] {
+  width: 300px !important;
+  height: 250px !important;
+  max-width: 300px !important;
+  max-height: 250px !important;
+  min-width: 300px !important;
+  min-height: 250px !important;
+}
+
+/* Fluid Ad Format - Responsive */
+ins[data-ad-client][data-ad-format="fluid"],
+ins[data-ad-client][data-ad-slot="6408733271"] {
+  width: 100% !important;
+  max-width: 500px !important;
+  min-width: 300px !important;
+  height: 200px !important;
+  min-height: 100px !important;
+}
+
+/* Auto Ad Format - Responsive Banner */
+ins[data-ad-client][data-ad-format="auto"] {
+  width: 100% !important;
+  max-width: 728px !important;
+  min-width: 320px !important;
+  height: 90px !important;
+  min-height: 90px !important;
+}
+
+/* AdSense Iframe Fixes */
+ins[data-ad-client] iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Parent Container Fixes */
+.adsense-container,
+.ad-container {
+  width: 100% !important;
+  min-width: 320px !important;
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: content-box !important;
+  overflow: visible !important;
+}
+
+/* Mobile Responsive AdSense */
+@media (max-width: 768px) {
+  ins[data-ad-client][data-ad-format="rectangle"],
+  ins[data-ad-client][data-ad-slot="1707587859"] {
+    width: 300px !important;
+    height: 250px !important;
+  }
+  
+  ins[data-ad-client][data-ad-format="fluid"],
+  ins[data-ad-client][data-ad-slot="6408733271"] {
+    max-width: 350px !important;
+    height: 150px !important;
+  }
+  
+  ins[data-ad-client][data-ad-format="auto"] {
+    max-width: 320px !important;
+    height: 50px !important;
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+  ins[data-ad-client][data-ad-format="rectangle"],
+  ins[data-ad-client][data-ad-slot="1707587859"] {
+    width: 300px !important;
+    height: 250px !important;
+  }
+  
+  ins[data-ad-client][data-ad-format="fluid"],
+  ins[data-ad-client][data-ad-slot="6408733271"] {
+    max-width: 300px !important;
+    height: 150px !important;
+  }
+  
+  ins[data-ad-client][data-ad-format="auto"] {
+    max-width: 300px !important;
+    height: 50px !important;
+  }
+}
+
+/* ===============================================
+   END ADSENSE FIXES
+   =============================================== */
+
 /* Maze Game Styles */
 .maze-grid {
   display: grid;

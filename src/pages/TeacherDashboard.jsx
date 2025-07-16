@@ -28,6 +28,7 @@ import NewHomeworkAssignment from '../components/NewHomeworkAssignment';
 import VirtualSchoolPlatform from '../components/VirtualSchoolPlatform';
 import ComprehensiveLessonLibrary from '../components/ComprehensiveLessonLibrary';
 import EnhancedAIGradingSystem from '../components/EnhancedAIGradingSystem';
+import PreschoolLessonLibrary from '../components/PreschoolLessonLibrary';
 import Header from '../components/Header';
 
 // Hooks and Services
@@ -52,6 +53,7 @@ const TeacherDashboard = () => {
   const [showVirtualSchoolPlatform, setShowVirtualSchoolPlatform] = useState(false);
   const [showComprehensiveLessons, setShowComprehensiveLessons] = useState(false);
   const [showEnhancedGrading, setShowEnhancedGrading] = useState(false);
+  const [showPreschoolLessons, setShowPreschoolLessons] = useState(false);
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
   const navigate = useNavigate();
   const { isDark } = useTheme();
@@ -416,6 +418,16 @@ const TeacherDashboard = () => {
     );
   }
 
+  if (showPreschoolLessons) {
+    return (
+      <PreschoolLessonLibrary 
+        onAssignHomework={handleAssignHomework}
+        classes={classes}
+        onClose={() => setShowPreschoolLessons(false)}
+      />
+    );
+  }
+
   if (showLessonLibrary) {
     return (
       <div>
@@ -629,6 +641,27 @@ const TeacherDashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full box-border mb-4">
+          {/* Preschool Lesson Library */}
+          <button
+            onClick={() => setShowPreschoolLessons(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-pink-900/20 to-rose-900/20 border-pink-700 hover:border-pink-600' : 'bg-gradient-to-r from-pink-100 to-rose-100 border-pink-200 hover:border-pink-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl">👶</div>
+              <FaLightbulb className={`text-2xl ${isDark ? 'text-pink-400' : 'text-pink-600'}`} />
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Preschool Lessons
+            </h3>
+            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              20 comprehensive lessons for ages 1-6 with digital resources, flashcards, and interactive content
+            </p>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-pink-400' : 'text-pink-600'}`}>
+              Browse Preschool Lessons <FaArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </button>
           {/* Virtual School Platform */}
           <button
             onClick={() => setShowVirtualSchoolPlatform(true)}

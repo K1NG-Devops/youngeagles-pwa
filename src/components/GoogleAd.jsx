@@ -14,14 +14,14 @@ const GoogleAd = ({
   const testMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
 
   useEffect(() => {
-    // Only load ads if AdSense is enabled and we have the required data
+    // Only load real ads if AdSense is enabled and we're in production with test mode disabled
     if (!adSenseEnabled || !publisherId || !slot) {
       console.warn('AdSense disabled or missing publisher ID/slot');
       return;
     }
 
-    // Load the ad in production or when test mode is enabled
-    if (isProduction || testMode) {
+    // Load real ads only in production when test mode is disabled
+    if (isProduction && !testMode) {
       try {
         if (window.adsbygoogle && adRef.current) {
           // Check if ad is already loaded
@@ -38,6 +38,8 @@ const GoogleAd = ({
       } catch (error) {
         console.error('Error loading AdSense ad:', error);
       }
+    } else {
+      console.log('AdSense placeholder mode - slot:', slot);
     }
   }, [publisherId, slot, adSenseEnabled, isProduction, testMode]);
 
@@ -46,8 +48,8 @@ const GoogleAd = ({
     return null;
   }
 
-  // Show placeholder only in development when test mode is disabled
-  if (!isProduction && !testMode) {
+  // Show placeholder in development OR when test mode is enabled (for debugging)
+  if (!isProduction || testMode) {
     return (
       <div className={`adsense-placeholder ${className}`} style={{ 
         ...style, 
@@ -63,7 +65,9 @@ const GoogleAd = ({
         <div>🔧 AdSense Placeholder</div>
         <div>Slot: {slot}</div>
         <div>Publisher: {publisherId}</div>
-        <div>(Enable test mode to see ads in development)</div>
+        <div>Mode: {isProduction ? 'Production' : 'Development'}</div>
+        <div>Test Mode: {testMode ? 'Enabled' : 'Disabled'}</div>
+        <div>{isProduction ? '(Real ads disabled in test mode)' : '(Enable test mode to see ads in development)'}</div>
       </div>
     );
   }
