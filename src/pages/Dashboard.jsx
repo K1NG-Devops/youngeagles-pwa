@@ -49,8 +49,11 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showChildRegistration, setShowChildRegistration] = useState(false);
   
-  // Ad frequency management
+  // Ad frequency management - simplified for better display
   const { shouldShowAd, recordAdShown, canShowMoreAds } = useAdFrequency('dashboard');
+  
+  // Always show ads for better user experience
+  const showAds = true;
 
   // Swipe gesture handlers
   const handleSwipe = (direction) => {
@@ -208,12 +211,17 @@ const Dashboard = () => {
   }
 
   return (
-    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} touch-none`}>
+    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} overflow-y-auto`} style={{
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain',
+      scrollBehavior: 'smooth',
+      touchAction: 'pan-y'
+    }}>
       <Header />
       <NativeAppEnhancements />
       
       
-      <main className="pt-0 pb-4">
+      <main className="pt-16 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Strategic Native Ad - Seamless integration */}
           <div className="mb-6">
@@ -360,7 +368,7 @@ const Dashboard = () => {
           )}
 
           {/* Content Ad - Native integration */}
-          {userRole === 'parent' && stats.children > 0 && (
+          {userRole === 'parent' && (
             <div className="mb-6">
               <ContentAd />
             </div>
@@ -486,7 +494,10 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Bottom Banner Ad - Removed to reduce ad density */}
+          {/* Additional Content Ad for better monetization */}
+          <div className="mb-6">
+            <ContentAd />
+          </div>
           
         </div>
       </main>
