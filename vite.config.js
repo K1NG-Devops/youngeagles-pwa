@@ -77,6 +77,8 @@ export default defineConfig({
   ],
   server: {
     port: 3002,
+    host: true,
+    historyApiFallback: true, // Enable history API fallback for SPA routing
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

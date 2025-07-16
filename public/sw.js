@@ -159,7 +159,7 @@ async function updateInBackground(request) {
   }
 }
 
-// Push event - handle push notifications
+// Push event - handle push notifications with enhanced native behavior
 self.addEventListener('push', (event) => {
   console.log('Service Worker: Push event received');
   
@@ -169,7 +169,11 @@ self.addEventListener('push', (event) => {
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-192x192.png',
     tag: 'young-eagles-notification',
-    data: {}
+    data: {},
+    requireInteraction: true, // Keep notification visible until user interacts
+    vibrate: [200, 100, 200], // Vibration pattern for mobile
+    timestamp: Date.now(),
+    silent: false // Not silent - play notification sound
   };
 
   // Parse notification data if available
@@ -195,6 +199,11 @@ self.addEventListener('push', (event) => {
         icon: '/icons/icon-48x48.png'
       },
       {
+        action: 'remind',
+        title: 'Remind Me Later',
+        icon: '/icons/icon-48x48.png'
+      },
+      {
         action: 'dismiss',
         title: 'Dismiss',
         icon: '/icons/icon-48x48.png'
@@ -205,6 +214,11 @@ self.addEventListener('push', (event) => {
       {
         action: 'view',
         title: 'View Grade',
+        icon: '/icons/icon-48x48.png'
+      },
+      {
+        action: 'share',
+        title: 'Share',
         icon: '/icons/icon-48x48.png'
       },
       {
@@ -228,7 +242,7 @@ self.addEventListener('push', (event) => {
     ];
   }
 
-  // Show notification
+  // Show notification with enhanced native behavior
   event.waitUntil(
     self.registration.showNotification(notificationData.title, {
       body: notificationData.body,
@@ -237,14 +251,17 @@ self.addEventListener('push', (event) => {
       tag: notificationData.tag,
       data: notificationData.data,
       actions: notificationData.actions,
-      requireInteraction: notificationData.requireInteraction || false,
-      silent: false,
-      timestamp: Date.now()
+      requireInteraction: notificationData.requireInteraction,
+      silent: notificationData.silent,
+      vibrate: notificationData.vibrate,
+      timestamp: notificationData.timestamp,
+      renotify: true, // Allow renotification on same tag
+      sticky: true // Make notification sticky on Android
     })
   );
 });
 
-// Notification click event - handle user interaction
+// Notification click event - handle user interaction with enhanced behavior
 self.addEventListener('notificationclick', (event) => {
   console.log('Service Worker: Notification click event');
   
@@ -261,6 +278,35 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
+  if (action === 'remind') {
+    // Schedule a reminder notification for later
+    console.log('Service Worker: Scheduling reminder notification');
+    setTimeout(() => {
+      self.registration.showNotification('Reminder: ' + notification.title, {
+        body: notification.body,
+        icon: notification.icon,
+        badge: notification.badge,
+        tag: 'young-eagles-reminder',
+        data: data,
+        requireInteraction: true,
+        vibrate: [200, 100, 200]
+      });
+    }, 30 * 60 * 1000); // Remind after 30 minutes
+    return;
+  }
+
+  if (action === 'share') {
+    // Try to use Web Share API if available
+    if (navigator.share) {
+      navigator.share({
+        title: notification.title,
+        text: notification.body,
+        url: data.url || window.location.origin
+      });
+    }
+    return;
+  }
+
   // Determine URL to open based on notification type
   let urlToOpen = '/';
   
@@ -274,7 +320,7 @@ self.addEventListener('notificationclick', (event) => {
     urlToOpen = '/notifications';
   }
 
-  // Open the app or focus existing tab
+  // Open the app or focus existing tab with enhanced behavior
   event.waitUntil(
     clients.matchAll({
       type: 'window',
@@ -286,7 +332,11 @@ self.addEventListener('notificationclick', (event) => {
         if (client.url.includes(self.location.origin)) {
           // Focus existing tab and navigate
           return client.focus().then(() => {
-            return client.navigate(urlToOpen);
+            return client.postMessage({
+              type: 'NAVIGATE',
+              url: urlToOpen,
+              fromNotification: true
+            });
           });
         }
       }

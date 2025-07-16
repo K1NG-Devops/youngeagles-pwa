@@ -28,14 +28,40 @@ class PushNotificationService {
     return outputArray;
   }
 
-  // Request permission for push notifications
+  // Request permission for push notifications with enhanced UX
   async requestPermission() {
     if (!this.isSupported) {
       throw new Error('Push notifications are not supported');
     }
 
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
+    // Check current permission status
+    let permission = Notification.permission;
+    
+    if (permission === 'default') {
+      // Request permission with better timing
+      permission = await Notification.requestPermission();
+    }
+    
+    if (permission === 'granted') {
+      console.log('✅ Push notification permission granted');
+      return true;
+    } else if (permission === 'denied') {
+      console.log('❌ Push notification permission denied');
+      // Show user-friendly message about enabling notifications
+      this.showPermissionDeniedMessage();
+      return false;
+    } else {
+      console.log('⏳ Push notification permission dismissed');
+      return false;
+    }
+  }
+
+  // Show user-friendly message when permission is denied
+  showPermissionDeniedMessage() {
+    if (window.confirm('Push notifications are disabled. Would you like to enable them to receive important updates? Click OK to learn how.')) {
+      // Provide instructions for enabling notifications
+      alert('To enable notifications:\n\n1. Click the lock icon in your browser\'s address bar\n2. Change "Notifications" to "Allow"\n3. Refresh the page\n\nOr check your browser settings for notification permissions.');
+    }
   }
 
   // Subscribe to push notifications
@@ -143,12 +169,62 @@ class PushNotificationService {
     }
 
     if (Notification.permission === 'granted') {
-      new Notification(title, {
+      const notification = new Notification(title, {
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-192x192.png',
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
         ...options
       });
+
+      // Auto-close after 5 seconds if not interacted with
+      setTimeout(() => {
+        notification.close();
+      }, 5000);
+
+      return notification;
+    } else {
+      console.warn('Notification permission not granted');
     }
+  }
+
+  // Test push notification functionality
+  async testPushNotification() {
+    try {
+      console.log('🧪 Testing push notification functionality...');
+      
+      // Check if subscribed
+      const isSubscribed = await this.isSubscribed();
+      if (!isSubscribed) {
+        console.log('📱 Not subscribed to push notifications. Subscribing...');
+        await this.subscribe();
+      }
+
+      // Send test notification via API
+      const response = await apiService.push.sendTest();
+      console.log('✅ Test notification sent:', response);
+      
+      // Also show local notification for immediate feedback
+      this.showLocalNotification('Test Notification', {
+        body: 'This is a test notification from Young Eagles!',
+        tag: 'test-notification'
+      });
+
+      return true;
+    } catch (error) {
+      console.error('❌ Push notification test failed:', error);
+      throw error;
+    }
+  }
+
+  // Get notification settings and status
+  async getNotificationStatus() {
+    return {
+      isSupported: this.isSupported,
+      permission: Notification.permission,
+      isSubscribed: await this.isSubscribed(),
+      subscription: await this.getSubscription()
+    };
   }
 }
 

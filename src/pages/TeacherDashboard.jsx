@@ -28,6 +28,7 @@ import NewHomeworkAssignment from '../components/NewHomeworkAssignment';
 import VirtualSchoolPlatform from '../components/VirtualSchoolPlatform';
 import ComprehensiveLessonLibrary from '../components/ComprehensiveLessonLibrary';
 import EnhancedAIGradingSystem from '../components/EnhancedAIGradingSystem';
+import NotificationTester from '../components/NotificationTester';
 import PreschoolLessonLibrary from '../components/PreschoolLessonLibrary';
 import Header from '../components/Header';
 
@@ -54,6 +55,7 @@ const TeacherDashboard = () => {
   const [showComprehensiveLessons, setShowComprehensiveLessons] = useState(false);
   const [showEnhancedGrading, setShowEnhancedGrading] = useState(false);
   const [showPreschoolLessons, setShowPreschoolLessons] = useState(false);
+  const [showNotificationTester, setShowNotificationTester] = useState(false);
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
   const navigate = useNavigate();
   const { isDark } = useTheme();
@@ -478,6 +480,25 @@ const TeacherDashboard = () => {
     );
   }
 
+  if (showNotificationTester) {
+    return (
+      <div>
+        <div className="mb-4 p-4">
+          <button
+            onClick={() => setShowNotificationTester(false)}
+            className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+              isDark ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <FaArrowRight className="w-4 h-4 mr-2 rotate-180" />
+            Back to Dashboard
+          </button>
+        </div>
+        <NotificationTester />
+      </div>
+    );
+  }
+
   if (showParentComm) {
     return (
       <div>
@@ -641,6 +662,28 @@ const TeacherDashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full box-border mb-4">
+          {/* Notification Tester */}
+          <button
+            onClick={() => setShowNotificationTester(true)}
+            className={`p-6 rounded-xl shadow-sm border transition-all hover:shadow-md text-left ${
+              isDark ? 'bg-gradient-to-r from-yellow-900/20 to-amber-900/20 border-yellow-700 hover:border-yellow-600' : 'bg-gradient-to-r from-yellow-100 to-amber-100 border-yellow-200 hover:border-yellow-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl">🔔</div>
+              <FaBell className={`text-2xl ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} />
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Push Notifications
+            </h3>
+            <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              Test and configure push notifications for native app-like experience
+            </p>
+            <div className={`inline-flex items-center text-sm font-medium ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+              Test Notifications <FaArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </button>
+
           {/* Preschool Lesson Library */}
           <button
             onClick={() => setShowPreschoolLessons(true)}

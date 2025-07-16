@@ -285,7 +285,8 @@ const apiService = {
     getVapidPublicKey: () => apiClient.get('/api/push/vapid-public-key'),
     subscribe: (subscription) => apiClient.post('/api/push/subscribe', subscription),
     unsubscribe: (endpoint) => apiClient.post('/api/push/unsubscribe', { endpoint }),
-    sendNotification: (notificationData) => apiClient.post('/api/push/send', notificationData)
+    sendNotification: (notificationData) => apiClient.post('/api/push/send', notificationData),
+    sendTest: () => apiClient.post('/api/push/test')
   },
 
   // Auth endpoints
