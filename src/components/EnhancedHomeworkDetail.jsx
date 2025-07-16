@@ -35,11 +35,8 @@ const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
   };
 
   const isInteractiveHomework = () => {
-    // Check if this homework type supports interactive activities
-    return homework.title.includes('Basic Addition') || 
-           homework.title.includes('Counting') || 
-           homework.title.includes('Number Recognition') ||
-           homework.subject === 'Mathematics';
+    // Check if this homework has interactive content based on content_type
+    return homework.content_type === 'interactive';
   };
 
   const handleInteractiveComplete = (results) => {
@@ -54,7 +51,7 @@ const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-200`}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="px-2 py-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <button
@@ -188,17 +185,13 @@ const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
 
         {/* Content based on selected mode */}
         {mode === 'instructions' && (
-          <div className={`rounded-xl shadow-lg p-6 border ${
-            isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          }`}>
+          <div className={`p-4`}>
             <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
               📋 Instructions
             </h2>
             
             {homework.description && (
-              <div className={`rounded-lg p-4 mb-4 border ${
-                isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-              }`}>
+              <div className="mb-4">
                 <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} whitespace-pre-wrap leading-relaxed`}>
                   {homework.description}
                 </p>
@@ -206,9 +199,7 @@ const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
             )}
 
             {homework.instructions && (
-              <div className={`rounded-lg p-4 border ${
-                isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-              }`}>
+              <div className="mb-4">
                 <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
                   Detailed Instructions:
                 </h3>
@@ -218,9 +209,136 @@ const EnhancedHomeworkDetail = ({ homework, selectedChildId }) => {
               </div>
             )}
 
-            {homework.estimated_duration && (
-              <div className={`mt-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                ⏱️ Estimated time: {homework.estimated_duration} minutes
+            {/* Show message if no detailed content available */}
+            {!homework.instructions && !homework.objectives && !homework.activities && !homework.materials && !homework.parent_guidance && (
+              <div className={`rounded-lg p-6 border text-center ${
+                isDark ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'
+              }`}>
+                <div className="text-yellow-500 text-4xl mb-3">⚠️</div>
+                <h3 className={`font-semibold ${isDark ? 'text-yellow-400' : 'text-yellow-800'} mb-2`}>
+                  Limited Information Available
+                </h3>
+                <p className={`${isDark ? 'text-yellow-300' : 'text-yellow-700'} mb-4`}>
+                  This homework assignment doesn't have detailed instructions yet. Please check with your teacher for more information.
+                </p>
+                <p className={`text-sm ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                  Basic assignment description is shown above.
+                </p>
+              </div>
+            )}
+
+            {/* Learning Objectives */}
+            {homework.objectives && homework.objectives.length > 0 && (
+              <div className="mt-6">
+                <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+                  🎯 Learning Objectives
+                </h3>
+                <ul className={`space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {homework.objectives.map((objective, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-blue-500 mr-2 mt-1">•</span>
+                      <span>{objective}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Activities to Complete */}
+            {homework.activities && homework.activities.length > 0 && (
+              <div className="mt-6">
+                <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+                  📝 Activities to Complete
+                </h3>
+                <ul className={`space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {homework.activities.map((activity, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-green-500 mr-2 mt-1">{index + 1}.</span>
+                      <span>{activity}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Materials Needed */}
+            {homework.materials && homework.materials.length > 0 && (
+              <div className="mt-6">
+                <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+                  📦 Materials Needed
+                </h3>
+                <ul className={`space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {homework.materials.map((material, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-orange-500 mr-2 mt-1">•</span>
+                      <span>{material}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Parent Guidance */}
+            {homework.parent_guidance && (
+              <div className={`rounded-lg p-4 mt-6 border-l-4 border-purple-500 ${
+                isDark ? 'bg-purple-900/20 border-purple-800' : 'bg-purple-50 border-purple-200'
+              }`}>
+                <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+                  👨‍👩‍👧‍👦 Parent Guidance
+                </h3>
+                <p className={`${isDark ? 'text-purple-300' : 'text-purple-700'} leading-relaxed`}>
+                  {homework.parent_guidance}
+                </p>
+              </div>
+            )}
+
+            {/* Duration and Difficulty */}
+            <div className="mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {homework.duration && (
+                  <div className={`p-3 rounded-lg border ${
+                    isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className="flex items-center">
+                      <span className="text-blue-500 mr-2">⏱️</span>
+                      <div>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Estimated Time</p>
+                        <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{homework.duration} minutes</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {homework.difficulty && (
+                  <div className={`p-3 rounded-lg border ${
+                    isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className="flex items-center">
+                      <span className="text-yellow-500 mr-2">📊</span>
+                      <div>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Difficulty Level</p>
+                        <p className={`font-semibold capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{homework.difficulty}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CAPS Alignment */}
+            {homework.caps_alignment && (
+              <div className="mt-6">
+                <div className={`p-4 rounded-lg border ${
+                  isDark ? 'bg-indigo-900/20 border-indigo-800' : 'bg-indigo-50 border-indigo-200'
+                }`}>
+                  <div className="flex items-center">
+                    <span className="text-indigo-500 mr-2">🎓</span>
+                    <div>
+                      <p className={`text-sm ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>CAPS Curriculum Alignment</p>
+                      <p className={`font-semibold ${isDark ? 'text-indigo-300' : 'text-indigo-800'}`}>{homework.caps_alignment}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 

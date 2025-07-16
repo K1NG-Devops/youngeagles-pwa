@@ -447,11 +447,19 @@ const NewHomeworkAssignment = ({ onClose, onHomeworkCreated }) => {
         subject: selectedAssignment.subject,
         grade: selectedAssignment.ageGroup, // Map age group to grade
         due_date: `${formData.dueDate} ${formData.dueTime}`,
-        estimated_duration: selectedAssignment.estimatedDuration,
-        difficulty: selectedAssignment.difficulty,
         teacher_id: user.id,
         status: 'active',
-        assignment_type: formData.assignmentType
+        assignment_type: formData.assignmentType,
+        
+        // NEW ENHANCED FIELDS
+        objectives: selectedAssignment.activities || [], // Use activities as objectives if available
+        activities: selectedAssignment.activities || [],
+        materials: selectedAssignment.materials || [],
+        parent_guidance: selectedAssignment.parentInstructions || 'Support your child with this assignment. Review their work and provide encouragement.',
+        caps_alignment: `CAPS Grade ${selectedAssignment.ageGroup} - ${selectedAssignment.subject}`,
+        duration: selectedAssignment.estimatedDuration || 30,
+        difficulty: selectedAssignment.difficulty || 'intermediate',
+        term: '2' // Default to term 2, could be dynamic
       };
 
       // Add class or individual assignment data

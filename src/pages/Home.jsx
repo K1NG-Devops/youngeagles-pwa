@@ -15,10 +15,9 @@ import {
   FaBell
 } from 'react-icons/fa';
 
-// Simplified Ad Components  
+// Google AdSense Components
 import PageWrapper from '../components/PageWrapper';
-import BannerAd from '../components/ads/BannerAd';
-import NativeAd from '../components/ads/NativeAd';
+import { HeaderBannerAd, InFeedNativeAd, SidebarSkyscraperAd, FooterBannerAd } from '../components/AdSenseComponents';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -94,7 +93,7 @@ const Home = () => {
         scrollBehavior: 'smooth'
       }}>
       {/* New Top Banner Ad */}
-      <BannerAd position="top" />
+      <HeaderBannerAd />
       
       {/* Hero Section */}
       <div className="relative overflow-hidden">
@@ -137,7 +136,7 @@ const Home = () => {
       </div>
 
       {/* New Inline Native Ad */}
-      <NativeAd type="feed" />
+      <InFeedNativeAd />
 
       {/* Features Section */}
       <div className="py-16 lg:py-24">
@@ -178,13 +177,13 @@ const Home = () => {
             </div>
             
             {/* New Sidebar Ad */}
-            <NativeAd type="sidebar" />
+            <SidebarSkyscraperAd />
           </div>
         </div>
       </div>
 
       {/* New Middle Content Ad */}
-      <NativeAd type="feed" />
+      <InFeedNativeAd />
 
       {/* CTA Section */}
       <div className="py-16">
@@ -210,7 +209,7 @@ const Home = () => {
       </div>
       
       {/* New Bottom Banner Ad */}
-      <BannerAd position="bottom" />
+      <FooterBannerAd />
       </div>
     </PageWrapper>
   );

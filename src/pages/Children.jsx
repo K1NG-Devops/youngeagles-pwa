@@ -7,7 +7,7 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 import { FaChild, FaCalendarAlt, FaUser, FaArrowLeft, FaPhone, FaPlus, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import FeatureGuard, { useFeatureAccess } from '../components/FeatureGuard';
-import NativeAd from '../components/ads/NativeAd';
+import { InFeedNativeAd } from '../components/AdSenseComponents';
 
 const Children = () => {
   const { user } = useAuth();
@@ -284,7 +284,7 @@ const Children = () => {
         )}
         
         {/* Single Content Ad */}
-        <NativeAd type="feed" />
+        <InFeedNativeAd />
       </div>
     </div>
   );

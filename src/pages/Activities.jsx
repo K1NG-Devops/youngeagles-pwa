@@ -9,8 +9,7 @@ import nativeNotificationService from '../services/nativeNotificationService';
 import LazyLoader from '../components/LazyLoader';
 import MazeActivity from '../components/PWA/MazeActivity';
 import PageWrapper from '../components/PageWrapper';
-import BannerAd from '../components/ads/BannerAd';
-import NativeAd from '../components/ads/NativeAd';
+import { HeaderBannerAd, InFeedNativeAd } from '../components/AdSenseComponents';
 
 const Activities = () => {
   const { isDark } = useTheme();
@@ -441,7 +440,7 @@ const Activities = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header Ad */}
-          <BannerAd position="top" />
+          <HeaderBannerAd />
 
           {/* Header Section */}
           <div className="flex items-center justify-between mb-8">
@@ -530,7 +529,7 @@ const Activities = () => {
                   </div>
 
                   {/* Content Ad */}
-                  <NativeAd type="feed" />
+                  <InFeedNativeAd />
 
                   {/* Activities Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -788,7 +787,7 @@ const Activities = () => {
         )}
 
         {/* Footer Ad */}
-        <BannerAd position="bottom" />
+        <HeaderBannerAd />
         </div>
       </ErrorBoundary>
     </PageWrapper>

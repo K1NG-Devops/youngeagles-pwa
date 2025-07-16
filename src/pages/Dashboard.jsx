@@ -13,10 +13,10 @@ import AdminDashboard from './AdminDashboard';
 import AdaptiveLoader from '../components/loading/AdaptiveLoader';
 import NativeAppEnhancements from '../components/NativeAppEnhancements';
 import ChildRegistration from '../components/ChildRegistration';
-// Simplified Ad Components
-import { HeaderAd, ContentAd } from '../components/ads/AdComponents';
-import NativeAd from '../components/ads/NativeAd';
-// import AdDiagnostic from '../components/ads/AdDiagnostic';
+// Google AdSense Components
+import { HeaderBannerAd, ContentRectangleAd, InFeedNativeAd, MobileBannerAd, ResponsiveAd } from '../components/AdSenseComponents';
+// Fallback Ad Components
+import { HeaderAd, ContentAd, NativeAd } from '../components/ads/AdComponents';
 
 import useAdFrequency from '../hooks/useAdFrequency';
 
@@ -222,11 +222,11 @@ const Dashboard = () => {
       <NativeAppEnhancements />
       
       
-      <main className="pt-4 pb-8">
+      <main>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Strategic Native Ad - Seamless integration */}
+          {/* Strategic Native Ad - Google AdSense */}
           <div className="mb-6">
-            <NativeAd />
+            <ResponsiveAd placement="header" />
           </div>
 
           {/* Welcome Section - Enhanced Light Blue Gradient */}
@@ -368,10 +368,10 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Content Ad - Native integration */}
+          {/* Content Ad - Google AdSense */}
           {userRole === 'parent' && (
             <div className="mb-6">
-              <ContentAd />
+              <ResponsiveAd placement="content" />
             </div>
           )}
 
@@ -495,9 +495,9 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Additional Content Ad for better monetization */}
+          {/* Additional Content Ad for better monetization - Google AdSense */}
           <div className="mb-6">
-            <ContentAd />
+            <ResponsiveAd placement="infeed" />
           </div>
           
         </div>
