@@ -787,21 +787,21 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
                   Preview
                 </button>
                 {user?.role === 'teacher' && (
-                  <div className="flex gap-1 flex-1">
+                  <div className="flex flex-col sm:flex-row gap-2 flex-1">
                     <button
                       onClick={() => handleAssignToClass(lesson)}
-                      className="flex-1 py-2 px-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                      className="flex-1 py-2 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm flex items-center justify-center gap-1"
                       title="Assign to all classes"
                     >
-                      <FaTasks className="inline mr-1" />
+                      <FaTasks className="w-4 h-4" />
                       Class
                     </button>
                     <button
                       onClick={() => handleAssignToStudents(lesson)}
-                      className="flex-1 py-2 px-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
+                      className="flex-1 py-2 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm flex items-center justify-center gap-1"
                       title="Assign to individual students"
                     >
-                      <FaUsers className="inline mr-1" />
+                      <FaUsers className="w-4 h-4" />
                       Student
                     </button>
                   </div>

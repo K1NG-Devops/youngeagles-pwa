@@ -111,5 +111,19 @@ SET
     difficulty = 'hard'
 WHERE subject = 'Science' AND objectives IS NULL;
 
+-- Create push_subscriptions table for push notification functionality
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,
+    endpoint TEXT NOT NULL,
+    p256dh VARCHAR(255) NOT NULL,
+    auth VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_user_endpoint (userId, endpoint(255)),
+    INDEX idx_user_id (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Show the updated schema
 DESCRIBE homework;
+DESCRIBE push_subscriptions;

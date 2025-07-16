@@ -1458,33 +1458,36 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
           {lesson.worksheets && (
             <div>
               <h3 className={`text-xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>Downloadable Resources</h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {lesson.worksheets.map((worksheet, index) => (
-                  <div key={index} className={`flex items-center justify-between p-3 rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-white'}`}>
-                    <div className="flex items-center gap-2">
+                  <div key={index} className={`p-4 rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-white'}`}>
+                    <div className="flex items-center gap-2 mb-3">
                       <FaDownload className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{worksheet}</span>
+                      <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{worksheet}</span>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handlePrintToPDF(lesson, worksheet)}
-                        className="px-2 py-1 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                        className="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1"
                         title="Print to PDF"
                       >
+                        <FaPrint className="w-3 h-3" />
                         Print PDF
                       </button>
                       <button
                         onClick={() => handleDownloadHTML(lesson, worksheet)}
-                        className="px-2 py-1 rounded text-xs font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
+                        className="px-3 py-2 rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1"
                         title="Download as HTML"
                       >
+                        <FaFileCode className="w-3 h-3" />
                         HTML
                       </button>
                       <button
                         onClick={() => handleDownloadText(lesson, worksheet)}
-                        className="px-2 py-1 rounded text-xs font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                        className="px-3 py-2 rounded-md text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors flex items-center gap-1"
                         title="Download as Text"
                       >
+                        <FaFileAlt className="w-3 h-3" />
                         Text
                       </button>
                     </div>
@@ -1495,10 +1498,10 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
           )}
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <button 
             onClick={() => handlePreviewLesson(lesson)}
-            className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
             <FaPlay className="w-5 h-5" />
             Preview Lesson
@@ -1506,30 +1509,30 @@ const LessonLibrary = ({ onAssignHomework, classes = [] }) => {
           {user?.role === 'teacher' && (
             <button 
               onClick={() => setShowAssignModal(true)}
-              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+              className="bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
             >
               <FaPaperPlane className="w-5 h-5" />
               Assign as Homework
             </button>
           )}
-          <div className="flex-1 flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button 
               onClick={() => handlePrintToPDF(lesson, `${lesson.title}_All_Materials`)}
-              className="flex-1 py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
+              className="py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
             >
               <FaPrint className="w-5 h-5" />
               Print All
             </button>
             <button 
               onClick={() => handleDownloadHTML(lesson, `${lesson.title}_All_Materials`)}
-              className="flex-1 py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-green-600 text-white hover:bg-green-700"
+              className="py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-green-600 text-white hover:bg-green-700"
             >
               <FaFileAlt className="w-5 h-5" />
               HTML
             </button>
             <button 
               onClick={() => handleDownloadText(lesson, `${lesson.title}_All_Materials`)}
-              className="flex-1 py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
+              className="py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
             >
               <FaFileCode className="w-5 h-5" />
               Text
