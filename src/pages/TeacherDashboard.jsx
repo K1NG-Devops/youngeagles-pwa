@@ -193,7 +193,16 @@ const TeacherDashboard = () => {
   const handleAssignHomework = async (homeworkData) => {
     try {
       const response = await apiService.homework.create(homeworkData);
-      const homeworkId = response?.data?.homeworkId || response?.data?.homework?.id;
+      
+      // Extract homework ID from response structure
+      const homeworkId = response?.data?.homework?.id || response?.data?.id || response?.data?.homeworkId;
+      
+      console.log('📋 Homework creation response:', {
+        homeworkId,
+        responseData: response?.data,
+        fullResponse: response
+      });
+      
       nativeNotificationService.success(`Lesson "${homeworkData.title}" assigned successfully!`);
 
       // Trigger immediate refresh of all data
@@ -201,7 +210,10 @@ const TeacherDashboard = () => {
 
       // Navigate to newly created homework details page if we have the ID
       if (homeworkId) {
-        navigate(`/homework/${homeworkId}`);
+        console.log(`🚀 Navigating to teacher homework view: /teacher/homework/${homeworkId}`);
+        navigate(`/teacher/homework/${homeworkId}`);
+      } else {
+        console.warn('⚠️ No homework ID found in response, cannot navigate to details');
       }
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || 'Failed to assign homework';
@@ -798,7 +810,7 @@ const TeacherDashboard = () => {
               <FaBook className="text-2xl mx-auto mb-2" />
               <div className="text-lg font-bold">{stats.assignments}</div>
               <div className="text-xs opacity-90">Assignments</div>
-              <div className="text-xs opacity-75 mt-1">Manage homework</div>
+              <div className="text-xs opacity-75 mt-1">View all assignments</div>
             </div>
           </Link>
 

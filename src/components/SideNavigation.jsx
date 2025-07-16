@@ -117,16 +117,6 @@ const SideNavigation = () => {
 
         {/* Footer */}
         <div className={`p-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          <NavLink
-            to="/settings"
-            onClick={toggleSidebar}
-            className={`flex items-center px-4 py-3 rounded-lg transition-colors mb-2 ${
-              isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <FaCog className="text-xl mr-4" />
-            <span className="font-medium">Settings</span>
-          </NavLink>
           <button
             onClick={() => {
               logout();

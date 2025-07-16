@@ -7,7 +7,7 @@ import EnhancedHomeworkDetail from '../components/EnhancedHomeworkDetail';
 import { FaSpinner, FaExclamationTriangle, FaArrowLeft } from 'react-icons/fa';
 
 const HomeworkDetails = () => {
-  const { homeworkId } = useParams();
+  const { id: homeworkId } = useParams(); // Extract 'id' parameter and rename to homeworkId
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();

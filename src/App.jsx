@@ -78,6 +78,7 @@ const Events = createLazyComponent(() => import('./pages/Events'), 'Events');
 const Management = createLazyComponent(() => import('./pages/Management'), 'Management');
 const AdminDashboard = createLazyComponent(() => import('./pages/AdminDashboard'), 'AdminDashboard');
 const TeacherDashboard = createLazyComponent(() => import('./pages/TeacherDashboard'), 'TeacherDashboard');
+const TeacherHomeworkView = createLazyComponent(() => import('./pages/TeacherHomeworkView'), 'TeacherHomeworkView');
 const ParentProfile = createLazyComponent(() => import('./pages/ParentProfile'), 'ParentProfile');
 const PrivacyPolicy = createLazyComponent(() => import('./pages/PrivacyPolicy'), 'PrivacyPolicy');
 const TermsOfService = createLazyComponent(() => import('./pages/TermsOfService'), 'TermsOfService');
@@ -278,6 +279,11 @@ function App() {
                               <Route path="teacher-dashboard" element={
                                 <PrivateRoute>
                                   <TeacherDashboard />
+                                </PrivateRoute>
+                              } />
+                              <Route path="teacher/homework/:id" element={
+                                <PrivateRoute>
+                                  <TeacherHomeworkView />
                                 </PrivateRoute>
                               } />
                               <Route path="profile" element={

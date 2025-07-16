@@ -51,6 +51,11 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [assignmentType, setAssignmentType] = useState('class'); // 'class' or 'individual'
   const [currentLessonToAssign, setCurrentLessonToAssign] = useState(null);
+  const [dueDate, setDueDate] = useState(() => {
+    // Default to 7 days from now
+    const defaultDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    return defaultDate.toISOString().slice(0, 16); // Format for datetime-local input
+  });
 
   // Subject categories with comprehensive coverage
   const subjects = [
@@ -416,7 +421,7 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
         description: lesson.description,
         type: 'lesson',
         lesson_id: lesson.id,
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // MySQL format
+        due_date: new Date(dueDate).toISOString(), // Use the teacher-selected due date
         points: 10,
         materials: lesson.materials,
         objectives: lesson.objectives,
@@ -456,6 +461,10 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
       setSelectedStudents([]);
       setCurrentLessonToAssign(null);
       setAssignmentType('class'); // Reset to default
+      // Reset due date to 7 days from now
+      const defaultDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      setDueDate(defaultDate.toISOString().slice(0, 16));
+      setAssignmentType('class'); // Reset to default
     } catch (error) {
       console.error('Assignment error:', error);
       nativeNotificationService.error('Failed to assign lesson');
@@ -473,7 +482,8 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
   const handleAssignToClass = (lesson) => {
     setAssignmentType('class');
     setCurrentLessonToAssign(lesson);
-    handleAssignLesson(lesson);
+    setSelectedStudents([]); // Clear individual student selection
+    setShowStudentSelector(true); // Show modal for due date setting
   };
 
   const handleAssignToStudents = (lesson) => {
@@ -946,17 +956,26 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Assign to Individual Students
+                  {assignmentType === 'class' ? 'Assign to Entire Class' : 'Assign to Individual Students'}
                 </h2>
                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   Lesson: {currentLessonToAssign.title}
                 </p>
+                {assignmentType === 'class' && (
+                  <p className={`text-xs mt-1 ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
+                    This will be assigned to all students in your class
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => {
                   setShowStudentSelector(false);
                   setSelectedStudents([]);
                   setCurrentLessonToAssign(null);
+                  setAssignmentType('class'); // Reset to default
+                  // Reset due date to 7 days from now
+                  const defaultDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                  setDueDate(defaultDate.toISOString().slice(0, 16));
                 }}
                 className={`p-2 rounded-full transition-all hover:bg-gray-200 ${isDark ? 'hover:bg-gray-700' : ''}`}
               >
@@ -985,65 +1004,134 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
               </div>
             )}
 
-            {/* Students Grid */}
-            {students.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {students.map((student) => {
-                  const isSelected = selectedStudents.find(s => s.id === student.id);
-                  return (
-                    <div
-                      key={student.id}
-                      onClick={() => handleStudentSelection(student)}
-                      className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                        isSelected
-                          ? isDark
-                            ? 'bg-blue-900/20 border-blue-500 ring-2 ring-blue-500'
-                            : 'bg-blue-50 border-blue-300 ring-2 ring-blue-300'
-                          : isDark
-                            ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
-                            : 'bg-white border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {student.name}
-                          </h4>
-                          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                            {student.className}
-                          </p>
-                          {student.grade && (
-                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Grade {student.grade}
-                            </p>
-                          )}
-                        </div>
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                          isSelected
-                            ? isDark
-                              ? 'bg-blue-500 border-blue-500'
-                              : 'bg-blue-500 border-blue-500'
-                            : isDark
-                              ? 'border-gray-500'
-                              : 'border-gray-300'
-                        }`}>
-                          {isSelected && (
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Assignment Settings */}
+            <div className={`p-4 rounded-lg mb-4 ${isDark ? 'bg-gray-700 border border-gray-600' : 'bg-gray-50 border border-gray-200'}`}>
+              <h3 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Assignment Settings
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Due Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className={`w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      isDark 
+                        ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                  />
+                  <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Current: {new Date(dueDate).toLocaleDateString()} at {new Date(dueDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </p>
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Assignment Type
+                  </label>
+                  <div className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
+                    <span className={`text-sm ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
+                      {assignmentType === 'class' ? 'Class Assignment' : 'Individual Assignment'}
+                    </span>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {assignmentType === 'class' 
+                        ? 'Assign to all students in your class' 
+                        : 'Assign to selected students only'
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <FaUsers className={`text-4xl mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-gray-300'}`} />
-                <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  No students found. Make sure you have classes with enrolled students.
+            </div>
+
+            {/* Students Grid - Only show for individual assignments */}
+            {assignmentType === 'individual' && (
+              <>
+                {students.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    {students.map((student) => {
+                      const isSelected = selectedStudents.find(s => s.id === student.id);
+                      return (
+                        <div
+                          key={student.id}
+                          onClick={() => handleStudentSelection(student)}
+                          className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+                            isSelected
+                              ? isDark
+                                ? 'bg-blue-900/20 border-blue-500 ring-2 ring-blue-500'
+                                : 'bg-blue-50 border-blue-300 ring-2 ring-blue-300'
+                              : isDark
+                                ? 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                                : 'bg-white border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {student.name}
+                              </h4>
+                              <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                {student.className}
+                              </p>
+                              {student.grade && (
+                                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Grade {student.grade}
+                                </p>
+                              )}
+                            </div>
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                              isSelected
+                                ? isDark
+                                  ? 'bg-blue-500 border-blue-500'
+                                  : 'bg-blue-500 border-blue-500'
+                                : isDark
+                                  ? 'border-gray-500'
+                                  : 'border-gray-300'
+                            }`}>
+                              {isSelected && (
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <FaUsers className={`text-4xl mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-gray-300'}`} />
+                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      No students found. Make sure you have classes with enrolled students.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Class Assignment Info - Show for class assignments */}
+            {assignmentType === 'class' && (
+              <div className={`p-6 rounded-lg mb-6 text-center ${isDark ? 'bg-blue-900/20 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${isDark ? 'bg-blue-800' : 'bg-blue-100'}`}>
+                  <FaUsers className={`text-2xl ${isDark ? 'text-blue-300' : 'text-blue-600'}`} />
+                </div>
+                <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>
+                  Class Assignment
+                </h3>
+                <p className={`${isDark ? 'text-blue-200' : 'text-blue-700'}`}>
+                  This lesson will be assigned to all students in your class. They will receive notifications and can view it in their homework section.
                 </p>
+                <div className={`mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${isDark ? 'bg-blue-800 text-blue-200' : 'bg-blue-200 text-blue-800'}`}>
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Ready to assign
+                </div>
               </div>
             )}
 
@@ -1060,6 +1148,7 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
                     <p>Selected students: {selectedStudents.length}</p>
                     <p>Assignment type: {assignmentType}</p>
                     <p>Current lesson: {currentLessonToAssign?.title || 'None'}</p>
+                    <p>Due date: {new Date(dueDate).toLocaleDateString()} {new Date(dueDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                     {selectedStudents.length > 0 && (
                       <p>Selected: {selectedStudents.map(s => s.name).join(', ')}</p>
                     )}
@@ -1069,7 +1158,10 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
               
               <div className="flex justify-between items-center">
                 <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {selectedStudents.length} student{selectedStudents.length !== 1 ? 's' : ''} selected
+                  {assignmentType === 'class' 
+                    ? 'This will be assigned to all students in your class'
+                    : `${selectedStudents.length} student${selectedStudents.length !== 1 ? 's' : ''} selected`
+                  }
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -1077,6 +1169,7 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
                       setShowStudentSelector(false);
                       setSelectedStudents([]);
                       setCurrentLessonToAssign(null);
+                      setAssignmentType('class'); // Reset to default
                     }}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       isDark 
@@ -1088,9 +1181,9 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
                   </button>
                   <button
                     onClick={handleConfirmStudentAssignment}
-                    disabled={selectedStudents.length === 0}
+                    disabled={assignmentType === 'individual' && selectedStudents.length === 0}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      selectedStudents.length === 0
+                      (assignmentType === 'individual' && selectedStudents.length === 0)
                         ? isDark
                           ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -1098,7 +1191,10 @@ const ComprehensiveLessonLibrary = ({ onAssignHomework, classes = [] }) => {
                     }`}
                   >
                     <FaUsers className="inline mr-2" />
-                    Assign to {selectedStudents.length} Student{selectedStudents.length !== 1 ? 's' : ''}
+                    {assignmentType === 'class' 
+                      ? 'Assign to Class'
+                      : `Assign to ${selectedStudents.length} Student${selectedStudents.length !== 1 ? 's' : ''}`
+                    }
                   </button>
                 </div>
               </div>
