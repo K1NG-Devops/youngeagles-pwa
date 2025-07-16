@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/apiService';
 import nativeNotificationService from '../services/nativeNotificationService';
+import NativeAd from '../components/ads/NativeAd';
+import { ContentAd } from '../components/ads/AdComponents';
+import useAdFrequency from '../hooks/useAdFrequency';
 import {
   FaBook,
   FaClock,
@@ -52,6 +55,9 @@ const EnhancedParentHomeworkDashboard = () => {
     weekStreak: 0,
     totalPoints: 0
   });
+  
+  // Ad frequency management
+  const { shouldShowAd, recordAdShown, canShowMoreAds } = useAdFrequency('homework');
 
   // Subject icons mapping
   const getSubjectIcon = (subject) => {
@@ -256,6 +262,13 @@ const EnhancedParentHomeworkDashboard = () => {
     <div className={`${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-2 sm:p-4 pb-20`}>
       {/* Header Section */}
       <div className="max-w-7xl mx-auto">
+        {/* Strategic Native Ad - Top placement */}
+        {shouldShowAd && canShowMoreAds && (
+          <div className="mb-4 sm:mb-6">
+            <NativeAd />
+          </div>
+        )}
+        
         <div className="mb-4 sm:mb-6">
           <h1 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
             📚 Homework Dashboard
@@ -376,6 +389,13 @@ const EnhancedParentHomeworkDashboard = () => {
           </div>
         </div>
 
+        {/* Content Ad - Mid-page placement */}
+        {shouldShowAd && canShowMoreAds && stats.total > 0 && (
+          <div className="mb-6 sm:mb-8">
+            <ContentAd />
+          </div>
+        )}
+
         {/* Homework List */}
         <div className="space-y-3 sm:space-y-4">
           <h2 className={`text-lg sm:text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3 sm:mb-4`}>
@@ -393,7 +413,7 @@ const EnhancedParentHomeworkDashboard = () => {
               </p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-4 w-full max-w-full">
               {homework.map((item) => {
                 const SubjectIcon = getSubjectIcon(item.subject);
                 const statusInfo = getStatusInfo(item.status);
@@ -402,13 +422,13 @@ const EnhancedParentHomeworkDashboard = () => {
                 return (
                   <div
                     key={item.id}
-                    className={`p-4 sm:p-6 rounded-xl border transition-all hover:shadow-lg ${
+                    className={`p-4 sm:p-6 rounded-xl border transition-all hover:shadow-lg w-full max-w-full overflow-hidden ${
                       isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-200 hover:shadow-xl'
                     } ${statusInfo.borderClass}`}
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-4 w-full">
                       {/* Main Content */}
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-3 mb-3">
                           <div className={`p-2 rounded-lg ${statusInfo.bgClass} flex-shrink-0`}>
                             <SubjectIcon className={`text-base sm:text-lg ${statusInfo.textClass}`} />
@@ -417,18 +437,18 @@ const EnhancedParentHomeworkDashboard = () => {
                             <h3 className={`font-semibold text-base sm:text-lg ${isDark ? 'text-white' : 'text-gray-900'} truncate`}>
                               {item.title}
                             </h3>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
-                              <span className={`flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                <FaChalkboardTeacher className="text-xs" />
-                                {item.teacher_name || 'Teacher'}
+                            <div className="flex flex-col gap-1 text-xs sm:text-sm">
+                              <span className={`flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'} truncate`}>
+                                <FaChalkboardTeacher className="text-xs flex-shrink-0" />
+                                <span className="truncate">{item.teacher_name || 'Teacher'}</span>
                               </span>
-                              <span className={`flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                <FaCalendarAlt className="text-xs" />
-                                {formatDueDate(item.due_date)}
+                              <span className={`flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'} truncate`}>
+                                <FaCalendarAlt className="text-xs flex-shrink-0" />
+                                <span className="truncate">{formatDueDate(item.due_date)}</span>
                               </span>
-                              <span className={`flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                <FaClock className="text-xs" />
-                                {item.duration || 30} mins
+                              <span className={`flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'} truncate`}>
+                                <FaClock className="text-xs flex-shrink-0" />
+                                <span className="truncate">{item.duration || 30} mins</span>
                               </span>
                             </div>
                           </div>
@@ -439,8 +459,8 @@ const EnhancedParentHomeworkDashboard = () => {
                           {item.description}
                         </p>
 
-                        {/* Status Badge */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        {/* Status Badge and Action Buttons */}
+                        <div className="flex flex-col gap-3 w-full">
                           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusInfo.bgClass} ${statusInfo.textClass} w-fit`}>
                             <StatusIcon className="text-xs" />
                             {statusInfo.text}
@@ -450,23 +470,23 @@ const EnhancedParentHomeworkDashboard = () => {
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                          <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <button
                               onClick={() => navigate(`/homework/${item.id}?child_id=${selectedChildId}`)}
-                              className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
+                              className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors flex-1 sm:flex-none ${
                                 isDark 
                                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
                                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                               }`}
                             >
                               <FaEye className="text-xs" />
-                              View Details
+                              <span className="truncate">View Details</span>
                             </button>
 
                             {item.status === 'pending' && (
                               <button
                                 onClick={() => handleHomeworkAction(item)}
-                                className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white rounded-lg transition-colors ${
+                                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white rounded-lg transition-colors flex-1 sm:flex-none ${
                                   item.content_type === 'interactive' 
                                     ? 'bg-green-600 hover:bg-green-700' 
                                     : 'bg-blue-600 hover:bg-blue-700'
@@ -475,12 +495,12 @@ const EnhancedParentHomeworkDashboard = () => {
                                 {item.content_type === 'interactive' ? (
                                   <>
                                     <FaGamepad className="text-xs" />
-                                    Start Activity
+                                    <span className="truncate">Start Activity</span>
                                   </>
                                 ) : (
                                   <>
                                     <FaUpload className="text-xs" />
-                                    Submit Work
+                                    <span className="truncate">Submit Work</span>
                                   </>
                                 )}
                               </button>
