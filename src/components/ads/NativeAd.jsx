@@ -12,12 +12,12 @@ const NativeAd = ({ type = 'banner' }) => {
   
   // Initialize AdSense
   useEffect(() => {
-    if (isAdsEnabled && adRef.current) {
+    if (isAdsEnabled) {
       // Add a small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         try {
           // Ensure adsbygoogle is available and is an array
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined' && adRef.current) {
             window.adsbygoogle = window.adsbygoogle || [];
             if (Array.isArray(window.adsbygoogle)) {
               window.adsbygoogle.push({});
@@ -30,11 +30,11 @@ const NativeAd = ({ type = 'banner' }) => {
         } catch (error) {
           console.error('AdSense error:', error);
         }
-      }, 100);
+      }, 200); // Slightly longer delay to ensure DOM is ready
       
       return () => clearTimeout(timer);
     }
-  }, [isAdsEnabled]);
+  }, [isAdsEnabled, type]); // Add type as dependency
   
   // If ads are disabled, show placeholder
   if (!isAdsEnabled) {
