@@ -239,38 +239,42 @@ const EnhancedParentHomeworkDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center`}>
-        <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
-          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Loading homework dashboard...</p>
+      <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
+              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Loading homework dashboard...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4`}>
+    <div className={`${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-2 sm:p-4 pb-20`}>
       {/* Header Section */}
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
+        <div className="mb-4 sm:mb-6">
+          <h1 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
             📚 Homework Dashboard
           </h1>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             Track your child's learning progress and assignments
           </p>
         </div>
 
         {/* Child Selector */}
         {children.length > 1 && (
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
               Select Child
             </label>
             <select
               value={selectedChildId}
               onChange={(e) => setSelectedChildId(e.target.value)}
-              className={`w-full max-w-sm px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full sm:max-w-sm px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 isDark 
                   ? 'bg-gray-800 border-gray-600 text-white' 
                   : 'bg-white border-gray-300 text-gray-900'
@@ -286,64 +290,64 @@ const EnhancedParentHomeworkDashboard = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-          <div className={`p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 mb-6 sm:mb-8">
+          <div className={`p-3 sm:p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {stats.total}
                 </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Total Assignments
                 </p>
               </div>
-              <FaBook className="text-blue-500 text-xl" />
+              <FaBook className="text-blue-500 text-lg sm:text-xl" />
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className={`p-3 sm:p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-2xl font-bold text-orange-500`}>
+                <p className={`text-xl sm:text-2xl font-bold text-orange-500`}>
                   {stats.pending}
                 </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Pending
                 </p>
               </div>
-              <FaClock className="text-orange-500 text-xl" />
+              <FaClock className="text-orange-500 text-lg sm:text-xl" />
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className={`p-3 sm:p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-2xl font-bold text-green-500`}>
+                <p className={`text-xl sm:text-2xl font-bold text-green-500`}>
                   {stats.submitted + stats.graded}
                 </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Completed
                 </p>
               </div>
-              <FaCheckCircle className="text-green-500 text-xl" />
+              <FaCheckCircle className="text-green-500 text-lg sm:text-xl" />
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className={`p-3 sm:p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-2xl font-bold text-purple-500`}>
+                <p className={`text-xl sm:text-2xl font-bold text-purple-500`}>
                   {stats.completionRate}%
                 </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Completion Rate
                 </p>
               </div>
-              <FaChartLine className="text-purple-500 text-xl" />
+              <FaChartLine className="text-purple-500 text-lg sm:text-xl" />
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className={`p-3 sm:p-4 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-2xl font-bold text-yellow-500`}>
@@ -373,15 +377,15 @@ const EnhancedParentHomeworkDashboard = () => {
         </div>
 
         {/* Homework List */}
-        <div className="space-y-4">
-          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className={`text-lg sm:text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3 sm:mb-4`}>
             📋 Current Assignments ({homework.length})
           </h2>
 
           {homework.length === 0 ? (
-            <div className={`text-center py-12 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-              <FaGraduationCap className={`text-6xl mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-              <h3 className={`text-xl font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
+            <div className={`text-center py-8 sm:py-12 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <FaGraduationCap className={`text-4xl sm:text-6xl mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+              <h3 className={`text-lg sm:text-xl font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
                 No assignments yet
               </h3>
               <p className={`${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
@@ -398,22 +402,22 @@ const EnhancedParentHomeworkDashboard = () => {
                 return (
                   <div
                     key={item.id}
-                    className={`p-6 rounded-xl border transition-all hover:shadow-lg ${
+                    className={`p-4 sm:p-6 rounded-xl border transition-all hover:shadow-lg ${
                       isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-200 hover:shadow-xl'
                     } ${statusInfo.borderClass}`}
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                       {/* Main Content */}
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className={`p-2 rounded-lg ${statusInfo.bgClass}`}>
-                            <SubjectIcon className={`text-lg ${statusInfo.textClass}`} />
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className={`p-2 rounded-lg ${statusInfo.bgClass} flex-shrink-0`}>
+                            <SubjectIcon className={`text-base sm:text-lg ${statusInfo.textClass}`} />
                           </div>
-                          <div>
-                            <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`font-semibold text-base sm:text-lg ${isDark ? 'text-white' : 'text-gray-900'} truncate`}>
                               {item.title}
                             </h3>
-                            <div className="flex items-center gap-4 text-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
                               <span className={`flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 <FaChalkboardTeacher className="text-xs" />
                                 {item.teacher_name || 'Teacher'}
@@ -431,13 +435,13 @@ const EnhancedParentHomeworkDashboard = () => {
                         </div>
 
                         {/* Description */}
-                        <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-4 line-clamp-2`}>
+                        <p className={`text-xs sm:text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-4 line-clamp-2`}>
                           {item.description}
                         </p>
 
                         {/* Status Badge */}
-                        <div className="flex items-center justify-between">
-                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgClass} ${statusInfo.textClass}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusInfo.bgClass} ${statusInfo.textClass} w-fit`}>
                             <StatusIcon className="text-xs" />
                             {statusInfo.text}
                             {item.status === 'graded' && item.score && (
@@ -446,10 +450,10 @@ const EnhancedParentHomeworkDashboard = () => {
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             <button
                               onClick={() => navigate(`/homework/${item.id}?child_id=${selectedChildId}`)}
-                              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                              className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
                                 isDark 
                                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
                                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -462,7 +466,7 @@ const EnhancedParentHomeworkDashboard = () => {
                             {item.status === 'pending' && (
                               <button
                                 onClick={() => handleHomeworkAction(item)}
-                                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
+                                className={`inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white rounded-lg transition-colors ${
                                   item.content_type === 'interactive' 
                                     ? 'bg-green-600 hover:bg-green-700' 
                                     : 'bg-blue-600 hover:bg-blue-700'
