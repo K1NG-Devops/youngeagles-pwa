@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 // Header Ad Component
@@ -35,6 +35,40 @@ export const HeaderAd = ({ className = '' }) => {
 // Content Ad Component
 export const ContentAd = ({ className = '' }) => {
   const { isDark } = useTheme();
+  const adRef = useRef(null);
+  
+  // AdSense configuration
+  const isAdsEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
+  const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-5506438806314781';
+  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
+  
+  // Initialize AdSense
+  useEffect(() => {
+    if (isAdsEnabled && adRef.current) {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (error) {
+        console.error('AdSense error:', error);
+      }
+    }
+  }, [isAdsEnabled]);
+  
+  if (!isAdsEnabled) {
+    return (
+      <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4 ${className}`}>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Sponsored Content (Disabled)
+            </span>
+          </div>
+          <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-lg text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">AdSense is disabled</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4 ${className}`}>
@@ -44,23 +78,16 @@ export const ContentAd = ({ className = '' }) => {
             Sponsored Content
           </span>
         </div>
-        <div className="bg-gradient-to-r from-green-500 to-teal-600 text-white p-4 rounded-lg">
-          <div className="grid md:grid-cols-2 gap-4 items-center">
-            <div>
-              <h3 className="font-bold text-lg mb-2">📚 Learning Made Fun</h3>
-              <p className="text-sm opacity-90 mb-3">Interactive lessons, games, and activities designed by education experts</p>
-              <button className="bg-white text-green-600 px-4 py-2 rounded-md font-medium text-sm hover:bg-gray-100 transition-colors">
-                Start Free Trial
-              </button>
-            </div>
-            <div className="text-center">
-              <div className="bg-white/20 rounded-lg p-4">
-                <div className="text-2xl mb-2">🏆</div>
-                <p className="text-xs">Trusted by 10,000+ families</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ins 
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block', minHeight: '150px' }}
+          data-ad-client={publisherId}
+          data-ad-slot={import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-ad-test={isTestMode ? 'on' : 'off'}
+        />
       </div>
     </div>
   );

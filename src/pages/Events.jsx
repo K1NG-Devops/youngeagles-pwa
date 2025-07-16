@@ -73,7 +73,7 @@ const Events = () => {
 
   return (
     <PageWrapper onRefresh={handleRefresh}>
-      <div className={`min-h-screen mt-18 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen mt-4 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
         {/* Header */}  
 
         <div className="p-4 space-y-4 -mt-1">

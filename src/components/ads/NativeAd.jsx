@@ -1,25 +1,64 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const NativeAd = ({ type = 'banner' }) => {
   const { isDark } = useTheme();
+  const adRef = useRef(null);
+  
+  // AdSense configuration
+  const isAdsEnabled = import.meta.env.VITE_ADSENSE_ENABLED === 'true';
+  const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-5506438806314781';
+  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
+  
+  // Initialize AdSense
+  useEffect(() => {
+    if (isAdsEnabled && adRef.current) {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (error) {
+        console.error('AdSense error:', error);
+      }
+    }
+  }, [isAdsEnabled]);
+  
+  // If ads are disabled, show placeholder
+  if (!isAdsEnabled) {
+    return (
+      <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm border ${isDark ? 'border-gray-700' : 'border-gray-200'} mb-4`}>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Advertisement (Disabled)
+            </span>
+          </div>
+          <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-lg text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">AdSense is disabled in environment settings</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  // Google AdSense integration
   if (type === 'banner') {
     return (
       <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm border ${isDark ? 'border-gray-700' : 'border-gray-200'} mb-4`}>
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Sponsored
+              Advertisement
             </span>
           </div>
-          <div className="bg-blue-500 text-white p-6 rounded-lg text-center">
-            <h3 className="font-bold text-lg mb-2">Educational Resources</h3>
-            <p className="text-sm mb-4">Discover premium learning materials for your child</p>
-            <button className="bg-white text-blue-500 px-4 py-2 rounded-md font-medium">
-              Learn More
-            </button>
-          </div>
+          <ins 
+            ref={adRef}
+            className="adsbygoogle"
+            style={{ display: 'block', minHeight: '90px' }}
+            data-ad-client={publisherId}
+            data-ad-slot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+            data-ad-test={isTestMode ? 'on' : 'off'}
+          />
         </div>
       </div>
     );
@@ -29,68 +68,21 @@ const NativeAd = ({ type = 'banner' }) => {
     return (
       <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm border ${isDark ? 'border-gray-700' : 'border-gray-200'} mb-4`}>
         <div className="p-4">
-          <div className="flex items-center mb-3">
-            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
-              <span className="text-white font-bold text-sm">ED</span>
-            </div>
-            <div>
-              <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Educational Apps
-              </h4>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Sponsored
-              </p>
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-green-400 to-blue-500 p-4 rounded-lg text-white mb-3">
-            <h3 className="font-bold mb-1">Khan Academy Kids</h3>
-            <p className="text-sm">Free educational games and activities for children</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <button className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium">
-              Download Now
-            </button>
-            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Free
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (type === 'video') {
-    return (
-      <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm border ${isDark ? 'border-gray-700' : 'border-gray-200'} mb-4`}>
-        <div className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Sponsored
+              Sponsored Content
             </span>
           </div>
-          <div className="bg-purple-600 aspect-video rounded-lg flex items-center justify-center relative mb-3">
-            <div className="text-white text-center">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </div>
-              <p className="text-sm font-medium">STEM Learning Adventures</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Interactive Science Experiments
-              </h4>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Perfect for ages 6-12
-              </p>
-            </div>
-            <button className="bg-purple-600 text-white px-3 py-1 rounded-md text-sm">
-              Watch
-            </button>
-          </div>
+          <ins 
+            ref={adRef}
+            className="adsbygoogle"
+            style={{ display: 'block', minHeight: '120px' }}
+            data-ad-client={publisherId}
+            data-ad-slot={import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE}
+            data-ad-format="fluid"
+            data-ad-layout-key="-6t+ed+2i-1n-4w"
+            data-ad-test={isTestMode ? 'on' : 'off'}
+          />
         </div>
       </div>
     );
@@ -102,22 +94,25 @@ const NativeAd = ({ type = 'banner' }) => {
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Sponsored
+              Advertisement
             </span>
           </div>
-          <div className="bg-orange-500 p-4 rounded-lg text-white text-center mb-3">
-            <h4 className="font-bold text-lg mb-2">Learning Tools</h4>
-            <p className="text-sm">Educational apps and resources</p>
-          </div>
-          <button className="w-full bg-orange-500 text-white py-2 rounded-md text-sm font-medium">
-            Explore
-          </button>
+          <ins 
+            ref={adRef}
+            className="adsbygoogle"
+            style={{ display: 'block', minHeight: '200px' }}
+            data-ad-client={publisherId}
+            data-ad-slot={import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+            data-ad-test={isTestMode ? 'on' : 'off'}
+          />
         </div>
       </div>
     );
   }
 
-  // Default banner style
+  // Default banner style with AdSense
   return (
     <div className={`w-full ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm border ${isDark ? 'border-gray-700' : 'border-gray-200'} mb-4`}>
       <div className="p-4">
@@ -126,13 +121,16 @@ const NativeAd = ({ type = 'banner' }) => {
             Advertisement
           </span>
         </div>
-        <div className="bg-blue-500 text-white p-6 rounded-lg text-center">
-          <h3 className="font-bold text-lg mb-2">Educational Content</h3>
-          <p className="text-sm mb-4">Enhance your child's learning experience</p>
-          <button className="bg-white text-blue-500 px-4 py-2 rounded-md font-medium">
-            Explore
-          </button>
-        </div>
+        <ins 
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block', minHeight: '90px' }}
+          data-ad-client={publisherId}
+          data-ad-slot={import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-ad-test={isTestMode ? 'on' : 'off'}
+        />
       </div>
     </div>
   );

@@ -221,7 +221,7 @@ const Dashboard = () => {
       <NativeAppEnhancements />
       
       
-      <main className="pt-16 pb-20">
+      <main className="pt-4 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Strategic Native Ad - Seamless integration */}
           <div className="mb-6">

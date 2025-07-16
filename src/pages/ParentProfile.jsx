@@ -331,7 +331,7 @@ const ParentProfile = () => {
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <section className="max-w-4xl mx-auto mt-12 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+      <section className="max-w-4xl mx-auto mt-4 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         {/* Back Button - Mobile Optimized */}
         <button
           onClick={() => navigate(-1)}

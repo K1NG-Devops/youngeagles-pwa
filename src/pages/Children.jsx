@@ -96,10 +96,10 @@ const Children = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-6`}>
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} pt-4 pb-8`}>
       <div className="max-w-6xl mx-auto px-2 sm:px-6 space-y-6">
         {/* Header */}       
-        <div className={`p-2 mt-18 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+        <div className={`p-2 mt-4 rounded-lg shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
