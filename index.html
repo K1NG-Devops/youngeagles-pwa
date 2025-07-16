@@ -119,41 +119,8 @@
   
   <!-- Initialize AdSense global array -->
   <script>
-    (function() {
-      // Function to ensure adsbygoogle is always an array
-      function ensureAdsbygoogleArray() {
-        if (!window.adsbygoogle || !Array.isArray(window.adsbygoogle)) {
-          window.adsbygoogle = [];
-        }
-      }
-      
-      // Initial setup
-      ensureAdsbygoogleArray();
-      
-      // Monitor for changes using Object.defineProperty
-      var _adsbygoogle = [];
-      Object.defineProperty(window, 'adsbygoogle', {
-        get: function() {
-          return _adsbygoogle;
-        },
-        set: function(value) {
-          // If someone tries to set it to non-array, keep it as array
-          if (Array.isArray(value)) {
-            _adsbygoogle = value;
-          } else {
-            console.warn('Attempted to set adsbygoogle to non-array:', value);
-            // If it has a push method, convert to array
-            if (value && typeof value.push === 'function') {
-              _adsbygoogle = Array.from(value);
-            }
-          }
-        },
-        configurable: true
-      });
-      
-      // Also set up after load
-      window.addEventListener('load', ensureAdsbygoogleArray);
-    })();
+    // Simple initialization - let AdSense handle the array management
+    window.adsbygoogle = window.adsbygoogle || [];
   </script>
 </body>
 

@@ -13,11 +13,26 @@ const NativeAd = ({ type = 'banner' }) => {
   // Initialize AdSense
   useEffect(() => {
     if (isAdsEnabled && adRef.current) {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (error) {
-        console.error('AdSense error:', error);
-      }
+      // Add a small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        try {
+          // Ensure adsbygoogle is available and is an array
+          if (typeof window !== 'undefined') {
+            window.adsbygoogle = window.adsbygoogle || [];
+            if (Array.isArray(window.adsbygoogle)) {
+              window.adsbygoogle.push({});
+            } else {
+              console.warn('adsbygoogle is not an array, reinitializing...');
+              window.adsbygoogle = [];
+              window.adsbygoogle.push({});
+            }
+          }
+        } catch (error) {
+          console.error('AdSense error:', error);
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [isAdsEnabled]);
   

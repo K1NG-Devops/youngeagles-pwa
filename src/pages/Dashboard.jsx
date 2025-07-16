@@ -14,7 +14,8 @@ import AdaptiveLoader from '../components/loading/AdaptiveLoader';
 import NativeAppEnhancements from '../components/NativeAppEnhancements';
 import ChildRegistration from '../components/ChildRegistration';
 // Simplified Ad Components
-import { HeaderAd, ContentAd, NativeAd } from '../components/ads/AdComponents';
+import { HeaderAd, ContentAd } from '../components/ads/AdComponents';
+import NativeAd from '../components/ads/NativeAd';
 // import AdDiagnostic from '../components/ads/AdDiagnostic';
 
 import useAdFrequency from '../hooks/useAdFrequency';

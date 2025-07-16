@@ -197,7 +197,7 @@ const AdminDashboard = () => {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <Header />
-        <div className="pt-20 pb-4">
+        <div className="pt-4 pb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-6">
               <button
@@ -224,7 +224,7 @@ const AdminDashboard = () => {
       <Header />
       
       {/* Main Content Container */}
-      <div className="pt-20 pb-4">
+      <div className="pt-4 pb-8">
         {/* Welcome Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="bg-gradient-to-r border-b-2 mb-8 border-blue-500 rounded-xl from-blue-600 to-purple-600 text-white">
