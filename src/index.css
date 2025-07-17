@@ -49,9 +49,26 @@ ins[data-ad-client][data-ad-slot="6408733271"] {
 ins[data-ad-client][data-ad-format="auto"] {
   width: 100% !important;
   max-width: 728px !important;
-  min-width: 320px !important;
+  min-width: 280px !important;
+  height: auto !important;
+  min-height: 50px !important;
+  max-height: 250px !important;
+}
+
+/* Header Banner Specific - Thin Banner */
+ins[data-ad-client][data-ad-format="auto"].mobile-header-safe {
+  max-width: 728px !important;
   height: 90px !important;
   min-height: 90px !important;
+  max-height: 90px !important;
+}
+
+/* Mobile Banner Specific - Mobile Banner */
+ins[data-ad-client][data-ad-format="auto"].mobile-optimized {
+  max-width: 320px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
 }
 
 /* AdSense Iframe Fixes */
@@ -91,7 +108,25 @@ ins[data-ad-client] iframe {
   
   ins[data-ad-client][data-ad-format="auto"] {
     max-width: 320px !important;
+    height: auto !important;
+    min-height: 50px !important;
+    max-height: 90px !important;
+  }
+  
+  /* Mobile header banner - thin banner */
+  ins[data-ad-client][data-ad-format="auto"].mobile-header-safe {
+    max-width: 320px !important;
     height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+  }
+  
+  /* Mobile banner ad - mobile banner */
+  ins[data-ad-client][data-ad-format="auto"].mobile-optimized {
+    max-width: 320px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
   }
 
   /* Mobile-optimized ad container */
@@ -527,18 +562,24 @@ body, html {
 
 @media (max-width: 768px) {
   .mobile-header-safe {
-    margin: 12px 0 !important; /* Adequate spacing for mobile */
+    margin: 16px auto !important; /* More spacing for mobile */
     padding: 0;
     position: relative;
-    z-index: 5; /* Lower z-index to avoid covering content */
+    z-index: 1; /* Very low z-index to avoid covering content */
+    max-width: 320px;
+    height: 50px;
+    overflow: hidden;
   }
   
   /* Header position ads specifically - only when actually needed */
   .ad-position-header {
-    margin: 16px 0 !important; /* More spacing to prevent overlap */
+    margin: 20px auto !important; /* Even more spacing to prevent overlap */
     position: relative;
-    z-index: 5;
+    z-index: 1;
     clear: both;
+    max-width: 320px;
+    height: 50px;
+    overflow: hidden;
   }
   
   /* Prevent header ads from interfering with navigation */
@@ -546,6 +587,8 @@ body, html {
     position: relative !important;
     clear: both;
     width: 100%;
+    max-width: 320px;
+    height: 50px;
     margin: 0 auto;
   }
 }
@@ -571,8 +614,9 @@ body, html {
     margin: 12px auto !important; /* Adequate margin */
     display: block !important;
     width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
+    max-width: 320px !important;
+    height: 50px !important;
+    overflow: hidden !important;
   }
 
   .mobile-optimized .adsbygoogle {
@@ -580,12 +624,13 @@ body, html {
     width: 100% !important;
     max-width: 320px !important;
     min-width: 280px !important;
-    height: auto !important;
+    height: 50px !important;
     min-height: 50px !important;
+    max-height: 50px !important;
     margin: 0 auto !important;
     background: transparent !important;
     border: none !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     position: relative !important;
   }
 

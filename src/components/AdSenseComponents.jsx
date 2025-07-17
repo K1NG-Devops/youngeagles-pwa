@@ -6,10 +6,17 @@ import useMobileDetection from '../hooks/useMobileDetection';
 export const HeaderBannerAd = ({ className = '' }) => (
   <GoogleAd
     slot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
-    style={{ display: 'block', margin: '12px 0', clear: 'both' }}  // Better margin and clear
+    style={{ 
+      display: 'block', 
+      margin: '8px auto',
+      clear: 'both',
+      maxWidth: '728px',
+      height: '90px',
+      width: '100%'
+    }}
     format="auto"
     responsive={true}
-    hideWhenEmpty={true}  // Hide when no ads
+    hideWhenEmpty={true}
     className={`mobile-header-safe ${className}`}
   />
 );
@@ -17,10 +24,17 @@ export const HeaderBannerAd = ({ className = '' }) => (
 export const MobileBannerAd = ({ className = '' }) => (
   <GoogleAd
     slot={import.meta.env.VITE_ADSENSE_MOBILE_BANNER}
-    style={{ display: 'block', margin: '12px 0', clear: 'both' }}  // Better margin and clear
+    style={{ 
+      display: 'block', 
+      margin: '8px auto',
+      clear: 'both',
+      maxWidth: '320px',
+      height: '50px',
+      width: '100%'
+    }}
     format="auto"
     responsive={true}
-    hideWhenEmpty={true}  // Hide when no ads
+    hideWhenEmpty={true}
     className={`mobile-optimized ${className}`}
   />
 );

@@ -225,19 +225,7 @@ const Dashboard = () => {
       
       <main className="relative">
         <div className="mobile-container">
-          {/* Mobile-First Ad Strategy - Better positioned ads */}
-          <div className="block sm:hidden">
-            <div className="mobile-optimized">
-              <MobileBannerAd />
-            </div>
-          </div>
-          <div className="hidden sm:block">
-            <div className="mobile-header-safe">
-              <ResponsiveAd placement="header" />
-            </div>
-          </div>
-
-          {/* Welcome Section - 320px Optimized */}
+          {/* Welcome Section - 320px Optimized - Moved before ads */}
           <div className="bg-gradient-to-br from-blue-400 via-purple-500 to-purple-600 text-white rounded-2xl shadow-xl mobile-space-md overflow-hidden relative">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-15">
@@ -356,6 +344,18 @@ const Dashboard = () => {
                   <span className="text-mobile-sm font-bold text-white">{stats.progress}%</span>
                 </div>
               </div>
+            </div>
+          </div>
+          
+          {/* Mobile-First Banner Ads - After welcome section */}
+          <div className="block sm:hidden">
+            <div className="mobile-optimized">
+              <MobileBannerAd />
+            </div>
+          </div>
+          <div className="hidden sm:block">
+            <div className="mobile-header-safe">
+              <ResponsiveAd placement="header" />
             </div>
           </div>
           
