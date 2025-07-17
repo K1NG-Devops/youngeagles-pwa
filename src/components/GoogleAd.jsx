@@ -115,10 +115,22 @@ const GoogleAd = ({
   }
 
   return (
-    <div ref={adRef} className={`adsense-container ${className}`} style={style}>
+    <div ref={adRef} className={`adsense-container ${className}`} style={{
+      ...style,
+      position: 'relative',
+      clear: 'both',
+      width: '100%',
+      margin: '0 auto',
+      textAlign: 'center'
+    }}>
       <ins
         className="adsbygoogle"
-        style={{ display: 'block' }}
+        style={{ 
+          display: 'block',
+          width: '100%',
+          height: 'auto',
+          minHeight: isMobile ? '50px' : '90px'
+        }}
         data-ad-client={publisherId}
         data-ad-slot={slot}
         data-ad-format={format}

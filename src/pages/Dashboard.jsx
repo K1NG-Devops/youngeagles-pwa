@@ -213,9 +213,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} overflow-y-auto`} style={{
+    <div ref={swipeRef} className={`min-h-screen mt-0 ${isDark ? 'bg-gray-900' : 'bg-gray-50'} mobile-scroll-container`} style={{
       WebkitOverflowScrolling: 'touch',
-      overscrollBehavior: 'contain',
+      overscrollBehavior: 'auto',
       scrollBehavior: 'smooth',
       touchAction: 'pan-y'
     }}>
@@ -223,14 +223,18 @@ const Dashboard = () => {
       <NativeAppEnhancements />
       
       
-      <main>
+      <main className="relative">
         <div className="mobile-container">
-          {/* Mobile-First Ad Strategy - ads will hide themselves if empty */}
+          {/* Mobile-First Ad Strategy - Better positioned ads */}
           <div className="block sm:hidden">
-            <MobileBannerAd />
+            <div className="mobile-optimized">
+              <MobileBannerAd />
+            </div>
           </div>
           <div className="hidden sm:block">
-            <ResponsiveAd placement="header" />
+            <div className="mobile-header-safe">
+              <ResponsiveAd placement="header" />
+            </div>
           </div>
 
           {/* Welcome Section - 320px Optimized */}
@@ -396,7 +400,9 @@ const Dashboard = () => {
           {/* Content Ad - Google AdSense */}
           {userRole === 'parent' && (
             <div className="mb-6">
-              <ResponsiveAd placement="content" />
+              <div className="mobile-optimized">
+                <ResponsiveAd placement="content" />
+              </div>
             </div>
           )}
 
@@ -522,7 +528,9 @@ const Dashboard = () => {
 
           {/* Additional Content Ad for better monetization - Google AdSense */}
           <div className="mb-6">
-            <ResponsiveAd placement="infeed" />
+            <div className="mobile-optimized">
+              <ResponsiveAd placement="infeed" />
+            </div>
           </div>
           
         </div>

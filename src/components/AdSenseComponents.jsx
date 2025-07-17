@@ -6,7 +6,7 @@ import useMobileDetection from '../hooks/useMobileDetection';
 export const HeaderBannerAd = ({ className = '' }) => (
   <GoogleAd
     slot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
-    style={{ display: 'block', margin: '4px 0' }}  // Minimal margin
+    style={{ display: 'block', margin: '12px 0', clear: 'both' }}  // Better margin and clear
     format="auto"
     responsive={true}
     hideWhenEmpty={true}  // Hide when no ads
@@ -17,7 +17,7 @@ export const HeaderBannerAd = ({ className = '' }) => (
 export const MobileBannerAd = ({ className = '' }) => (
   <GoogleAd
     slot={import.meta.env.VITE_ADSENSE_MOBILE_BANNER}
-    style={{ display: 'block', margin: '4px 0' }}  // Minimal margin
+    style={{ display: 'block', margin: '12px 0', clear: 'both' }}  // Better margin and clear
     format="auto"
     responsive={true}
     hideWhenEmpty={true}  // Hide when no ads
