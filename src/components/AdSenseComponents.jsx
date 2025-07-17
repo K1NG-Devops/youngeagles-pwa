@@ -8,7 +8,7 @@ export const HeaderBannerAd = ({ className = '' }) => (
     slot={import.meta.env.VITE_ADSENSE_HEADER_BANNER}
     style={{ 
       display: 'block', 
-      margin: '8px auto',
+      margin: '4px auto',
       clear: 'both',
       maxWidth: '728px',
       height: '90px',
@@ -27,11 +27,10 @@ export const MobileBannerAd = ({ className = '' }) => (
     slot={import.meta.env.VITE_ADSENSE_MOBILE_BANNER}
     style={{ 
       display: 'block', 
-      margin: '8px auto',
+      margin: '4px 0',
       clear: 'both',
-      maxWidth: '320px',
+      width: '100vw',
       height: '50px',
-      width: '100%',
       overflow: 'hidden'
     }}
     format="auto"

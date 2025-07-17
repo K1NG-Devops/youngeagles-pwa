@@ -14,7 +14,7 @@
 /* AdSense Container Base Styles - STRICT CONSTRAINTS */
 ins[data-ad-client] {
   display: block !important;
-  margin: 15px auto !important;
+  margin: 8px auto !important; /* Reduced margin */
   padding: 0 !important;
   box-sizing: content-box !important;
   background: transparent !important;
@@ -23,6 +23,8 @@ ins[data-ad-client] {
   overflow: hidden !important;
   position: relative !important;
   max-height: 90px !important;
+  contain: layout style !important;
+  isolation: isolate !important;
 }
 
 /* Rectangle Ad Format (300x250) */
@@ -74,13 +76,36 @@ ins[data-ad-client][data-ad-format="auto"].mobile-optimized {
   max-height: 50px !important;
 }
 
-/* AdSense Iframe Fixes */
+/* AdSense Iframe Fixes - INCLUDING VIDEO CONSTRAINTS */
 ins[data-ad-client] iframe {
   width: 100% !important;
   height: 100% !important;
+  max-height: 90px !important;
   border: none !important;
   margin: 0 !important;
   padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Video ad constraints */
+ins[data-ad-client] video,
+ins[data-ad-client] iframe[src*="video"],
+ins[data-ad-client] iframe[src*="youtube"],
+ins[data-ad-client] iframe[src*="vimeo"] {
+  width: 100% !important;
+  height: 90px !important;
+  max-height: 90px !important;
+  object-fit: cover !important;
+  overflow: hidden !important;
+}
+
+/* Any embedded content in ads */
+ins[data-ad-client] embed,
+ins[data-ad-client] object {
+  width: 100% !important;
+  height: 90px !important;
+  max-height: 90px !important;
+  overflow: hidden !important;
 }
 
 /* Parent Container Fixes */
@@ -119,12 +144,25 @@ ins[data-ad-client] iframe {
   }
   
   ins[data-ad-client][data-ad-format="auto"] {
-    max-width: 320px !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     height: 50px !important;
     min-height: 50px !important;
     max-height: 50px !important;
     overflow: hidden !important;
     display: block !important;
+    margin: 4px 0 !important; /* Reduced margin */
+  }
+  
+  /* Mobile video ad constraints */
+  ins[data-ad-client] iframe,
+  ins[data-ad-client] video,
+  ins[data-ad-client] embed,
+  ins[data-ad-client] object {
+    max-height: 50px !important;
+    height: 50px !important;
+    overflow: hidden !important;
+    object-fit: cover !important;
   }
   
   /* Mobile header banner - thin banner */
@@ -625,10 +663,10 @@ body, html {
     position: relative !important;
     z-index: 1 !important;
     clear: both !important;
-    margin: 12px auto !important; /* Adequate margin */
+    margin: 6px 0 !important; /* Reduced margin */
     display: block !important;
-    width: 100% !important;
-    max-width: 320px !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
     height: 50px !important;
     min-height: 50px !important;
     max-height: 50px !important;
@@ -637,17 +675,30 @@ body, html {
 
   .mobile-optimized .adsbygoogle {
     display: block !important;
-    width: 100% !important;
-    max-width: 320px !important;
-    min-width: 280px !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 100vw !important;
     height: 50px !important;
     min-height: 50px !important;
     max-height: 50px !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     background: transparent !important;
     border: none !important;
     overflow: hidden !important;
     position: relative !important;
+  }
+  
+  /* Force all content inside mobile-optimized ads to be constrained */
+  .mobile-optimized .adsbygoogle *,
+  .mobile-optimized ins[data-ad-client] *,
+  .mobile-optimized iframe,
+  .mobile-optimized video,
+  .mobile-optimized embed,
+  .mobile-optimized object {
+    max-height: 50px !important;
+    height: 50px !important;
+    overflow: hidden !important;
+    object-fit: cover !important;
   }
 
   /* Force AdSense mobile banner visibility */
