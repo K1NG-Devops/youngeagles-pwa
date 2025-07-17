@@ -77,12 +77,29 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   
+  // Skip caching for AdSense and ad-related domains
+  const adDomains = [
+    'googlesyndication.com',
+    'doubleclick.net',
+    'googleadservices.com',
+    'googletagservices.com',
+    'google.com/ads',
+    'gstatic.com'
+  ];
+  
+  const isAdRequest = adDomains.some(domain => url.hostname.includes(domain));
+  
+  if (isAdRequest) {
+    // Let ad requests go directly to network without caching
+    return;
+  }
+  
   // Handle different types of requests with appropriate strategies
   if (url.origin === location.origin) {
     // For same-origin requests, use network-first strategy
     event.respondWith(networkFirst(event.request));
   } else {
-    // For external resources (ads, fonts, etc.), use cache-first
+    // For external resources (fonts, etc.), use cache-first
     event.respondWith(cacheFirst(event.request));
   }
 });

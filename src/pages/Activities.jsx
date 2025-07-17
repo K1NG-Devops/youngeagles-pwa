@@ -438,71 +438,70 @@ const Activities = () => {
         <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} transition-colors`}>
         {/* Header Ad - Removed due to mobile interference */}
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mobile-container pt-2 pb-8">
           {/* Header Ad */}
-          <HeaderBannerAd />
 
-          {/* Header Section */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className={`p-2 rounded-lg mr-4 transition-colors ${
-                  isDark 
-                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' 
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <FaArrowLeft />
-              </button>
-              <div>
-                <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Learning Activities
-                </h1>
-                <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Interactive games and exercises for young learners
-                </p>
+          {/* Header Section - Optimized for 320px */}
+          <div className="mobile-section">
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-center">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className={`mobile-touch-target rounded-lg mr-3 transition-colors ${
+                    isDark 
+                      ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' 
+                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <FaArrowLeft />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <h1 className={`text-mobile-xl font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Learning Activities
+                  </h1>
+                  <p className={`text-mobile-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Interactive games for young learners
+                  </p>
+                </div>
               </div>
+              
+              {user?.role === 'teacher' && (
+                <button
+                  onClick={() => setShowAssignModal(true)}
+                  className="mobile-btn-md bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full"
+                >
+                  <FaClipboardList className="mr-2" />
+                  <span className="text-mobile-sm">Assign Activity</span>
+                </button>
+              )}
             </div>
-            
-            {user?.role === 'teacher' && (
-              <button
-                onClick={() => setShowAssignModal(true)}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <FaClipboardList className="mr-2" />
-                Assign Activity
-              </button>
-            )}
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Activities Grid - Main Content */}
-            <div className="lg:col-span-3">
-              {/* Activity Selection */}
-              {!selectedActivity ? (
-                <div className="space-y-6">
-                  {/* Stats Overview */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                      <div className="flex items-center">
-                        <FaTrophy className="text-3xl text-yellow-500 mr-4" />
-                        <div>
-                          <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {completedActivities.length}
-                          </h3>
-                          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Completed
-                          </p>
-                        </div>
+          {/* Main Content - 320px Optimized */}
+          <div className="mobile-content">
+            {/* Activity Selection */}
+            {!selectedActivity ? (
+              <div className="space-y-4">
+                {/* Stats Overview - 320px Grid */}
+                <div className="mobile-grid-1 mb-6">
+                  <div className={`mobile-card ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+                    <div className="flex items-center">
+                      <FaTrophy className="text-2xl text-yellow-500 mr-3" />
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`text-mobile-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {completedActivities.length}
+                        </h3>
+                        <p className={`text-mobile-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Completed
+                        </p>
                       </div>
                     </div>
-                    
-                    <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                      <div className="flex items-center">
-                        <FaCalculator className="text-3xl text-blue-500 mr-4" />
-                        <div>
+                  </div>
+                  
+                  <div className={`mobile-card ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+                    <div className="flex items-center">
+                      <FaCalculator className="text-2xl text-blue-500 mr-3" />
+                      <div className="flex-1 min-w-0">
                           <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {activities.length}
                           </h3>
@@ -651,9 +650,10 @@ const Activities = () => {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
 
               {/* Progress Summary */}
               <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
@@ -699,7 +699,8 @@ const Activities = () => {
             </div>
           </div>
 
-        </div>
+        {/* Footer Ad */}
+        <HeaderBannerAd />
 
         {/* Assignment Modal */}
         {showAssignModal && (
@@ -788,7 +789,6 @@ const Activities = () => {
 
         {/* Footer Ad */}
         <HeaderBannerAd />
-        </div>
       </ErrorBoundary>
     </PageWrapper>
   );

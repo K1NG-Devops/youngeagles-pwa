@@ -15,6 +15,7 @@ import NativeAppEnhancements from '../components/NativeAppEnhancements';
 import ChildRegistration from '../components/ChildRegistration';
 // Google AdSense Components
 import { HeaderBannerAd, ContentRectangleAd, InFeedNativeAd, MobileBannerAd, ResponsiveAd } from '../components/AdSenseComponents';
+import MobileAdDebugger from '../components/MobileAdDebugger';
 // Fallback Ad Components
 import { HeaderAd, ContentAd, NativeAd } from '../components/ads/AdComponents';
 
@@ -223,108 +224,132 @@ const Dashboard = () => {
       
       
       <main>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Strategic Native Ad - Google AdSense */}
-          <div className="mb-6">
+        <div className="mobile-container">
+          {/* Mobile-First Ad Strategy - ads will hide themselves if empty */}
+          <div className="block sm:hidden">
+            <MobileBannerAd />
+          </div>
+          <div className="hidden sm:block">
             <ResponsiveAd placement="header" />
           </div>
 
-          {/* Welcome Section - Enhanced Light Blue Gradient */}
-          <div className="bg-gradient-to-br from-blue-400 via-purple-500 to-purple-600 text-white rounded-2xl shadow-xl mb-6 overflow-hidden relative">
+          {/* Welcome Section - 320px Optimized */}
+          <div className="bg-gradient-to-br from-blue-400 via-purple-500 to-purple-600 text-white rounded-2xl shadow-xl mobile-space-md overflow-hidden relative">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-15">
-              <div className="absolute top-4 left-4 w-20 h-20 rounded-full bg-white/30"></div>
-              <div className="absolute bottom-4 right-4 w-16 h-16 rounded-full bg-white/20"></div>
-              <div className="absolute top-1/2 right-8 w-12 h-12 rounded-full bg-white/25"></div>
+              <div className="absolute top-4 left-4 w-16 h-16 rounded-full bg-white/30"></div>
+              <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-white/20"></div>
+              <div className="absolute top-1/2 right-6 w-8 h-8 rounded-full bg-white/25"></div>
             </div>
             
-            <div className="relative z-10 p-4 sm:p-6">
-              {/* Header Section - Graduation cap centered on top */}
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                  <FaGraduationCap className="text-2xl sm:text-4xl text-white" />
+            <div className="relative z-10 mobile-p-md">
+              {/* Header Section - 320px Optimized */}
+              <div className="text-center mobile-space-sm">
+                <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center mx-auto mobile-space-xs shadow-lg">
+                  <FaGraduationCap className="text-lg text-white" />
                 </div>
-                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 leading-tight text-white">
-                  Welcome back, {user?.name}!
+                <h1 className="text-mobile-xl font-bold leading-tight text-white mobile-space-xs">
+                  Welcome back, {user?.name?.split(' ')[0] || 'Student'}!
                 </h1>
-                <p className="text-white/90 text-xs sm:text-sm md:text-base opacity-90">
-                  Track your child's learning progress
+                <p className="text-white/90 text-mobile-sm opacity-90">
+                  Track learning progress
                 </p>
               </div>
 
-              {/* Stats Preview - Consistent styling with darker gradient */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white/25 rounded-lg px-3 py-2 text-center backdrop-blur-sm shadow-md border border-white/30">
-                  <div className="flex items-center justify-center mb-1">
+              {/* Stats Preview - 320px Grid */}
+              <div className="mobile-grid-2 mobile-space-sm">
+                <div className="bg-white/25 rounded-lg mobile-p-sm text-center backdrop-blur-sm shadow-md border border-white/30">
+                  <div className="flex items-center justify-center mobile-space-xs">
                     <FaUser className="text-sm mr-1 text-white" />
-                    <div className="text-xl sm:text-2xl font-bold text-white">{stats.children}</div>
+                    <div className="text-mobile-lg font-bold text-white">{stats.children}</div>
                   </div>
-                  <div className="text-xs text-white/80 font-medium">Children</div>
+                  <div className="text-mobile-xs text-white/80 font-medium">Children</div>
                 </div>
-                <div className="bg-white/25 rounded-lg px-3 py-2 text-center backdrop-blur-sm shadow-md border border-white/30">
-                  <div className="flex items-center justify-center mb-1">
+                <div className="bg-white/25 rounded-lg mobile-p-sm text-center backdrop-blur-sm shadow-md border border-white/30">
+                  <div className="flex items-center justify-center mobile-space-xs">
                     <FaBell className="text-sm mr-1 text-white" />
-                    <div className="text-xl sm:text-2xl font-bold text-white">{stats.classes}</div>
+                    <div className="text-mobile-lg font-bold text-white">{stats.classes}</div>
                   </div>
-                  <div className="text-xs text-white/80 font-medium">Classes</div>
+                  <div className="text-mobile-xs text-white/80 font-medium">Classes</div>
                 </div>
               </div>
               
-              {/* Quick Actions Grid - Consistent White Styling */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {/* Quick Actions - 320px Optimized */}
+              <div className="mobile-space-sm">
                 <Link 
                   to="/children" 
-                  className="group bg-white/25 hover:bg-white/35 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg border border-white/30"
+                  className="mobile-card hover:bg-white/35 backdrop-blur-sm border border-white/30 mb-3 block transition-all duration-300"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    color: 'white'
+                  }}
                 >
-                  <div className="flex items-center mb-2">
-                    <FaUser className="text-lg mr-2 group-hover:scale-110 transition-transform text-white" />
-                    <span className="font-semibold text-sm sm:text-base text-white">Children</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <FaUser className="text-lg mr-3 text-white" />
+                      <div>
+                        <span className="font-semibold text-mobile-sm text-white block">Children</span>
+                        <p className="text-mobile-xs text-white/80">Manage profiles</p>
+                      </div>
+                    </div>
+                    <FaArrowRight className="text-white/60" />
                   </div>
-                  <p className="text-xs text-white/80">Manage profiles</p>
                 </Link>
                 
                 <Link 
                   to="/activities" 
-                  className="group bg-white/25 hover:bg-white/35 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg col-span-2 sm:col-span-1 border border-white/30"
+                  className="mobile-card hover:bg-white/35 backdrop-blur-sm border border-white/30 block transition-all duration-300"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    color: 'white'
+                  }}
                 >
-                  <div className="flex items-center mb-2">
-                    <FaBrain className="text-lg mr-2 group-hover:scale-110 transition-transform text-white" />
-                    <span className="font-semibold text-sm sm:text-base text-white">Activities</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <FaBrain className="text-lg mr-3 text-white" />
+                      <div>
+                        <span className="font-semibold text-mobile-sm text-white block">Activities</span>
+                        <p className="text-mobile-xs text-white/80">Learning games</p>
+                      </div>
+                    </div>
+                    <FaArrowRight className="text-white/60" />
                   </div>
-                  <p className="text-xs text-white/80">Learning games</p>
                 </Link>
               </div>
               
-              {/* Register Child Button - Prominent placement */}
-              <div className="mt-4">
+              {/* Register Child Button - 320px Optimized */}
+              <div className="mobile-space-sm">
                 <button
                   onClick={() => setShowChildRegistration(true)}
-                  className="w-full group bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg border border-white/30 text-left"
+                  className="mobile-touch-target w-full hover:bg-white/30 backdrop-blur-sm rounded-xl border border-white/30 text-left transition-all duration-300"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white'
+                  }}
                 >
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center mb-2">
-                        <FaPlus className="text-lg mr-2 group-hover:scale-110 transition-transform text-white" />
-                        <span className="font-semibold text-sm sm:text-base text-white">Register Child</span>
+                    <div className="flex items-center">
+                      <FaPlus className="text-lg mr-3 text-white" />
+                      <div>
+                        <span className="font-semibold text-mobile-sm text-white block">Register Child</span>
+                        <p className="text-mobile-xs text-white/80">Add new child</p>
                       </div>
-                      <p className="text-xs text-white/80">Add a new child to your account</p>
                     </div>
-                    <FaArrowRight className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                    <FaArrowRight className="text-white/60" />
                   </div>
                 </button>
               </div>
               
-              {/* Progress Indicator - Enhanced White Styling */}
-              <div className="mt-6 bg-white/25 rounded-lg p-3 backdrop-blur-sm border border-white/30">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-white">Overall Progress</span>
-                  <span className="text-sm font-bold text-white">{stats.completionRate}%</span>
-                </div>
-                <div className="w-full bg-white/30 rounded-full h-2 border border-white/20">
-                  <div 
-                    className="bg-gradient-to-r from-white to-white/90 h-2 rounded-full transition-all duration-500 shadow-sm"
-                    style={{ width: `${stats.completionRate}%` }}
-                  ></div>
+              {/* Progress Indicator - 320px Optimized */}
+                            {/* Progress Indicator - 320px Optimized */}
+              <div className="mobile-space-sm rounded-lg mobile-p-sm backdrop-blur-sm border border-white/30"
+                   style={{
+                     background: 'rgba(255, 255, 255, 0.25)',
+                     color: 'white'
+                   }}>
+                <div className="flex items-center justify-between">
+                  <span className="text-mobile-sm font-semibold text-white">Progress</span>
+                  <span className="text-mobile-sm font-bold text-white">{stats.progress}%</span>
                 </div>
               </div>
             </div>
@@ -519,6 +544,9 @@ const Dashboard = () => {
           Dev Mode
         </div>
       )}
+      
+      {/* Mobile Ad Debugger */}
+      <MobileAdDebugger />
     </div>
   );
 };

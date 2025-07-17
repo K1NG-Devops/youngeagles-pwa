@@ -229,9 +229,15 @@ const UserDropdown = ({ onLogout }) => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className={`absolute right-0 top-full mt-2 w-72 max-h-[80vh] rounded-xl shadow-xl border z-[60] overflow-hidden ${
+        <div className={`absolute right-0 top-full mt-2 w-72 sm:w-80 max-h-[80vh] rounded-xl shadow-xl border z-[60] overflow-hidden ${
           isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        } ${isAnimating ? 'animate-slideDown' : ''}`}>
+        } ${isAnimating ? 'animate-slideDown' : ''}`} 
+        style={{ 
+          backgroundColor: isDark ? '#1f2937' : '#ffffff',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          maxWidth: 'calc(100vw - 2rem)',
+          minWidth: '280px'
+        }}>
           
           {/* User Info Header */}
           <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -255,10 +261,12 @@ const UserDropdown = ({ onLogout }) => {
                 )}
               </button>
               <div className="flex-1 min-w-0">
-                <h3 className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}
+                style={{ color: isDark ? '#ffffff' : '#1f2937' }}>
                   {user?.name || 'User'}
                 </h3>
-                <p className={`text-sm truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-sm truncate ${isDark ? 'text-gray-300' : 'text-gray-600'}`}
+                style={{ color: isDark ? '#d1d5db' : '#4b5563' }}>
                   {user?.email || 'user@example.com'}
                 </p>
                 <div className="flex items-center mt-1">
@@ -278,9 +286,12 @@ const UserDropdown = ({ onLogout }) => {
                   onClick={() => handleItemClick(item.action)}
                   className={`w-full px-4 py-3 text-left flex items-center space-x-3 transition-colors ${
                     isDark 
-                      ? 'hover:bg-gray-700 text-gray-200'
-                      : 'hover:bg-gray-50 text-gray-700'
+                      ? 'hover:bg-gray-700 text-gray-100'
+                      : 'hover:bg-gray-50 text-gray-800'
                   } ${item.danger ? 'hover:bg-red-50 hover:text-red-600' : ''}`}
+                  style={{
+                    color: item.danger ? '#dc2626' : (isDark ? '#f9fafb' : '#1f2937')
+                  }}
                 >
                   <item.icon className={`text-lg ${
                     item.danger ? 'text-red-500' : (isDark ? 'text-gray-400' : 'text-gray-500')
@@ -288,12 +299,18 @@ const UserDropdown = ({ onLogout }) => {
                   <div className="flex-1 min-w-0">
                     <div className={`font-medium ${
                       item.danger ? 'text-red-600' : (isDark ? 'text-white' : 'text-gray-900')
-                    }`}>
+                    }`}
+                    style={{
+                      color: item.danger ? '#dc2626' : (isDark ? '#ffffff' : '#1f2937')
+                    }}>
                       {item.label}
                     </div>
                     <div className={`text-xs ${
-                      item.danger ? 'text-red-500' : (isDark ? 'text-gray-400' : 'text-gray-500')
-                    }`}>
+                      item.danger ? 'text-red-500' : (isDark ? 'text-gray-300' : 'text-gray-600')
+                    }`}
+                    style={{
+                      color: item.danger ? '#ef4444' : (isDark ? '#d1d5db' : '#4b5563')
+                    }}>
                       {item.description}
                     </div>
                   </div>
@@ -308,14 +325,21 @@ const UserDropdown = ({ onLogout }) => {
             isDark 
               ? 'border-gray-700 bg-gray-750' 
               : 'border-gray-100 bg-gray-50'
-          }`}>
+          }`}
+          style={{
+            backgroundColor: isDark ? '#1f2937' : '#f9fafb',
+            borderColor: isDark ? '#374151' : '#e5e7eb'
+          }}>
             <button
               onClick={() => handleItemClick(toggleTheme)}
               className={`w-full flex items-center justify-between p-2 rounded-lg transition-colors ${
                 isDark 
-                  ? 'hover:bg-gray-700 text-gray-200' 
-                  : 'hover:bg-gray-100 text-gray-700'
+                  ? 'hover:bg-gray-700 text-gray-100' 
+                  : 'hover:bg-gray-100 text-gray-800'
               }`}
+              style={{
+                color: isDark ? '#f9fafb' : '#1f2937'
+              }}
             >
               <div className="flex items-center space-x-3">
                 {isDark ? (

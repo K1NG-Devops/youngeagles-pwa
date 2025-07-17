@@ -1,10 +1,15 @@
 import axios from 'axios';
 
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (() => {
+  if (import.meta.env.PROD) {
+    throw new Error('VITE_API_URL environment variable is required in production');
+  }
+  return 'http://localhost:5000'; // Development fallback only
+})();
 
-// Log API configuration
-if (process.env.NODE_ENV === 'development') {
+// Log API configuration (development only)
+if (import.meta.env.DEV) {
   console.log('🌐 API Base URL:', API_BASE_URL);
 }
 
@@ -49,7 +54,9 @@ const debouncedRequest = async (method, url, data = null, config = {}) => {
   if (requestCache.has(cacheKey)) {
     const cacheEntry = requestCache.get(cacheKey);
     if (isCacheValid(cacheEntry)) {
+    if (import.meta.env.DEV) {
       console.log('📦 Cache Hit:', cacheKey);
+    }
       return Promise.resolve(cacheEntry.data);
     } else {
       requestCache.delete(cacheKey);
@@ -58,13 +65,17 @@ const debouncedRequest = async (method, url, data = null, config = {}) => {
   
   // Check if request is already pending
   if (pendingRequests.has(cacheKey)) {
+  if (import.meta.env.DEV) {
     console.log('⏳ Request Pending:', cacheKey);
+  }
     return pendingRequests.get(cacheKey);
   }
   
   // Check rate limiting
   if (isRateLimited()) {
+  if (import.meta.env.DEV) {
     console.log('🚦 Rate limited, delaying request:', cacheKey);
+  }
     await new Promise(resolve => setTimeout(resolve, BURST_WINDOW));
   }
   
@@ -131,29 +142,26 @@ apiClient.interceptors.request.use(
     const user = localStorage.getItem('user');
     
     // Enhanced debugging
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('🔍 Request Interceptor Debug:', {
-        method: config.method?.toUpperCase(),
         url: config.url,
-        fullUrl: `${config.baseURL}${config.url}`,
+        method: config.method,
         hasToken: !!token,
-        tokenPrefix: token ? token.substring(0, 10) + '...' : 'None',
-        userInStorage: !!user,
-        headers: config.headers
+        timestamp: new Date().toISOString()
       });
     }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('✅ Auth token added to request');
       }
     } else {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('⚠️ No auth token found in localStorage');
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     }
     return config;
@@ -174,7 +182,9 @@ const retryRequest = async (config, retryCount = 0) => {
   }
   
   const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff
-  console.log(`⏳ Retrying request in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+  if (import.meta.env.DEV) {
+    console.log(`⏳ Retrying request in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+  }
   
   await new Promise(resolve => setTimeout(resolve, delay));
   
@@ -191,19 +201,27 @@ const retryRequest = async (config, retryCount = 0) => {
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
+    if (import.meta.env.DEV) {
+      console.log(`✅ API Response: ${response.status} ${response.config.url}`);
+    }
     return response;
   },
   async (error) => {
-    console.error('❌ API Error:', error.response?.status, error.response?.data || error.message);
+    if (import.meta.env.DEV) {
+      console.error('❌ API Error:', error.response?.status, error.response?.data || error.message);
+    }
     
     // Handle 429 - Too Many Requests with retry
     if (error.response?.status === 429) {
-      console.log('🚦 Rate limited, attempting retry...');
+      if (import.meta.env.DEV) {
+        console.log('🚦 Rate limited, attempting retry...');
+      }
       try {
         return await retryRequest(error.config);
       } catch {
-        console.error('❌ Retry failed after max attempts');
+        if (import.meta.env.DEV) {
+          console.error('❌ Retry failed after max attempts');
+        }
         return Promise.reject(error);
       }
     }
@@ -213,7 +231,9 @@ apiClient.interceptors.response.use(
       const errorCode = error.response?.data?.code;
       const errorMessage = error.response?.data?.error || 'Authentication failed';
       
-      console.log('🔒 Authentication Error:', errorCode, errorMessage);
+      if (import.meta.env.DEV) {
+        console.log('🔒 Authentication Error:', errorCode, errorMessage);
+      }
       
       // Clear stored auth data
       localStorage.removeItem('authToken');
@@ -221,18 +241,24 @@ apiClient.interceptors.response.use(
       
       // Show appropriate message based on error code
       if (errorCode === 'TOKEN_EXPIRED') {
-        console.log('⏰ Token expired, redirecting to login...');
+        if (import.meta.env.DEV) {
+          console.log('⏰ Token expired, redirecting to login...');
+        }
         // You could show a toast notification here if needed
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.href = '/login?expired=true';
         }
       } else if (errorCode === 'INVALID_TOKEN') {
-        console.log('🚫 Invalid token, redirecting to login...');
+        if (import.meta.env.DEV) {
+          console.log('🚫 Invalid token, redirecting to login...');
+        }
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.href = '/login?invalid=true';
         }
       } else {
-        console.log('❌ Authentication failed, redirecting to login...');
+        if (import.meta.env.DEV) {
+          console.log('❌ Authentication failed, redirecting to login...');
+        }
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
@@ -265,7 +291,9 @@ const apiService = {
   clearCache: () => {
     requestCache.clear();
     pendingRequests.clear();
+  if (import.meta.env.DEV) {
     console.log('🧹 API cache cleared');
+  }
   },
   
   // Get cache stats
@@ -551,7 +579,9 @@ const apiService = {
     
     // Upload profile picture with extended timeout and progress tracking
     uploadProfilePicture: (formData) => {
-      console.log('📤 Starting profile picture upload to:', `${API_BASE_URL}/api/users/profile-picture`);
+      if (import.meta.env.DEV) {
+        console.log('📤 Starting profile picture upload to:', `${API_BASE_URL}/api/users/profile-picture`);
+      }
       return apiClient.post('/api/users/profile-picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -562,7 +592,9 @@ const apiService = {
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            console.log(`📊 Upload progress: ${percentCompleted}%`);
+            if (import.meta.env.DEV) {
+              console.log(`📊 Upload progress: ${percentCompleted}%`);
+            }
           }
         }
       });

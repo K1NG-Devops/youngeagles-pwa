@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-First 320px Optimization System */
+@import './styles/mobile-first.css';
+
 /* ===============================================
    ADSENSE FIXES - PREVENT CROPPING AND ZERO WIDTH
    =============================================== */
@@ -89,6 +92,33 @@ ins[data-ad-client] iframe {
   ins[data-ad-client][data-ad-format="auto"] {
     max-width: 320px !important;
     height: 50px !important;
+  }
+
+  /* Mobile-optimized ad container */
+  .mobile-optimized {
+    margin: 16px auto !important;
+    padding: 8px !important;
+    max-width: 100% !important;
+    text-align: center !important;
+  }
+
+  /* Mobile banner specific styling */
+  .mobile-optimized ins[data-ad-client] {
+    width: 100% !important;
+    max-width: 320px !important;
+    min-width: 300px !important;
+    height: auto !important;
+    min-height: 50px !important;
+  }
+
+  /* Force visibility on mobile */
+  .mobile-optimized .adsbygoogle {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    min-height: 50px !important;
   }
 }
 
@@ -208,7 +238,9 @@ body {
   -ms-overflow-style: none; /* IE and Edge */
   /* Enhanced touch scrolling for iOS */
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  /* RESTORED: Allow native pull-to-refresh */
+  overscroll-behavior-x: contain; /* Prevent horizontal overscroll */
+  overscroll-behavior-y: auto; /* Allow vertical overscroll for pull-to-refresh */
   height: 100%;
   position: relative;
 }
@@ -223,32 +255,35 @@ body {
   scroll-behavior: smooth;
 }
 
-/* Enhanced momentum scrolling for mobile */
+/* Enhanced momentum scrolling for mobile - ALLOW PULL-TO-REFRESH */
 .smooth-scroll {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-x: contain; /* Prevent horizontal overscroll */
+  overscroll-behavior-y: auto; /* Allow pull-to-refresh */
   scroll-behavior: smooth;
 }
 
-/* Prevent bounce scrolling */
+/* Prevent bounce scrolling ONLY for specific elements, not globally */
 .no-bounce {
   overscroll-behavior: none;
 }
 
-/* Mobile-first touch scrolling */
+/* Mobile-first touch scrolling - PRESERVE NATIVE BEHAVIOR */
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior-x: contain; /* Prevent horizontal overscroll */
+  overscroll-behavior-y: auto; /* Allow pull-to-refresh */
   scroll-behavior: smooth;
   touch-action: pan-y;
 }
 
-/* Ensure proper mobile viewport */
+/* Ensure proper mobile viewport - RESTORE NATIVE PULL-TO-REFRESH */
 @media (max-width: 768px) {
   html, body {
-    touch-action: pan-y;
+    touch-action: manipulation; /* Allow native touch gestures including pull-to-refresh */
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain; /* Prevent horizontal overscroll */
+    overscroll-behavior-y: auto; /* CRITICAL: Allow pull-to-refresh */
     height: 100%;
     position: relative;
   }
@@ -256,17 +291,19 @@ body {
   .mobile-scroll {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto; /* Allow pull-to-refresh */
     scroll-behavior: smooth;
     height: 100%;
   }
   
-  /* Fix for dashboard scrolling */
+  /* Fix for dashboard scrolling - PRESERVE PULL-TO-REFRESH */
   .dashboard-container {
     height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto; /* Allow pull-to-refresh */
     position: relative;
   }
 }
@@ -482,18 +519,18 @@ body, html {
 .mobile-header-safe {
   position: relative;
   z-index: 10; /* Lower than header (z-50) */
+  margin: 4px 0; /* Minimal margin by default */
 }
 
 @media (max-width: 768px) {
   .mobile-header-safe {
-    margin-top: 80px !important; /* Safe distance from fixed header */
-    padding-top: 8px;
+    margin: 8px 0 !important; /* Reduced from 80px - much cleaner */
+    padding: 0;
   }
   
-  /* Header position ads specifically */
+  /* Header position ads specifically - only when actually needed */
   .ad-position-header {
-    margin-top: 80px !important;
-    margin-bottom: 16px;
+    margin: 12px 0 !important; /* Reasonable spacing */
     position: relative;
     z-index: 10;
   }
@@ -508,16 +545,72 @@ body, html {
 /* Desktop - normal spacing */
 @media (min-width: 769px) {
   .mobile-header-safe {
-    margin-top: 16px;
+    margin: 8px 0; /* Reduced desktop margin */
   }
   
   .ad-position-header {
-    margin-top: 16px;
-    margin-bottom: 16px;
+    margin: 12px 0; /* Reduced desktop spacing */
   }
 }
 
 /* Footer safe spacing for mobile devices */
+@media (max-width: 768px) {
+  /* Mobile ad optimizations - reduced margins */
+  .mobile-optimized {
+    position: relative !important;
+    z-index: 1 !important;
+    clear: both !important;
+    margin: 8px auto !important; /* Reduced from 16px */
+    display: block !important;
+  }
+
+  .mobile-optimized .adsbygoogle {
+    display: block !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    min-width: 280px !important;
+    height: auto !important;
+    min-height: 50px !important;
+    margin: 0 auto !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  /* Force AdSense mobile banner visibility */
+  ins[data-ad-slot="5122452205"] {
+    width: 320px !important;
+    height: 50px !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+  /* Mobile banner ad specific */
+  .mobile-optimized ins[data-ad-slot="5122452205"] {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Prevent mobile ad interference with layout */
+  .mobile-optimized {
+    contain: layout !important;
+  }
+
+  /* Mobile ad debugging */
+  .adsense-placeholder {
+    min-height: 60px !important;
+    background: #e5e7eb !important;
+    border: 2px dashed #9ca3af !important;
+  }
+}
+
+/* Desktop ad spacing adjustments */
+@media (min-width: 769px) {
+  .mobile-optimized {
+    display: none !important;
+  }
+}
 .footer-safe-spacing {
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }

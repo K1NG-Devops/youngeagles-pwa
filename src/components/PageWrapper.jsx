@@ -1,19 +1,13 @@
 import React from 'react';
-import PullToRefresh from './PullToRefresh';
 
 const PageWrapper = ({ children, onRefresh, className = '' }) => {
-  const defaultRefresh = async () => {
-    // Default refresh - reload the page
-    window.location.reload();
-  };
-
+  // Note: Removed custom PullToRefresh to restore native mobile pull-to-refresh
+  // Native browser pull-to-refresh will now work on mobile devices
+  
   return (
-    <PullToRefresh 
-      onRefresh={onRefresh || defaultRefresh}
-      className={className}
-    >
+    <div className={className}>
       {children}
-    </PullToRefresh>
+    </div>
   );
 };
 
