@@ -11,7 +11,7 @@
    ADSENSE FIXES - PREVENT CROPPING AND ZERO WIDTH
    =============================================== */
 
-/* AdSense Container Base Styles */
+/* AdSense Container Base Styles - STRICT CONSTRAINTS */
 ins[data-ad-client] {
   display: block !important;
   margin: 15px auto !important;
@@ -20,8 +20,9 @@ ins[data-ad-client] {
   background: transparent !important;
   border: none !important;
   text-align: center !important;
-  overflow: visible !important;
+  overflow: hidden !important;
   position: relative !important;
+  max-height: 90px !important;
 }
 
 /* Rectangle Ad Format (300x250) */
@@ -45,14 +46,16 @@ ins[data-ad-client][data-ad-slot="6408733271"] {
   min-height: 100px !important;
 }
 
-/* Auto Ad Format - Responsive Banner */
+/* Auto Ad Format - Responsive Banner - STRICT CONSTRAINTS */
 ins[data-ad-client][data-ad-format="auto"] {
   width: 100% !important;
   max-width: 728px !important;
   min-width: 280px !important;
-  height: auto !important;
+  height: 90px !important;
   min-height: 50px !important;
-  max-height: 250px !important;
+  max-height: 90px !important;
+  overflow: hidden !important;
+  display: block !important;
 }
 
 /* Header Banner Specific - Thin Banner */
@@ -92,12 +95,21 @@ ins[data-ad-client] iframe {
   overflow: visible !important;
 }
 
-/* Mobile Responsive AdSense */
+/* Mobile Responsive AdSense - STRICT BANNER CONSTRAINTS */
 @media (max-width: 768px) {
+  /* Force all ads to be banner size on mobile */
+  ins[data-ad-client] {
+    max-height: 50px !important;
+    overflow: hidden !important;
+    display: block !important;
+  }
+  
   ins[data-ad-client][data-ad-format="rectangle"],
   ins[data-ad-client][data-ad-slot="1707587859"] {
-    width: 300px !important;
-    height: 250px !important;
+    width: 320px !important;
+    height: 50px !important;
+    max-height: 50px !important;
+    overflow: hidden !important;
   }
   
   ins[data-ad-client][data-ad-format="fluid"],
@@ -108,9 +120,11 @@ ins[data-ad-client] iframe {
   
   ins[data-ad-client][data-ad-format="auto"] {
     max-width: 320px !important;
-    height: auto !important;
+    height: 50px !important;
     min-height: 50px !important;
-    max-height: 90px !important;
+    max-height: 50px !important;
+    overflow: hidden !important;
+    display: block !important;
   }
   
   /* Mobile header banner - thin banner */
@@ -616,6 +630,8 @@ body, html {
     width: 100% !important;
     max-width: 320px !important;
     height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
     overflow: hidden !important;
   }
 

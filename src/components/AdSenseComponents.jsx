@@ -12,10 +12,11 @@ export const HeaderBannerAd = ({ className = '' }) => (
       clear: 'both',
       maxWidth: '728px',
       height: '90px',
-      width: '100%'
+      width: '100%',
+      overflow: 'hidden'
     }}
     format="auto"
-    responsive={true}
+    responsive={false}
     hideWhenEmpty={true}
     className={`mobile-header-safe ${className}`}
   />
@@ -30,10 +31,11 @@ export const MobileBannerAd = ({ className = '' }) => (
       clear: 'both',
       maxWidth: '320px',
       height: '50px',
-      width: '100%'
+      width: '100%',
+      overflow: 'hidden'
     }}
     format="auto"
-    responsive={true}
+    responsive={false}
     hideWhenEmpty={true}
     className={`mobile-optimized ${className}`}
   />
