@@ -3,29 +3,30 @@
 import { useState, useEffect } from "react"
 import { MobileBannerAd, ContentRectangleAd, InFeedNativeAd } from "./AdSenseComponents"
 
-export const useMobileDetection = () => {
+export const useMobileAdOptimizer = () => {
   const [isMobile, setIsMobile] = useState(false)
-  const [screenSize, setScreenSize] = useState({
-    width: typeof window !== "undefined" ? window.innerWidth : 0,
-    height: typeof window !== "undefined" ? window.innerHeight : 0,
-  })
 
   useEffect(() => {
     const checkMobile = () => {
-      const width = window.innerWidth
-      const height = window.innerHeight
+      // Simple check for common mobile user agents or screen width
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera
+      const mobileRegex =
+        /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|rim)|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i
+      const tabletRegex = /android|ipad|playbook|silk/i
 
-      setScreenSize({ width, height })
-      setIsMobile(width <= 768)
+      const isMobileDevice = mobileRegex.test(userAgent) || tabletRegex.test(userAgent) || window.innerWidth < 768
+      setIsMobile(isMobileDevice)
     }
 
     checkMobile()
     window.addEventListener("resize", checkMobile)
 
-    return () => window.removeEventListener("resize", checkMobile)
+    return () => {
+      window.removeEventListener("resize", checkMobile)
+    }
   }, [])
 
-  return { isMobile, screenSize }
+  return { isMobile }
 }
 
 export const MobileOptimizedAd = ({
@@ -33,7 +34,7 @@ export const MobileOptimizedAd = ({
   mobileComponent: MobileComponent,
   ...props
 }) => {
-  const { isMobile } = useMobileDetection()
+  const { isMobile } = useMobileAdOptimizer()
 
   if (isMobile) {
     return MobileComponent ? <MobileComponent {...props} /> : <MobileBannerAd {...props} />
@@ -43,7 +44,7 @@ export const MobileOptimizedAd = ({
 }
 
 export const StickyMobileAd = ({ className = "", style = {} }) => {
-  const { isMobile } = useMobileDetection()
+  const { isMobile } = useMobileAdOptimizer()
   const [isVisible, setIsVisible] = useState(true)
 
   if (!isMobile) return null
@@ -84,7 +85,7 @@ export const StickyMobileAd = ({ className = "", style = {} }) => {
 }
 
 export const InContentMobileAd = ({ contentLength = 0, className = "", style = {} }) => {
-  const { isMobile } = useMobileDetection()
+  const { isMobile } = useMobileAdOptimizer()
 
   // Show in-content ads for longer content on mobile
   if (!isMobile || contentLength < 500) return null
