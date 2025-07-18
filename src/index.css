@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basic styles for mobile optimization */
+.mobile-container {
+  max-width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mobile-space-xs {
+  margin-bottom: 0.5rem;
+}
+
+.mobile-space-sm {
+  margin-bottom: 1rem;
+}
+
+.mobile-space-md {
+  margin-bottom: 1.5rem;
+}
+
+.mobile-p-sm {
+  padding: 0.75rem;
+}
+
+.mobile-p-md {
+  padding: 1rem;
+}
+
+.mobile-text-xs {
+  font-size: 0.75rem;
+}
+
+.mobile-text-sm {
+  font-size: 0.875rem;
+}
+
+.mobile-text-base {
+  font-size: 1rem;
+}
+
+.mobile-text-lg {
+  font-size: 1.125rem;
+}
+
+.mobile-text-xl {
+  font-size: 1.25rem;
+}
+
+.mobile-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.mobile-card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-touch-target {
+  min-height: 48px; /* Ensure sufficient touch target size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure smooth scrolling behavior for PWA */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* Basic styles for the root div to ensure it fills the screen */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

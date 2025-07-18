@@ -71,7 +71,7 @@ const useMobileDetection = () => {
     }
   }, [])
 
-  return deviceInfo.isMobile
+  return deviceInfo
 }
 
 export default useMobileDetection

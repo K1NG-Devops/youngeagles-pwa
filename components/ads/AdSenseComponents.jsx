@@ -1,24 +1,84 @@
 "use client"
 
 import { useEffect } from "react"
-import useAdFrequency from "../../hooks/useAdFrequency" // Assuming default export
-import useMobileDetection from "../../hooks/useMobileDetection" // Assuming default export
+import { useAdFrequency } from "../../hooks/useAdFrequency" // Corrected to named import
+import { useMobileDetection } from "../../hooks/useMobileDetection" // Corrected to named import
 
-// Fallback Ad Components (assuming these exist and are correctly imported/defined)
-import { HeaderAd, ContentAd, NativeAd, FooterAd } from "./AdComponents"
+// Helper to get AdSense client ID from environment variables
+const getAdClient = () => import.meta.env.VITE_ADSENSE_PUBLISHER_ID
+const isAdSenseEnabled = () => import.meta.env.VITE_ADSENSE_ENABLED === "true"
+const isAdSenseTestMode = () => import.meta.env.VITE_ADSENSE_TEST_MODE === "true"
 
-// Helper to check if AdSense is enabled and in test mode
-const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === "true"
-const isAdSenseTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === "true"
-const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID
+// Fallback Ad Component
+const FallbackAd = ({ slot, type = "banner" }) => {
+  const adStyle = {
+    background: "#f0f0f0",
+    border: "1px dashed #ccc",
+    color: "#666",
+    textAlign: "center",
+    padding: "10px",
+    margin: "10px 0",
+    fontSize: "14px",
+    minHeight: type === "banner" ? "50px" : "250px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    maxWidth: type === "banner" ? "728px" : "336px",
+    aspectRatio: type === "banner" ? "728 / 90" : "336 / 280",
+  }
 
-// Component to load the AdSense script dynamically if not already in index.html
+  return (
+    <div style={adStyle}>
+      <p>Advertisement (Fallback) - Slot: {slot}</p>
+      {isAdSenseTestMode() && <p>Test Mode: ON</p>}
+    </div>
+  )
+}
+
+// Main Google AdSense component
+const GoogleAd = ({ slot, format = "auto", responsive = "true", className = "", style = {} }) => {
+  const { shouldShowAd, recordAdShown } = useAdFrequency(slot)
+
+  useEffect(() => {
+    if (isAdSenseEnabled() && shouldShowAd()) {
+      try {
+        // Push ad to array only if window.adsbygoogle exists
+        if (window.adsbygoogle && window.adsbygoogle.push) {
+          window.adsbygoogle.push({})
+          recordAdShown()
+        } else {
+          console.warn("AdSense script not loaded or window.adsbygoogle not available.")
+        }
+      } catch (e) {
+        console.error("Error pushing AdSense ad:", e)
+      }
+    }
+  }, [slot, shouldShowAd, recordAdShown])
+
+  if (!isAdSenseEnabled() || !shouldShowAd()) {
+    return <FallbackAd slot={slot} />
+  }
+
+  return (
+    <ins
+      className={`adsbygoogle ${className}`}
+      style={{ display: "block", ...style }}
+      data-ad-client={getAdClient()}
+      data-ad-slot={slot}
+      data-ad-format={format}
+      data-full-width-responsive={responsive}
+    ></ins>
+  )
+}
+
+// Specific AdSense Components
 export const AdSenseScript = () => {
   useEffect(() => {
-    if (isAdSenseEnabled && !document.querySelector(`script[src*="adsbygoogle.js?client=${publisherId}"]`)) {
+    if (isAdSenseEnabled() && !document.querySelector(`script[src*="${getAdClient()}"]`)) {
       const script = document.createElement("script")
-      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`
       script.async = true
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${getAdClient()}`
       script.crossOrigin = "anonymous"
       document.head.appendChild(script)
     }
@@ -26,79 +86,31 @@ export const AdSenseScript = () => {
   return null
 }
 
-// Generic Google AdSense component
-const GoogleAd = ({ slot, format = "auto", responsive = "true", className = "", style = {} }) => {
-  const { shouldShowAd, recordAdShown } = useAdFrequency("ad-slot-" + slot)
-  const isMobile = useMobileDetection() // Use the hook
+export const HeaderBannerAd = () => {
+  const slot = import.meta.env.VITE_ADSENSE_HEADER_BANNER
+  return <GoogleAd slot={slot} format="horizontal" style={{ textAlign: "center" }} />
+}
 
-  useEffect(() => {
-    if (isAdSenseEnabled && shouldShowAd && window.adsbygoogle && window.adsbygoogle.push) {
-      try {
-        // Push an empty object to the adsbygoogle array to trigger ad loading
-        ;(window.adsbygoogle = window.adsbygoogle || []).push({})
-        recordAdShown()
-      } catch (e) {
-        console.error("AdSense push error:", e)
-      }
-    }
-  }, [slot, shouldShowAd, isMobile]) // Re-run if slot changes or ad should show
+export const ContentRectangleAd = () => {
+  const slot = import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE
+  return <GoogleAd slot={slot} format="rectangle" style={{ margin: "auto" }} />
+}
 
-  if (!isAdSenseEnabled) {
-    return <div className={`bg-gray-200 text-gray-600 p-4 text-center ${className}`}>AdSense Disabled (Fallback)</div>
-  }
-
-  if (isAdSenseTestMode) {
-    return (
-      <div className={`bg-yellow-100 text-yellow-800 p-4 text-center ${className}`}>
-        AdSense Test Mode (Slot: {slot})
-      </div>
-    )
-  }
-
-  if (!shouldShowAd) {
-    return <div className={`bg-gray-100 text-gray-500 p-4 text-center ${className}`}>Ad hidden by frequency cap</div>
-  }
-
+export const MobileBannerAd = () => {
+  const slot = import.meta.env.VITE_ADSENSE_MOBILE_BANNER
+  const { isMobile } = useMobileDetection()
+  if (!isMobile) return null // Only show on mobile
   return (
-    <div className={`ad-container ${className}`} style={style}>
-      <ins
-        className="adsbygoogle"
-        style={{ display: "block", ...style }}
-        data-ad-client={publisherId}
-        data-ad-slot={slot}
-        data-ad-format={format}
-        data-full-width-responsive={responsive}
-      ></ins>
-    </div>
+    <GoogleAd
+      slot={slot}
+      format="auto"
+      responsive="true"
+      style={{ textAlign: "center", width: "100%", height: "50px" }}
+    />
   )
 }
 
-// Specific Ad Components
-export const HeaderBannerAd = ({ className = "" }) => {
-  const slot = import.meta.env.VITE_ADSENSE_HEADER_BANNER
-  if (!slot) return <HeaderAd /> // Fallback
-  return <GoogleAd slot={slot} format="auto" responsive="true" className={className} />
-}
-
-export const ContentRectangleAd = ({ className = "" }) => {
-  const slot = import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE
-  if (!slot) return <ContentAd /> // Fallback
-  return <GoogleAd slot={slot} format="rectangle" responsive="true" className={className} />
-}
-
-export const InFeedNativeAd = ({ className = "" }) => {
-  const slot = import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE
-  if (!slot) return <NativeAd /> // Fallback
-  return <GoogleAd slot={slot} format="fluid" data-ad-layout-key="-gw-1+2a-3a+4a" className={className} />
-}
-
-export const MobileBannerAd = ({ className = "" }) => {
-  const slot = import.meta.env.VITE_ADSENSE_MOBILE_BANNER
-  if (!slot) return <HeaderAd /> // Fallback
-  return <GoogleAd slot={slot} format="auto" responsive="true" className={className} />
-}
-
-export const ResponsiveAd = ({ placement = "general", className = "" }) => {
+export const ResponsiveAd = ({ placement = "general" }) => {
   let slot
   switch (placement) {
     case "header":
@@ -110,30 +122,44 @@ export const ResponsiveAd = ({ placement = "general", className = "" }) => {
     case "infeed":
       slot = import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE
       break
-    case "mobile":
-      slot = import.meta.env.VITE_ADSENSE_MOBILE_BANNER
+    case "sidebar":
+      slot = import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER
+      break
+    case "footer":
+      slot = import.meta.env.VITE_ADSENSE_FOOTER_BANNER
       break
     default:
-      slot = import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT // A general banner unit
+      slot = import.meta.env.VITE_ADSENSE_MAIN_DISPLAY_AD_UNIT
   }
-  if (!slot) return <ContentAd /> // Fallback
-  return <GoogleAd slot={slot} format="auto" responsive="true" className={className} />
+  return <GoogleAd slot={slot} format="auto" responsive="true" />
 }
 
-export const SidebarSkyscraperAd = ({ className = "" }) => {
-  const slot = import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER
-  if (!slot) return <ContentAd /> // Fallback
-  return <GoogleAd slot={slot} format="auto" responsive="true" className={className} />
+export const InFeedNativeAd = () => {
+  const slot = import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE
+  return <GoogleAd slot={slot} format="fluid" data-ad-layout-key="-gw-1+2a-49+5f" />
 }
 
-export const FooterBannerAd = ({ className = "" }) => {
-  const slot = import.meta.env.VITE_ADSENSE_FOOTER_BANNER
-  if (!slot) return <FooterAd /> // Assuming FooterAd exists in AdComponents
-  return <GoogleAd slot={slot} format="auto" responsive="true" className={className} />
+export const InArticleNativeAd = () => {
+  const slot = import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE
+  return <GoogleAd slot={slot} format="fluid" data-ad-layout-key="-ha-1+1e-3e+5f" />
 }
 
-export const MainDisplayAd = ({ className = "" }) => {
+export const MainDisplayAd = () => {
   const slot = import.meta.env.VITE_ADSENSE_MAIN_DISPLAY_AD_UNIT
-  if (!slot) return <ContentAd /> // Fallback
-  return <GoogleAd slot={slot} format="auto" responsive="true" className={className} />
+  return <GoogleAd slot={slot} format="auto" responsive="true" />
+}
+
+export const BannerAdUnit = () => {
+  const slot = import.meta.env.VITE_ADSENSE_BANNER_AD_UNIT
+  return <GoogleAd slot={slot} format="auto" responsive="true" />
+}
+
+export const SidebarSkyscraperAd = () => {
+  const slot = import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER
+  return <GoogleAd slot={slot} format="auto" responsive="true" style={{ minHeight: "600px" }} />
+}
+
+export const FooterBannerAd = () => {
+  const slot = import.meta.env.VITE_ADSENSE_FOOTER_BANNER
+  return <GoogleAd slot={slot} format="horizontal" style={{ textAlign: "center" }} />
 }

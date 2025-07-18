@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import AdSenseScript, {
   HeaderBannerAd,
   MobileBannerAd,
-  FooterBannerAd,
   MainDisplayAd,
+  FooterBannerAd, // Declared here
 } from "../components/ads/AdSenseComponents"
 import { useAdBlockDetector } from "../components/ads/AdBlockDetector"
 
