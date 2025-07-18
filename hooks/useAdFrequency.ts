@@ -127,11 +127,26 @@ const useAdFrequency = (pageId: string, adType: string, config: Partial<AdFreque
     }
   }, [state, canShowMoreAds])
 
+  const resetPageAds = useCallback(() => {
+    setState((prev) => ({ ...prev, pageAdsShown: 0 }))
+  }, [])
+
+  const resetAllAds = useCallback(() => {
+    setState({
+      sessionAdsShown: 0,
+      pageAdsShown: 0,
+      lastAdTime: 0,
+      lastResetTime: Date.now(),
+    })
+  }, [])
+
   return {
     shouldShowAd: shouldShowAd(),
     recordAdShown,
     canShowMoreAds: canShowMoreAds(),
     getAdStats,
+    resetPageAds,
+    resetAllAds,
     adsShownThisPage: state.pageAdsShown,
     adsShownThisSession: state.sessionAdsShown,
   }

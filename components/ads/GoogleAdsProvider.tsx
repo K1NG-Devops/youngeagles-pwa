@@ -39,10 +39,12 @@ export const GoogleAdsProvider: React.FC<GoogleAdsProviderProps> = ({ children, 
       testAd.className = "adsbox"
       testAd.style.position = "absolute"
       testAd.style.left = "-10000px"
+      testAd.style.width = "1px"
+      testAd.style.height = "1px"
       document.body.appendChild(testAd)
 
       setTimeout(() => {
-        const isBlocked = testAd.offsetHeight === 0
+        const isBlocked = testAd.offsetHeight === 0 || testAd.offsetWidth === 0
         setIsAdBlockerDetected(isBlocked)
         document.body.removeChild(testAd)
 
@@ -67,7 +69,7 @@ export const GoogleAdsProvider: React.FC<GoogleAdsProviderProps> = ({ children, 
         }
 
         const script = document.createElement("script")
-        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-${publisherId}`
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`
         script.async = true
         script.crossOrigin = "anonymous"
 
@@ -88,13 +90,13 @@ export const GoogleAdsProvider: React.FC<GoogleAdsProviderProps> = ({ children, 
       }
     }
 
-    if (!isAdBlockerDetected) {
+    if (!isAdBlockerDetected && publisherId) {
       loadGoogleAds()
     }
   }, [publisherId, isAdBlockerDetected])
 
   const refreshAds = () => {
-    if (window.adsbygoogle && !isAdBlockerDetected) {
+    if (typeof window !== "undefined" && window.adsbygoogle && !isAdBlockerDetected) {
       try {
         // Refresh all ads on the page
         const ads = document.querySelectorAll(".adsbygoogle")
