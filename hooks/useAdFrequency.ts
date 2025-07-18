@@ -2,167 +2,101 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-interface AdFrequencyConfig {
-  maxAdsPerSession: number
-  maxAdsPerPage: number
-  minTimeBetweenAds: number // in milliseconds
-  resetInterval: number // in milliseconds
+// Define a type for ad frequency settings
+interface AdFrequencySettings {
+  [key: string]: {
+    lastShown: number | null
+    count: number
+  }
 }
 
-const DEFAULT_CONFIG: AdFrequencyConfig = {
-  maxAdsPerSession: 10,
-  maxAdsPerPage: 3,
-  minTimeBetweenAds: 30000, // 30 seconds
-  resetInterval: 3600000, // 1 hour
-}
+// Default settings for ad frequency (can be customized)
+const DEFAULT_AD_INTERVAL_MS = 30 * 1000 // 30 seconds
+const MAX_ADS_PER_SESSION = 5 // Max ads to show per page load/session for a given placement
 
-interface AdFrequencyState {
-  sessionAdsShown: number
-  pageAdsShown: number
-  lastAdTime: number
-  lastResetTime: number
-  [key: string]: number // Tracks how many times an ad slot has been shown
-}
-
-const AD_DISPLAY_LIMIT = 3 // Max times an ad of a certain type can be shown per session (example)
-
-const useAdFrequency = (pageId: string, adType: string, config: Partial<AdFrequencyConfig> = {}) => {
-  const finalConfig = { ...DEFAULT_CONFIG, ...config }
-  const storageKey = `adFrequency_${pageId}_${adType}`
-
-  const [state, setState] = useState<AdFrequencyState>(() => {
-    if (typeof window === "undefined") {
-      return {
-        sessionAdsShown: 0,
-        pageAdsShown: 0,
-        lastAdTime: 0,
-        lastResetTime: Date.now(),
-      }
-    }
-
+/**
+ * Custom hook to manage ad display frequency and capping.
+ * Prevents ads from showing too frequently or exceeding a maximum count.
+ *
+ * @param placementId A unique identifier for the ad placement (e.g., 'header-banner', 'content-ad-1')
+ * @returns An object containing `shouldShowAd` (boolean) and `recordAdShown` (function)
+ */
+const useAdFrequency = (placementId: string) => {
+  const [adState, setAdState] = useState<AdFrequencySettings>(() => {
+    // Initialize from session storage or default
     try {
-      const stored = localStorage.getItem(storageKey)
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        const now = Date.now()
-
-        // Reset if interval has passed
-        if (now - parsed.lastResetTime > finalConfig.resetInterval) {
-          return {
-            sessionAdsShown: 0,
-            pageAdsShown: 0,
-            lastAdTime: 0,
-            lastResetTime: now,
-          }
-        }
-
-        return parsed
-      }
+      const stored = sessionStorage.getItem("adFrequencyState")
+      return stored ? JSON.parse(stored) : {}
     } catch (error) {
-      console.error("Error loading ad frequency state:", error)
-    }
-
-    return {
-      sessionAdsShown: 0,
-      pageAdsShown: 0,
-      lastAdTime: 0,
-      lastResetTime: Date.now(),
+      console.error("Failed to parse adFrequencyState from session storage:", error)
+      return {}
     }
   })
 
-  // Save state to localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return
+  const currentPlacementState = adState[placementId] || { lastShown: null, count: 0 }
 
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(state))
-    } catch (error) {
-      console.error("Error saving ad frequency state:", error)
-    }
-  }, [state, storageKey])
-
-  // Reset page ads when component mounts
-  useEffect(() => {
-    setState((prev) => ({ ...prev, pageAdsShown: 0 }))
-  }, [pageId])
-
+  // Determine if the ad should be shown based on frequency and cap
   const shouldShowAd = useCallback(() => {
     const now = Date.now()
+    const lastShown = currentPlacementState.lastShown
+    const count = currentPlacementState.count
 
-    // Check session limit
-    if (state.sessionAdsShown >= finalConfig.maxAdsPerSession) {
+    // Check if AdSense is enabled globally (from environment variable)
+    const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === "true"
+    if (!isAdSenseEnabled) {
+      return false // Do not show ad if AdSense is disabled
+    }
+
+    // Check if max ads for this placement have been reached
+    if (MAX_ADS_PER_SESSION !== -1 && count >= MAX_ADS_PER_SESSION) {
       return false
     }
 
-    // Check page limit
-    if (state.pageAdsShown >= finalConfig.maxAdsPerPage) {
-      return false
-    }
-
-    // Check time between ads
-    if (now - state.lastAdTime < finalConfig.minTimeBetweenAds) {
+    // Check if enough time has passed since the last ad for this placement
+    if (lastShown && now - lastShown < DEFAULT_AD_INTERVAL_MS) {
       return false
     }
 
     return true
-  }, [state])
+  }, [currentPlacementState])
 
-  const recordAdShown = useCallback((slotId: string) => {
-    const now = Date.now()
-    setState((prev) => ({
-      ...prev,
-      sessionAdsShown: prev.sessionAdsShown + 1,
-      pageAdsShown: prev.pageAdsShown + 1,
-      lastAdTime: now,
-      [slotId]: (prev[slotId] || 0) + 1,
-    }))
-  }, [])
-
-  const canShowMoreAds = useCallback(() => {
-    return state.pageAdsShown < finalConfig.maxAdsPerPage && state.sessionAdsShown < finalConfig.maxAdsPerSession
-  }, [state])
-
-  const getAdStats = useCallback(() => {
-    return {
-      sessionAdsShown: state.sessionAdsShown,
-      pageAdsShown: state.pageAdsShown,
-      canShowMore: canShowMoreAds(),
-      timeUntilNextAd: Math.max(0, finalConfig.minTimeBetweenAds - (Date.now() - state.lastAdTime)),
-    }
-  }, [state, canShowMoreAds])
-
-  const resetPageAds = useCallback(() => {
-    setState((prev) => ({ ...prev, pageAdsShown: 0 }))
-  }, [])
-
-  const resetAllAds = useCallback(() => {
-    setState({
-      sessionAdsShown: 0,
-      pageAdsShown: 0,
-      lastAdTime: 0,
-      lastResetTime: Date.now(),
+  // Function to call when an ad is successfully shown
+  const recordAdShown = useCallback(() => {
+    setAdState((prev) => {
+      const newState = {
+        ...prev,
+        [placementId]: {
+          lastShown: Date.now(),
+          count: (prev[placementId]?.count || 0) + 1,
+        },
+      }
+      try {
+        sessionStorage.setItem("adFrequencyState", JSON.stringify(newState))
+      } catch (error) {
+        console.error("Failed to save adFrequencyState to session storage:", error)
+      }
+      return newState
     })
-  }, [])
+  }, [placementId])
 
-  const canShowAd = useCallback(
-    (slotId: string): boolean => {
-      const currentCount = state[slotId] || 0
-      return currentCount < AD_DISPLAY_LIMIT
-    },
-    [state],
-  )
+  // Reset ad counts for all placements when the component mounts (new session/page load)
+  // This ensures MAX_ADS_PER_SESSION applies per session, not across browser restarts
+  useEffect(() => {
+    setAdState((prev) => {
+      const resetState = Object.keys(prev).reduce((acc, key) => {
+        acc[key] = { lastShown: null, count: 0 }
+        return acc
+      }, {} as AdFrequencySettings)
+      try {
+        sessionStorage.setItem("adFrequencyState", JSON.stringify(resetState))
+      } catch (error) {
+        console.error("Failed to reset adFrequencyState in session storage:", error)
+      }
+      return resetState
+    })
+  }, []) // Empty dependency array ensures this runs only once on mount
 
-  return {
-    shouldShowAd: shouldShowAd(),
-    recordAdShown,
-    canShowMoreAds: canShowMoreAds(),
-    getAdStats,
-    resetPageAds,
-    resetAllAds,
-    adsShownThisPage: state.pageAdsShown,
-    adsShownThisSession: state.sessionAdsShown,
-    canShowAd,
-  }
+  return { shouldShowAd: shouldShowAd(), recordAdShown }
 }
 
 export default useAdFrequency

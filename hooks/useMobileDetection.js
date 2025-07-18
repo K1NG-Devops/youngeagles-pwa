@@ -26,24 +26,19 @@ const useMobileDetection = () => {
         /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|rim)|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i
       const tabletRegex = /android|ipad|playbook|silk/i
 
-      const isMobile = mobileRegex.test(userAgent) || tabletRegex.test(userAgent.substring(0, 4))
+      const isMobileDevice = mobileRegex.test(userAgent) || tabletRegex.test(userAgent)
+      const isSmallScreen = width < 768 // Common breakpoint for mobile
 
-      // Tablet detection (more specific)
+      const isMobile = isMobileDevice || isSmallScreen
       const isTablet = (width >= 768 && width <= 1024) || /ipad|android(?!.*mobile)/i.test(userAgent)
-
-      // Desktop detection
       const isDesktop = width > 1024 && !touchSupported
-
-      // Orientation
       const orientation = width > height ? "landscape" : "portrait"
-
-      // Device type
       let deviceType = "desktop"
       if (isMobile && !isTablet) deviceType = "mobile"
       else if (isTablet) deviceType = "tablet"
 
       setDeviceInfo({
-        isMobile: isMobile && !isTablet,
+        isMobile,
         isTablet,
         isDesktop,
         screenSize: { width, height },
@@ -76,7 +71,7 @@ const useMobileDetection = () => {
     }
   }, [])
 
-  return deviceInfo
+  return deviceInfo.isMobile
 }
 
 export default useMobileDetection

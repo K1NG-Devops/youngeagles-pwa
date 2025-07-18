@@ -290,7 +290,7 @@ function App() {
             path="/ad-test"
             element={
               <PageWrapper>
-                <AdTestPage />
+                <AdTest />
               </PageWrapper>
             }
           />
@@ -298,7 +298,7 @@ function App() {
             path="/ad-test-old"
             element={
               <PageWrapper>
-                <AdTest />
+                <AdTestPage />
               </PageWrapper>
             }
           />
