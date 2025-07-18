@@ -1,64 +1,103 @@
 "use client"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from "next/image"
+import { CardDescription } from "@/components/ui/card"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  HeaderBannerAd,
-  FooterBannerAd,
-  ResponsiveAd,
-  ContentRectangleAd,
-  MobileBannerAd,
-  InFeedNativeAd,
-} from "@/components/ads/AdSenseComponents"
-import { BookOpen, Users, Trophy, Star, Calendar, MapPin, Phone, Mail, Globe } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { FooterBannerAd, ResponsiveAd, ContentRectangleAd, InFeedNativeAd } from "@/components/ads/AdSenseComponents"
+import { BookOpen, Users, Trophy, Star, Calendar, MapPin, Phone, Mail, Globe, BarChart } from "lucide-react"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header with Ad */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Young Eagles</h1>
-                <p className="text-sm text-gray-600">Educational Excellence</p>
-              </div>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <a href="#programs" className="text-gray-700 hover:text-blue-600">
-                Programs
-              </a>
-              <a href="#about" className="text-gray-700 hover:text-blue-600">
-                About
-              </a>
-              <a href="#contact" className="text-gray-700 hover:text-blue-600">
-                Contact
-              </a>
-            </nav>
-          </div>
+    <div className="min-h-screen bg-neutral-light text-neutral-dark">
+      {/* Header */}
+      <header className="bg-primary text-white p-4 shadow-md flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Image src="/edudash-pro-logo.png" alt="EduDash Pro Logo" width={40} height={40} className="rounded-full" />
+          <h1 className="text-2xl font-bold">EduDash Pro</h1>
         </div>
-
-        {/* Header Ad */}
-        <div className="border-t border-gray-200 py-2">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-            <HeaderBannerAd pageId="homepage" className="max-w-full" />
-          </div>
-        </div>
+        <nav>
+          <ul className="flex gap-4">
+            <li>
+              <Button variant="ghost" className="text-white hover:bg-primary/80">
+                Dashboard
+              </Button>
+            </li>
+            <li>
+              <Button variant="ghost" className="text-white hover:bg-primary/80">
+                Courses
+              </Button>
+            </li>
+            <li>
+              <Button variant="ghost" className="text-white hover:bg-primary/80">
+                Profile
+              </Button>
+            </li>
+          </ul>
+        </nav>
       </header>
 
-      {/* Mobile Banner Ad */}
-      <div className="md:hidden bg-white border-b border-gray-200 py-2">
-        <div className="flex justify-center">
-          <MobileBannerAd pageId="homepage" />
-        </div>
-      </div>
+      {/* Main Content */}
+      <main className="container mx-auto p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Welcome Card */}
+        <Card className="col-span-full bg-white shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-primary">Welcome to EduDash Pro!</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-neutral-dark">
+              Your personalized dashboard to track progress, manage courses, and connect with your learning community.
+            </p>
+            <Button className="mt-4 bg-accent text-primary hover:bg-accent/90">Get Started</Button>
+          </CardContent>
+        </Card>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Progress Card */}
+        <Card className="bg-white shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium text-primary">Your Progress</CardTitle>
+            <BarChart className="h-5 w-5 text-secondary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">75% Complete</div>
+            <Progress value={75} className="mt-2 h-2 bg-secondary" />
+            <p className="text-xs text-gray-500 mt-1">Across all active courses</p>
+          </CardContent>
+        </Card>
+
+        {/* Courses Card */}
+        <Card className="bg-white shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium text-primary">Active Courses</CardTitle>
+            <BookOpen className="h-5 w-5 text-secondary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3 Courses</div>
+            <p className="text-xs text-gray-500 mt-1">You are currently enrolled in</p>
+            <Button variant="link" className="mt-2 p-0 text-secondary hover:text-secondary/80">
+              View All Courses
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Community Card */}
+        <Card className="bg-white shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium text-primary">Community</CardTitle>
+            <Users className="h-5 w-5 text-secondary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12 New Messages</div>
+            <p className="text-xs text-gray-500 mt-1">From your study groups</p>
+            <Button variant="link" className="mt-2 p-0 text-secondary hover:text-secondary/80">
+              Go to Community
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Hero Section */}
         <section className="text-center mb-16">
           <div className="max-w-4xl mx-auto">
