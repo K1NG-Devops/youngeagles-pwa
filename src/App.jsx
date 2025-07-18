@@ -38,6 +38,7 @@ import TermsOfService from "./pages/TermsOfService"
 import SwipeDemo from "./pages/SwipeDemo"
 import AdTest from "./pages/AdTest"
 import AdFallbackTest from "./pages/AdFallbackTest"
+import AdTestPage from "./pages/AdTestPage" // Assuming this is a test page
 
 // Assuming you have a PageWrapper component for common layout elements
 import PageWrapper from "./components/PageWrapper"
@@ -287,6 +288,14 @@ function App() {
           />
           <Route
             path="/ad-test"
+            element={
+              <PageWrapper>
+                <AdTestPage />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/ad-test-old"
             element={
               <PageWrapper>
                 <AdTest />
