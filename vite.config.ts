@@ -13,8 +13,8 @@ export default defineConfig({
       },
       manifest: {
         name: process.env.VITE_APP_NAME || "Young Eagles PWA",
-        short_name: process.env.VITE_APP_NAME || "Young Eagles",
-        description: "Young Eagles PWA Dashboard",
+        short_name: "Young Eagles",
+        description: "A Progressive Web App for Young Eagles",
         theme_color: "#ffffff",
         icons: [
           {
@@ -67,6 +67,6 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 3005, // Ensure this matches VITE_APP_URL in .env
+    port: 3005, // Matches VITE_APP_URL in .env.local
   },
 })

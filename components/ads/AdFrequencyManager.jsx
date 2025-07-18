@@ -1,39 +1,57 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 const AD_IMPRESSION_KEY = "adImpressions"
-const AD_RESET_INTERVAL = 60 * 60 * 1000 // 1 hour in milliseconds
+const AD_RESET_INTERVAL_MS = 60 * 60 * 1000 // 1 hour
 const MAX_ADS_PER_INTERVAL = 5 // Max ads to show per interval
 
-export const useAdFrequency = () => {
-  const [impressions, setImpressions] = useState([])
+export const useAdFrequency = (adSlotId) => {
   const [shouldShowAd, setShouldShowAd] = useState(true)
 
-  useEffect(() => {
-    const storedImpressions = JSON.parse(localStorage.getItem(AD_IMPRESSION_KEY) || "[]")
-    setImpressions(storedImpressions)
-  }, [])
+  const recordImpression = useCallback(() => {
+    if (typeof window === "undefined") return
 
-  useEffect(() => {
     const now = Date.now()
-    const recentImpressions = impressions.filter((timestamp) => now - timestamp < AD_RESET_INTERVAL)
+    let impressions = JSON.parse(localStorage.getItem(AD_IMPRESSION_KEY) || "[]")
 
-    if (recentImpressions.length >= MAX_ADS_PER_INTERVAL) {
+    // Filter out old impressions
+    impressions = impressions.filter((imp) => now - imp.timestamp < AD_RESET_INTERVAL_MS)
+
+    if (impressions.length < MAX_ADS_PER_INTERVAL) {
+      impressions.push({ slotId: adSlotId, timestamp: now })
+      localStorage.setItem(AD_IMPRESSION_KEY, JSON.stringify(impressions))
+      setShouldShowAd(true)
+    } else {
+      setShouldShowAd(false)
+    }
+  }, [adSlotId])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const now = Date.now()
+    let impressions = JSON.parse(localStorage.getItem(AD_IMPRESSION_KEY) || "[]")
+
+    // Filter out old impressions
+    impressions = impressions.filter((imp) => now - imp.timestamp < AD_RESET_INTERVAL_MS)
+
+    if (impressions.length >= MAX_ADS_PER_INTERVAL) {
       setShouldShowAd(false)
     } else {
       setShouldShowAd(true)
+      // Record impression immediately if it's a new ad load and within limits
+      // This prevents multiple ads from loading on a single page refresh if not managed carefully
+      recordImpression()
     }
-    localStorage.setItem(AD_IMPRESSION_KEY, JSON.stringify(recentImpressions))
-  }, [impressions])
 
-  const recordAdImpression = useCallback(() => {
-    setImpressions((prev) => {
-      const newImpressions = [...prev, Date.now()]
-      localStorage.setItem(AD_IMPRESSION_KEY, JSON.stringify(newImpressions))
-      return newImpressions
-    })
-  }, [])
+    // Set up a timer to re-evaluate ad visibility after an interval
+    const timer = setInterval(() => {
+      recordImpression() // Re-check and record
+    }, AD_RESET_INTERVAL_MS)
 
-  return { shouldShowAd, recordAdImpression }
+    return () => clearInterval(timer)
+  }, [adSlotId, recordImpression])
+
+  return { shouldShowAd, recordImpression }
 }

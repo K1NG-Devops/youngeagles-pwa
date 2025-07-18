@@ -1,151 +1,174 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useAdFrequency } from "../../hooks/useAdFrequency"
 import { useAdBlockDetector } from "../../hooks/useAdBlockDetector"
-import { useMobileAdOptimizer } from "../../hooks/useMobileAdOptimizer"
+import { useMobileDetection } from "../../hooks/useMobileDetection"
 
-const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === "true"
-const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === "true"
-const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID
-
-const adUnitSlots = {
-  mobileBanner: import.meta.env.VITE_ADSENSE_MOBILE_BANNER,
-  footerBanner: import.meta.env.VITE_ADSENSE_FOOTER_BANNER,
-  headerBanner: import.meta.env.VITE_ADSENSE_HEADER_BANNER,
-  sidebarSkyscraper: import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER,
-  contentRectangle: import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE,
-  inFeedNative: import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE,
-  inArticleNative: import.meta.env.env.VITE_ADSENSE_IN_ARTICLE_NATIVE,
-  mainDisplay: import.meta.env.VITE_ADSENSE_MAIN_DISPLAY_AD_UNIT, // Using the new variable name
-}
-
+// Helper to load Google AdSense script
 const AdSenseScript = () => {
+  const publisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID
+  const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === "true"
+
   useEffect(() => {
-    if (isAdSenseEnabled && typeof window !== "undefined") {
+    if (isAdSenseEnabled && publisherId && typeof window !== "undefined") {
       const script = document.createElement("script")
       script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`
       script.async = true
       script.crossOrigin = "anonymous"
       document.head.appendChild(script)
 
-      script.onload = () => {
-        console.log("AdSense script loaded.")
-        if (isTestMode) {
-          console.log("AdSense is in test mode. Ads will not generate revenue.")
-        }
-      }
-      script.onerror = (e) => {
-        console.error("Failed to load AdSense script:", e)
-      }
+      // Push an empty ad slot to the adsbygoogle array to initialize it
+      window.adsbygoogle = window.adsbygoogle || []
+      window.adsbygoogle.push({})
     }
-  }, [])
+  }, [publisherId, isAdSenseEnabled])
+
   return null
 }
 
-const AdSenseAd = ({ slotId, format = "auto", responsive = "true", className = "" }) => {
-  const { shouldShowAd, recordAdImpression } = useAdFrequency()
-  const { adBlocked } = useAdBlockDetector()
-  const { isMobile } = useMobileAdOptimizer()
-  const [adLoaded, setAdLoaded] = useState(false)
+// Generic AdSense Ad component
+const AdSenseAd = ({ slotId, adFormat = "auto", className = "", style = {}, adTest = false }) => {
+  const adRef = useRef(null)
+  const [isVisible, setIsVisible] = useState(false)
+  const { shouldShowAd } = useAdFrequency(slotId)
+  const { isAdBlocked } = useAdBlockDetector()
+  const isAdSenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === "true"
+  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === "true"
 
   useEffect(() => {
-    if (isAdSenseEnabled && !adBlocked && shouldShowAd && typeof window !== "undefined" && window.adsbygoogle) {
-      try {
-        const pushAd = () => {
-          ;(window.adsbygoogle = window.adsbygoogle || []).push({})
-          setAdLoaded(true)
-          recordAdImpression()
-        }
+    if (!adRef.current) return
 
-        // Ensure the ad container is visible before pushing the ad
-        const adContainer = document.getElementById(`ad-container-${slotId}`)
-        if (adContainer && adContainer.offsetParent !== null) {
-          // Check if element is visible
-          pushAd()
-        } else {
-          // If not visible, wait for it to become visible or try again
-          const observer = new IntersectionObserver(
-            (entries) => {
-              if (entries[0].isIntersecting) {
-                pushAd()
-                observer.disconnect()
-              }
-            },
-            { threshold: 0.1 },
-          )
-          if (adContainer) observer.observe(adContainer)
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect() // Stop observing once visible
         }
-      } catch (e) {
-        console.error("Error pushing AdSense ad:", e)
+      },
+      { threshold: 0.1 }, // Trigger when 10% of the ad is visible
+    )
+
+    observer.observe(adRef.current)
+
+    return () => {
+      if (adRef.current) {
+        observer.unobserve(adRef.current)
       }
     }
-  }, [slotId, isAdSenseEnabled, adBlocked, shouldShowAd, recordAdImpression])
+  }, [])
+
+  useEffect(() => {
+    if (isVisible && isAdSenseEnabled && shouldShowAd && !isAdBlocked && slotId && typeof window !== "undefined") {
+      try {
+        // Push the ad to the adsbygoogle array
+        ;(window.adsbygoogle = window.adsbygoogle || []).push({})
+      } catch (e) {
+        console.error("AdSense push error:", e)
+      }
+    }
+  }, [isVisible, isAdSenseEnabled, shouldShowAd, isAdBlocked, slotId])
 
   if (!isAdSenseEnabled) {
-    return <div className={`ad-placeholder ${className}`}>AdSense is disabled.</div>
+    return (
+      <div
+        className={`ad-placeholder bg-gray-200 flex items-center justify-center text-gray-500 ${className}`}
+        style={style}
+      >
+        AdSense Disabled
+      </div>
+    )
   }
 
-  if (adBlocked) {
-    return <div className={`ad-placeholder ${className}`}>Ad Blocker Detected. Please disable to see ads.</div>
+  if (isAdBlocked) {
+    return (
+      <div
+        className={`ad-placeholder bg-red-100 flex items-center justify-center text-red-700 ${className}`}
+        style={style}
+      >
+        Ad Blocker Detected
+      </div>
+    )
   }
 
   if (!shouldShowAd) {
-    return <div className={`ad-placeholder ${className}`}>Ad frequency limit reached.</div>
+    return (
+      <div
+        className={`ad-placeholder bg-yellow-100 flex items-center justify-center text-yellow-700 ${className}`}
+        style={style}
+      >
+        Ad Frequency Limit Reached
+      </div>
+    )
+  }
+
+  if (!slotId) {
+    return (
+      <div
+        className={`ad-placeholder bg-gray-200 flex items-center justify-center text-gray-500 ${className}`}
+        style={style}
+      >
+        Ad Slot ID Missing
+      </div>
+    )
   }
 
   return (
-    <div id={`ad-container-${slotId}`} className={`ad-container ${className}`}>
+    <div className={`ad-container ${className}`} style={style} ref={adRef}>
       <ins
         className="adsbygoogle"
-        style={{ display: "block" }}
-        data-ad-client={publisherId}
+        style={{ display: "block", ...style }}
+        data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID}
         data-ad-slot={slotId}
-        data-ad-format={format}
-        data-full-width-responsive={responsive}
-        data-adtest={isTestMode ? "on" : undefined}
+        data-ad-format={adFormat}
+        data-full-width-responsive="true"
+        data-adtest={isTestMode || adTest ? "on" : undefined} // Use VITE_ADSENSE_TEST_MODE or component prop
       ></ins>
-      {!adLoaded && <div className="ad-loading-spinner">Loading Ad...</div>}
     </div>
   )
 }
 
-export const MobileBannerAd = ({ className }) => {
-  const { isMobile } = useMobileAdOptimizer()
-  if (!isMobile) return null
-  return <AdSenseAd slotId={adUnitSlots.mobileBanner} format="auto" responsive="true" className={className} />
+// Specific AdSense Ad Components
+export const HeaderBannerAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_HEADER_BANNER
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
-export const HeaderBannerAd = ({ className }) => {
-  const { isMobile } = useMobileAdOptimizer()
-  if (isMobile) return null // Only show on desktop
-  return <AdSenseAd slotId={adUnitSlots.headerBanner} format="auto" responsive="true" className={className} />
+export const MobileBannerAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_MOBILE_BANNER
+  const { isMobile } = useMobileDetection()
+  if (!isMobile) return null // Only show on mobile
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
-export const FooterBannerAd = ({ className }) => {
-  return <AdSenseAd slotId={adUnitSlots.footerBanner} format="auto" responsive="true" className={className} />
+export const FooterBannerAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_FOOTER_BANNER
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
-export const SidebarSkyscraperAd = ({ className }) => {
-  const { isMobile } = useMobileAdOptimizer()
-  if (isMobile) return null // Only show on desktop
-  return <AdSenseAd slotId={adUnitSlots.sidebarSkyscraper} format="auto" responsive="true" className={className} />
+export const SidebarSkyscraperAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_SIDEBAR_SKYSCRAPER
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
-export const ContentRectangleAd = ({ className }) => {
-  return <AdSenseAd slotId={adUnitSlots.contentRectangle} format="rectangle" responsive="true" className={className} />
+export const ContentRectangleAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_CONTENT_RECTANGLE
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
-export const InFeedNativeAd = ({ className }) => {
-  return <AdSenseAd slotId={adUnitSlots.inFeedNative} format="fluid" responsive="true" className={className} />
+export const InFeedNativeAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_IN_FEED_NATIVE
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
-export const InArticleNativeAd = ({ className }) => {
-  return <AdSenseAd slotId={adUnitSlots.inArticleNative} format="fluid" responsive="true" className={className} />
+export const InArticleNativeAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_IN_ARTICLE_NATIVE
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
-export const MainDisplayAd = ({ className }) => {
-  return <AdSenseAd slotId={adUnitSlots.mainDisplay} format="auto" responsive="true" className={className} />
+export const MainDisplayAd = ({ className, style }) => {
+  const slotId = import.meta.env.VITE_ADSENSE_MAIN_DISPLAY_AD_UNIT
+  return <AdSenseAd slotId={slotId} className={className} style={style} />
 }
 
 export default AdSenseScript
