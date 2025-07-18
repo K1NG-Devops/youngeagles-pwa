@@ -22,7 +22,11 @@ const useMobileDetection = () => {
       const touchSupported = "ontouchstart" in window || navigator.maxTouchPoints > 0
 
       // Mobile detection
-      const isMobile = width <= 768 || /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)
+      const mobileRegex =
+        /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|rim)|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i
+      const tabletRegex = /android|ipad|playbook|silk/i
+
+      const isMobile = mobileRegex.test(userAgent) || tabletRegex.test(userAgent.substring(0, 4))
 
       // Tablet detection (more specific)
       const isTablet = (width >= 768 && width <= 1024) || /ipad|android(?!.*mobile)/i.test(userAgent)

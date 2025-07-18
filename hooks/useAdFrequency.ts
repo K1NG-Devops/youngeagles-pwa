@@ -21,7 +21,10 @@ interface AdFrequencyState {
   pageAdsShown: number
   lastAdTime: number
   lastResetTime: number
+  [key: string]: number // Tracks how many times an ad slot has been shown
 }
+
+const AD_DISPLAY_LIMIT = 3 // Max times an ad of a certain type can be shown per session (example)
 
 const useAdFrequency = (pageId: string, adType: string, config: Partial<AdFrequencyConfig> = {}) => {
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
@@ -104,13 +107,14 @@ const useAdFrequency = (pageId: string, adType: string, config: Partial<AdFreque
     return true
   }, [state])
 
-  const recordAdShown = useCallback(() => {
+  const recordAdShown = useCallback((slotId: string) => {
     const now = Date.now()
     setState((prev) => ({
       ...prev,
       sessionAdsShown: prev.sessionAdsShown + 1,
       pageAdsShown: prev.pageAdsShown + 1,
       lastAdTime: now,
+      [slotId]: (prev[slotId] || 0) + 1,
     }))
   }, [])
 
@@ -140,6 +144,14 @@ const useAdFrequency = (pageId: string, adType: string, config: Partial<AdFreque
     })
   }, [])
 
+  const canShowAd = useCallback(
+    (slotId: string): boolean => {
+      const currentCount = state[slotId] || 0
+      return currentCount < AD_DISPLAY_LIMIT
+    },
+    [state],
+  )
+
   return {
     shouldShowAd: shouldShowAd(),
     recordAdShown,
@@ -149,6 +161,7 @@ const useAdFrequency = (pageId: string, adType: string, config: Partial<AdFreque
     resetAllAds,
     adsShownThisPage: state.pageAdsShown,
     adsShownThisSession: state.sessionAdsShown,
+    canShowAd,
   }
 }
 

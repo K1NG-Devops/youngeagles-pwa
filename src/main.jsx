@@ -5,7 +5,8 @@ import App from "./App.jsx"
 import { AuthProvider } from "./contexts/AuthContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
 import { SubscriptionProvider } from "./contexts/SubscriptionContext"
-import "../styles/globals.css" // Assuming your global styles are here
+import { GoogleAdsProvider } from "../components/ads/GoogleAdsProvider.tsx" // Assuming this path is correct
+import "./index.css" // Assuming you have a global CSS file here
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -13,7 +14,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <ThemeProvider>
           <SubscriptionProvider>
-            <App />
+            <GoogleAdsProvider>
+              <App />
+            </GoogleAdsProvider>
           </SubscriptionProvider>
         </ThemeProvider>
       </AuthProvider>
