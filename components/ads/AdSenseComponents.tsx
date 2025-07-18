@@ -103,17 +103,6 @@ export const HeaderBannerAd: React.FC<{ className?: string }> = ({ className = "
   />
 )
 
-// Content Rectangle Ad (300x250)
-export const ContentRectangleAd: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <AdSenseAd
-    adSlot="YOUR_CONTENT_RECTANGLE_SLOT"
-    adFormat="rectangle"
-    style={{ width: "300px", height: "250px" }}
-    className={`content-rectangle-ad ${className}`}
-    fullWidthResponsive={false}
-  />
-)
-
 // Responsive Ad
 export const ResponsiveAd: React.FC<{
   placement: "header" | "content" | "sidebar" | "infeed"
@@ -143,13 +132,3 @@ export const ResponsiveAd: React.FC<{
     />
   )
 }
-
-// In-Feed Native Ad
-export const InFeedNativeAd: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <AdSenseAd
-    adSlot="YOUR_INFEED_NATIVE_SLOT"
-    adFormat="fluid"
-    className={`infeed-native-ad ${className}`}
-    style={{ minHeight: "100px" }}
-  />
-)

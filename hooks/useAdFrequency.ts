@@ -23,11 +23,20 @@ interface AdFrequencyState {
   lastResetTime: number
 }
 
-const useAdFrequency = (pageId: string, config: Partial<AdFrequencyConfig> = {}) => {
+const useAdFrequency = (pageId: string, adType: string, config: Partial<AdFrequencyConfig> = {}) => {
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
-  const storageKey = `adFrequency_${pageId}`
+  const storageKey = `adFrequency_${pageId}_${adType}`
 
   const [state, setState] = useState<AdFrequencyState>(() => {
+    if (typeof window === "undefined") {
+      return {
+        sessionAdsShown: 0,
+        pageAdsShown: 0,
+        lastAdTime: 0,
+        lastResetTime: Date.now(),
+      }
+    }
+
     try {
       const stored = localStorage.getItem(storageKey)
       if (stored) {
@@ -60,6 +69,8 @@ const useAdFrequency = (pageId: string, config: Partial<AdFrequencyConfig> = {})
 
   // Save state to localStorage
   useEffect(() => {
+    if (typeof window === "undefined") return
+
     try {
       localStorage.setItem(storageKey, JSON.stringify(state))
     } catch (error) {
@@ -76,17 +87,17 @@ const useAdFrequency = (pageId: string, config: Partial<AdFrequencyConfig> = {})
     const now = Date.now()
 
     // Check session limit
-    if (state.sessionAdsShown >= DEFAULT_CONFIG.maxAdsPerSession) {
+    if (state.sessionAdsShown >= finalConfig.maxAdsPerSession) {
       return false
     }
 
     // Check page limit
-    if (state.pageAdsShown >= DEFAULT_CONFIG.maxAdsPerPage) {
+    if (state.pageAdsShown >= finalConfig.maxAdsPerPage) {
       return false
     }
 
     // Check time between ads
-    if (now - state.lastAdTime < DEFAULT_CONFIG.minTimeBetweenAds) {
+    if (now - state.lastAdTime < finalConfig.minTimeBetweenAds) {
       return false
     }
 
@@ -104,28 +115,23 @@ const useAdFrequency = (pageId: string, config: Partial<AdFrequencyConfig> = {})
   }, [])
 
   const canShowMoreAds = useCallback(() => {
-    return state.pageAdsShown < DEFAULT_CONFIG.maxAdsPerPage && state.sessionAdsShown < DEFAULT_CONFIG.maxAdsPerSession
+    return state.pageAdsShown < finalConfig.maxAdsPerPage && state.sessionAdsShown < finalConfig.maxAdsPerSession
   }, [state])
 
-  const resetPageAds = useCallback(() => {
-    setState((prev) => ({ ...prev, pageAdsShown: 0 }))
-  }, [])
-
-  const resetAllAds = useCallback(() => {
-    setState({
-      sessionAdsShown: 0,
-      pageAdsShown: 0,
-      lastAdTime: 0,
-      lastResetTime: Date.now(),
-    })
-  }, [])
+  const getAdStats = useCallback(() => {
+    return {
+      sessionAdsShown: state.sessionAdsShown,
+      pageAdsShown: state.pageAdsShown,
+      canShowMore: canShowMoreAds(),
+      timeUntilNextAd: Math.max(0, finalConfig.minTimeBetweenAds - (Date.now() - state.lastAdTime)),
+    }
+  }, [state, canShowMoreAds])
 
   return {
     shouldShowAd: shouldShowAd(),
     recordAdShown,
     canShowMoreAds: canShowMoreAds(),
-    resetPageAds,
-    resetAllAds,
+    getAdStats,
     adsShownThisPage: state.pageAdsShown,
     adsShownThisSession: state.sessionAdsShown,
   }
