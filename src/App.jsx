@@ -49,7 +49,13 @@ function App() {
 
   return (
     <Router>
-      {isAdSenseEnabled && <AdSenseScript />}
+      {isAdSenseEnabled && (
+        <>
+          <AdSenseScript publisherId={import.meta.env.VITE_ADSENSE_PUBLISHER_ID} />
+          {/* Example of a main display ad, adjust as needed */}
+          <MainDisplayAd slotId={import.meta.env.VITE_ADSENSE_MAIN_DISPLAY_AD_UNIT} />
+        </>
+      )}
       <div className="App">
         {isAdBlocked && (
           <div className="bg-red-500 text-white p-2 text-center">
@@ -314,7 +320,6 @@ function App() {
 
         {/* Example Ad Placements */}
         <FooterBannerAd className="my-4" style={{ height: "90px", width: "728px", margin: "0 auto" }} />
-        <MainDisplayAd className="my-4" style={{ height: "250px", width: "300px", margin: "0 auto" }} />
         {/* You can place other ads like SidebarSkyscraperAd, ContentRectangleAd, etc. within specific page components */}
       </div>
     </Router>

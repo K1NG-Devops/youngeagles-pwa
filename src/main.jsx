@@ -1,22 +1,25 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
-import { BrowserRouter as Router } from "react-router-dom"
 import App from "./App.jsx"
-import "./index.css" // Assuming you have a global CSS file
-import { AuthProvider } from "./contexts/AuthContext"
-import { ThemeProvider } from "./contexts/ThemeContext"
-import { SubscriptionProvider } from "./contexts/SubscriptionContext"
+import "./index.css"
+import { BrowserRouter } from "react-router-dom"
+import { AuthProvider } from "../contexts/AuthContext.jsx" // Assuming AuthContext
+import { ThemeProvider } from "../contexts/ThemeContext.jsx" // Assuming ThemeContext
+import { SubscriptionProvider } from "../contexts/SubscriptionContext.jsx" // Assuming SubscriptionContext
+import { AdSenseProvider } from "../components/ads/AdSenseProvider.jsx" // Assuming AdSenseProvider
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Router>
-      <ThemeProvider>
-        <AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ThemeProvider>
           <SubscriptionProvider>
-            <App />
+            <AdSenseProvider>
+              <App />
+            </AdSenseProvider>
           </SubscriptionProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 )

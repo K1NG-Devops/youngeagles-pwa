@@ -2,38 +2,44 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-// This hook manages ad display frequency based on a simple counter
-export function useAdFrequency(adSlotId, frequency = 3) {
-  const [adCount, setAdCount] = useState(0)
+const AD_FREQUENCY_KEY = "ad_display_counts"
+const AD_RESET_INTERVAL = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+
+export function useAdFrequency() {
+  const [adCounts, setAdCounts] = useState({})
 
   useEffect(() => {
-    // Load count from session storage or local storage
-    const storedCount = sessionStorage.getItem(`adCount_${adSlotId}`)
-    if (storedCount) {
-      setAdCount(Number.parseInt(storedCount, 10))
+    const storedCounts = localStorage.getItem(AD_FREQUENCY_KEY)
+    if (storedCounts) {
+      setAdCounts(JSON.parse(storedCounts))
     }
-  }, [adSlotId])
 
-  const shouldShowAd = useCallback(() => {
-    // In test mode, always show ads
-    if (import.meta.env.VITE_ADSENSE_TEST_MODE === "true") {
-      return true
-    }
-    // Show ad if count is a multiple of frequency (e.g., every 3rd time)
-    return adCount % frequency === 0
-  }, [adCount, frequency])
+    // Set up interval to reset ad counts periodically
+    const interval = setInterval(() => {
+      setAdCounts({})
+      localStorage.removeItem(AD_FREQUENCY_KEY)
+    }, AD_RESET_INTERVAL)
 
-  const recordAdShown = useCallback(() => {
-    // Increment count and store it
-    const newCount = adCount + 1
-    setAdCount(newCount)
-    sessionStorage.setItem(`adCount_${adSlotId}`, newCount.toString())
-  }, [adCount, adSlotId])
-
-  const canShowMoreAds = useCallback(() => {
-    // This can be expanded to check daily limits, etc.
-    return true // For now, always allow more ads
+    return () => clearInterval(interval)
   }, [])
 
-  return { shouldShowAd, recordAdShown, canShowMoreAds }
+  const incrementAdCount = useCallback((slotId) => {
+    setAdCounts((prevCounts) => {
+      const newCounts = {
+        ...prevCounts,
+        [slotId]: (prevCounts[slotId] || 0) + 1,
+      }
+      localStorage.setItem(AD_FREQUENCY_KEY, JSON.stringify(newCounts))
+      return newCounts
+    })
+  }, [])
+
+  const canShowAd = useCallback(
+    (slotId, maxDisplays = 3) => {
+      return (adCounts[slotId] || 0) < maxDisplays
+    },
+    [adCounts],
+  )
+
+  return { incrementAdCount, canShowAd }
 }
