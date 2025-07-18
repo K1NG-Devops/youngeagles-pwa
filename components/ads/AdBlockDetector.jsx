@@ -4,21 +4,12 @@ import { useState, useEffect } from "react"
 
 export const AdBlockDetector = ({ children, fallback }) => {
   const [adBlockDetected, setAdBlockDetected] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const detectAdBlock = async () => {
       try {
-        // Method 1: Try to fetch a common ad-related URL
-        const response = await fetch("/ads.txt", {
-          method: "HEAD",
-          cache: "no-cache",
-        })
-
-        // Method 2: Check if AdSense script is blocked
-        const adSenseScript = document.querySelector('script[src*="googlesyndication.com"]')
-
-        // Method 3: Create a test element that ad blockers typically hide
+        // Method 1: Try to load a known ad-related resource
         const testAd = document.createElement("div")
         testAd.innerHTML = "&nbsp;"
         testAd.className = "adsbox"
@@ -27,59 +18,49 @@ export const AdBlockDetector = ({ children, fallback }) => {
         document.body.appendChild(testAd)
 
         setTimeout(() => {
-          const isHidden = testAd.offsetHeight === 0
+          const isBlocked = testAd.offsetHeight === 0
           document.body.removeChild(testAd)
+          setAdBlockDetected(isBlocked)
+          setLoading(false)
+        }, 100)
 
-          // If any detection method indicates ad blocking
-          if (!response.ok || !adSenseScript || isHidden) {
+        // Method 2: Check for adsbygoogle
+        setTimeout(() => {
+          if (!window.adsbygoogle || window.adsbygoogle.length === 0) {
             setAdBlockDetected(true)
           }
-
-          setIsLoading(false)
-        }, 100)
+          setLoading(false)
+        }, 2000)
       } catch (error) {
-        // If fetch fails, likely due to ad blocker
-        setAdBlockDetected(true)
-        setIsLoading(false)
+        console.log("Ad block detection failed:", error)
+        setAdBlockDetected(false)
+        setLoading(false)
       }
     }
 
     detectAdBlock()
   }, [])
 
-  if (isLoading) {
-    return (
-      <div
-        className="ad-loading"
-        style={{
-          padding: "20px",
-          textAlign: "center",
-          color: "#666",
-        }}
-      >
-        Loading...
-      </div>
-    )
+  if (loading) {
+    return <div>Loading...</div>
   }
 
   if (adBlockDetected) {
     return (
       fallback || (
         <div
-          className="ad-block-message"
           style={{
             padding: "20px",
-            textAlign: "center",
-            backgroundColor: "#f8f9fa",
-            border: "1px solid #dee2e6",
+            backgroundColor: "#fff3cd",
+            border: "1px solid #ffeaa7",
             borderRadius: "4px",
+            textAlign: "center",
             margin: "10px 0",
           }}
         >
-          <h4 style={{ margin: "0 0 10px 0", color: "#495057" }}>Ad Blocker Detected</h4>
-          <p style={{ margin: "0", color: "#6c757d", fontSize: "14px" }}>
-            Please consider disabling your ad blocker to support our content.
-          </p>
+          <h4>Support Young Eagles</h4>
+          <p>We notice you're using an ad blocker. Please consider disabling it to support our educational programs.</p>
+          <small>Ads help us provide free resources to students and families.</small>
         </div>
       )
     )
@@ -88,24 +69,34 @@ export const AdBlockDetector = ({ children, fallback }) => {
   return children
 }
 
-// Wrapper component for ads with ad block detection
-export const AdWithBlockDetection = ({ children, fallbackMessage }) => (
-  <AdBlockDetector
-    fallback={
-      <div
-        style={{
-          padding: "15px",
-          textAlign: "center",
-          backgroundColor: "#fff3cd",
-          border: "1px solid #ffeaa7",
-          borderRadius: "4px",
-          color: "#856404",
-        }}
-      >
-        {fallbackMessage || "Please disable ad blocker to view ads"}
-      </div>
-    }
+export const AdBlockFallback = ({ message, showDonation = true }) => (
+  <div
+    style={{
+      padding: "20px",
+      backgroundColor: "#e8f4fd",
+      border: "1px solid #bee5eb",
+      borderRadius: "4px",
+      textAlign: "center",
+      margin: "10px 0",
+    }}
   >
-    {children}
-  </AdBlockDetector>
+    <h4>🦅 Young Eagles PWA</h4>
+    <p>{message || "Help us keep this app free by allowing ads or making a donation."}</p>
+    {showDonation && (
+      <button
+        style={{
+          backgroundColor: "#007bff",
+          color: "white",
+          border: "none",
+          padding: "8px 16px",
+          borderRadius: "4px",
+          cursor: "pointer",
+          marginTop: "10px",
+        }}
+        onClick={() => window.open("/donate", "_blank")}
+      >
+        Support Us
+      </button>
+    )}
+  </div>
 )

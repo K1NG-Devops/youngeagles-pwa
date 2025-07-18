@@ -3,107 +3,105 @@
 import { useState, useEffect } from "react"
 import { MobileBannerAd, ContentRectangleAd, InFeedNativeAd } from "./AdSenseComponents"
 
-export const MobileAdOptimizer = () => {
-  const [deviceInfo, setDeviceInfo] = useState({
-    isMobile: false,
-    isTablet: false,
-    screenWidth: 0,
-    orientation: "portrait",
+export const useMobileDetection = () => {
+  const [isMobile, setIsMobile] = useState(false)
+  const [screenSize, setScreenSize] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 0,
+    height: typeof window !== "undefined" ? window.innerHeight : 0,
   })
 
   useEffect(() => {
-    const updateDeviceInfo = () => {
+    const checkMobile = () => {
       const width = window.innerWidth
       const height = window.innerHeight
 
-      setDeviceInfo({
-        isMobile: width <= 768,
-        isTablet: width > 768 && width <= 1024,
-        screenWidth: width,
-        orientation: width > height ? "landscape" : "portrait",
-      })
+      setScreenSize({ width, height })
+      setIsMobile(width <= 768)
     }
 
-    updateDeviceInfo()
-    window.addEventListener("resize", updateDeviceInfo)
-    window.addEventListener("orientationchange", updateDeviceInfo)
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
 
-    return () => {
-      window.removeEventListener("resize", updateDeviceInfo)
-      window.removeEventListener("orientationchange", updateDeviceInfo)
-    }
+    return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Mobile-specific ad placement
-  if (deviceInfo.isMobile) {
-    return (
-      <div className="mobile-ad-container">
-        {/* Top banner for mobile */}
-        <div
-          className="mobile-top-ad"
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 100,
-            backgroundColor: "white",
-            padding: "5px",
-            textAlign: "center",
-            borderBottom: "1px solid #eee",
-          }}
-        >
-          <MobileBannerAd />
-        </div>
-
-        {/* In-content ad for mobile */}
-        <div
-          className="mobile-content-ad"
-          style={{
-            margin: "20px 0",
-            textAlign: "center",
-          }}
-        >
-          <ContentRectangleAd
-            style={{
-              maxWidth: "100%",
-              height: "auto",
-            }}
-          />
-        </div>
-
-        {/* Native in-feed ad */}
-        <div
-          className="mobile-native-ad"
-          style={{
-            margin: "15px 0",
-          }}
-        >
-          <InFeedNativeAd />
-        </div>
-      </div>
-    )
-  }
-
-  return null
+  return { isMobile, screenSize }
 }
 
-// Hook for mobile ad optimization
-export const useMobileAdOptimization = () => {
-  const [adConfig, setAdConfig] = useState({
-    showStickyAd: false,
-    adDensity: "normal",
-    preferredFormats: ["banner"],
-  })
+export const MobileOptimizedAd = ({
+  desktopComponent: DesktopComponent,
+  mobileComponent: MobileComponent,
+  ...props
+}) => {
+  const { isMobile } = useMobileDetection()
 
-  useEffect(() => {
-    const isMobile = window.innerWidth <= 768
-    const isSlowConnection = navigator.connection && navigator.connection.effectiveType === "slow-2g"
+  if (isMobile) {
+    return MobileComponent ? <MobileComponent {...props} /> : <MobileBannerAd {...props} />
+  }
 
-    setAdConfig({
-      showStickyAd: isMobile && !isSlowConnection,
-      adDensity: isSlowConnection ? "low" : "normal",
-      preferredFormats: isMobile ? ["banner", "native"] : ["banner", "rectangle", "skyscraper"],
-    })
-  }, [])
+  return DesktopComponent ? <DesktopComponent {...props} /> : <ContentRectangleAd {...props} />
+}
 
-  return adConfig
+export const StickyMobileAd = ({ className = "", style = {} }) => {
+  const { isMobile } = useMobileDetection()
+  const [isVisible, setIsVisible] = useState(true)
+
+  if (!isMobile) return null
+
+  return (
+    <div
+      className={`sticky-mobile-ad ${className}`}
+      style={{
+        position: "fixed",
+        bottom: isVisible ? "0" : "-60px",
+        left: "0",
+        right: "0",
+        zIndex: 1000,
+        backgroundColor: "white",
+        borderTop: "1px solid #ddd",
+        transition: "bottom 0.3s ease",
+        ...style,
+      }}
+    >
+      <button
+        onClick={() => setIsVisible(false)}
+        style={{
+          position: "absolute",
+          top: "5px",
+          right: "5px",
+          background: "none",
+          border: "none",
+          fontSize: "16px",
+          cursor: "pointer",
+          zIndex: 1001,
+        }}
+      >
+        ×
+      </button>
+      <MobileBannerAd />
+    </div>
+  )
+}
+
+export const InContentMobileAd = ({ contentLength = 0, className = "", style = {} }) => {
+  const { isMobile } = useMobileDetection()
+
+  // Show in-content ads for longer content on mobile
+  if (!isMobile || contentLength < 500) return null
+
+  return (
+    <div
+      className={`in-content-mobile-ad ${className}`}
+      style={{
+        margin: "20px 0",
+        padding: "10px",
+        backgroundColor: "#f8f9fa",
+        borderRadius: "4px",
+        ...style,
+      }}
+    >
+      <small style={{ color: "#666", fontSize: "12px" }}>Advertisement</small>
+      <InFeedNativeAd />
+    </div>
+  )
 }
