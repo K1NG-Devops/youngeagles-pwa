@@ -1,110 +1,30 @@
-# Young Eagles PWA
+# PWA code analysis
 
-A modern Progressive Web App (PWA) for educational management, built with React and optimized for mobile devices.
+*Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
-## Features
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/k1ng-devops-projects/v0-pwa-code-analysis)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/Y6jGjoq7lnA)
 
-- 📱 **Progressive Web App**: Install on mobile devices for native app experience
-- 🎓 **Educational Management**: Homework tracking, student progress, and class management
-- 👨‍👩‍👧‍👦 **Multi-User Support**: Parents, teachers, students, and administrators
-- 🎨 **Modern UI**: Responsive design with dark/light theme support
-- 🔄 **Real-time Updates**: Live notifications and progress tracking
-- 💳 **Payment Integration**: Subscription management and payment processing
-- 📊 **Analytics**: Comprehensive progress tracking and reporting
-- 🌐 **Offline Support**: Works without internet connection
+## Overview
 
-## Tech Stack
+This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
 
-- **Frontend**: React 18 + Vite
-- **Styling**: Tailwind CSS
-- **Routing**: React Router
-- **State Management**: React Context API
-- **Animations**: Framer Motion
-- **PWA**: Workbox Service Worker
-- **Build Tool**: Vite
-- **Deployment**: Vercel
+## Deployment
 
-## Getting Started
+Your project is live at:
 
-### Prerequisites
+**[https://vercel.com/k1ng-devops-projects/v0-pwa-code-analysis](https://vercel.com/k1ng-devops-projects/v0-pwa-code-analysis)**
 
-- Node.js (v16 or higher)
-- npm or yarn
+## Build your app
 
-### Installation
+Continue building your app on:
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd YoungEagles_PWA
-```
+**[https://v0.dev/chat/projects/Y6jGjoq7lnA](https://v0.dev/chat/projects/Y6jGjoq7lnA)**
 
-2. Install dependencies:
-```bash
-npm install
-```
+## How It Works
 
-3. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-4. Start the development server:
-```bash
-npm run dev
-```
-
-5. Open [http://localhost:3002](http://localhost:3002) in your browser
-
-## Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run serve` - Build and serve production
-- `npm run lint` - Run ESLint
-- `npm run test:build` - Test production build
-
-## Project Structure
-
-```
-src/
-├── components/     # Reusable UI components
-├── contexts/       # React Context providers
-├── hooks/          # Custom React hooks
-├── pages/          # Route components
-├── services/       # API and external services
-├── utils/          # Utility functions
-└── styles/         # Global styles
-```
-
-## User Roles
-
-- **Students**: Complete homework, track progress, submit assignments
-- **Parents**: Monitor children's progress, manage payments, communicate with teachers
-- **Teachers**: Create assignments, grade work, manage classes
-- **Administrators**: User management, payment verification, system analytics
-
-## PWA Features
-
-- **Installation**: Can be installed on mobile devices
-- **Offline Support**: Works without internet connection
-- **Push Notifications**: Real-time updates and reminders
-- **Native Feel**: App-like experience on mobile devices
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Commit your changes: `git commit -am 'Add new feature'`
-4. Push to the branch: `git push origin feature/new-feature`
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support, please contact [your-email@example.com](mailto:your-email@example.com)
+1. Create and modify your project using [v0.dev](https://v0.dev)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository

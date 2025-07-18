@@ -1,0 +1,76 @@
+{
+  "setup_steps": {
+    "1_adsense_account": {
+      "title": "Create AdSense Account",
+      "steps": [
+        "Go to https://www.google.com/adsense/",
+        "Sign up with your Google account",
+        "Add your website URL",
+        "Select your country/region",
+        "Choose how you want to be paid"
+      ]
+    },
+    "2_site_verification": {
+      "title": "Verify Your Site",
+      "steps": [
+        "Add AdSense code to your site's <head> section",
+        "Wait for Google to review your site (can take 24-48 hours)",
+        "Ensure your site has quality content and follows AdSense policies"
+      ]
+    },
+    "3_create_ad_units": {
+      "title": "Create Ad Units",
+      "ad_types": {
+        "display_ads": {
+          "mobile_banner": "320x50 - Mobile banner",
+          "header_banner": "728x90 - Leaderboard",
+          "content_rectangle": "300x250 - Medium rectangle",
+          "responsive": "Auto-sizing responsive ads"
+        },
+        "native_ads": {
+          "in_feed": "Matches your content feed",
+          "in_article": "Placed within article content"
+        }
+      }
+    },
+    "4_implementation": {
+      "title": "Implementation Steps",
+      "steps": [
+        "Replace 'YOUR_PUBLISHER_ID' with your actual publisher ID",
+        "Replace ad slot IDs with your actual slot IDs",
+        "Test in development mode first",
+        "Deploy to production",
+        "Monitor performance in AdSense dashboard"
+      ]
+    }
+  },
+  "common_issues": {
+    "ads_not_showing": [
+      "Check if ad blocker is enabled",
+      "Verify publisher ID and slot IDs are correct",
+      "Ensure site is approved by AdSense",
+      "Check browser console for errors",
+      "Verify HTTPS is enabled"
+    ],
+    "low_revenue": [
+      "Optimize ad placement",
+      "Use responsive ad units",
+      "Improve site traffic and engagement",
+      "Experiment with different ad formats",
+      "Monitor ad frequency to avoid fatigue"
+    ],
+    "policy_violations": [
+      "Review AdSense policies",
+      "Ensure content is family-friendly",
+      "Avoid clicking your own ads",
+      "Don't encourage users to click ads",
+      "Maintain good user experience"
+    ]
+  },
+  "pwa_specific_considerations": {
+    "service_worker": "Ensure ads work with service worker caching",
+    "offline_mode": "Handle ad failures gracefully when offline",
+    "app_install": "Ads should work in installed PWA mode",
+    "performance": "Monitor ad impact on PWA performance scores"
+  }
+}
