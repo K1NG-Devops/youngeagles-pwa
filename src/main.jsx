@@ -1,25 +1,29 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
-import { BrowserRouter as Router } from "react-router-dom"
+import { BrowserRouter } from "react-router-dom"
 import App from "./App.jsx"
-import "./index.css" // Assuming you have a global CSS file
 import { AuthProvider } from "./contexts/AuthContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
 import { SubscriptionProvider } from "./contexts/SubscriptionContext"
-import { GoogleAdsProvider } from "./components/ads/GoogleAdsProvider" // Assuming this path
+import { AdSenseProvider } from "./components/ads/AdSenseProvider.jsx" // Correct path to AdSenseProvider
+import "./index.css" // Assuming you have a global CSS file here
+
+// Get AdSense configuration from environment variables
+const adsensePublisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID
+const adsenseEnabled = import.meta.env.VITE_ADSENSE_ENABLED === "true" // Convert string to boolean
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Router>
-      <ThemeProvider>
-        <AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ThemeProvider>
           <SubscriptionProvider>
-            <GoogleAdsProvider>
+            <AdSenseProvider publisherId={adsensePublisherId} enabled={adsenseEnabled}>
               <App />
-            </GoogleAdsProvider>
+            </AdSenseProvider>
           </SubscriptionProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 )
